@@ -125,6 +125,9 @@
           <el-form-item label="用户ID">
             <el-input v-model="editForm.userId" placeholder="请输入用户ID" />
           </el-form-item>
+          <el-form-item label="SteamID">
+            <el-input v-model="editForm.steamId" placeholder="请输入SteamID" />
+          </el-form-item>
         </template>
 
         <!-- BUFF特有配置 -->
@@ -307,6 +310,12 @@
               placeholder="请输入用户ID"
             />
           </el-form-item>
+          <el-form-item label="SteamID">
+            <el-input 
+              v-model="inputForm.steamId" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
         </template>
         
         <el-form-item label="启用状态">
@@ -362,7 +371,8 @@ export default {
       appVersion: '',
       sleepTime: 6000,
       appType: '',
-      userId: ''
+      userId: '',
+      steamId: ''
     })
     
     const inputForm = ref({
@@ -380,7 +390,8 @@ export default {
       appVersion: '',
       sleepTime: 6000,
       appType: '',
-      userId: ''
+      userId: '',
+      steamId: ''
     })
 
     const dataSources = ref([])
@@ -450,7 +461,8 @@ export default {
             app_version: inputForm.value.appVersion,
             sleep_time: inputForm.value.sleepTime.toString(),
             app_type: inputForm.value.appType,
-            userId: inputForm.value.userId
+            userId: inputForm.value.userId,
+            steamId: inputForm.value.steamId
           })
         } else {
           requestData.configJson = JSON.stringify({
@@ -523,7 +535,8 @@ export default {
         appVersion: '',
         sleepTime: 6000,
         appType: '',
-        userId: ''
+        userId: '',
+        steamId: ''
       }
       editingSourceId.value = null
     }
@@ -791,6 +804,7 @@ export default {
         editForm.value.sleepTime = parseInt(config.yyyp_sleep_time || '6000')
         editForm.value.appType = config.yyyp_app_type || ''
         editForm.value.userId = config.yyyp_userId || ''
+        editForm.value.steamId = config.yyyp_steamId || ''
         
         console.log('悠悠有品配置解析结果:', {
           phone: editForm.value.phone,
@@ -837,7 +851,8 @@ export default {
         appVersion: '',
         sleepTime: 6000,
         appType: '',
-        userId: ''
+        userId: '',
+        steamId: ''
       }
     }
 
@@ -1026,7 +1041,8 @@ export default {
             app_version: editForm.value.appVersion,
             sleep_time: editForm.value.sleepTime.toString(),
             app_type: editForm.value.appType,
-            userId: editForm.value.userId
+            userId: editForm.value.userId,
+            steamId: editForm.value.steamId
           })
         } else {
           requestData.configJson = JSON.stringify({
