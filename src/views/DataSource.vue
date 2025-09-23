@@ -905,7 +905,8 @@ export default {
           app_version: editForm.value.appVersion || '',
           app_type: editForm.value.appType || '',
           userId: editForm.value.userId || '',
-          
+          steamId: editForm.value.steamId || '',
+
           // 额外的数据源信息（可选）
           dataID: editingSourceId.value,
           dataName: editForm.value.name,
