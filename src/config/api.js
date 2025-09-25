@@ -25,7 +25,9 @@ export const API_CONFIG = {
     
     // 爬虫相关
     YOUPIN_SPIDER: '/youping898SpiderV1/allDate',
-    YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData'
+    YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
+    BUFF_SPIDER: '/buffSpiderV1/NewData',
+    BUFF_FULL_SPIDER: '/buffSpiderV1/NoneData'
   }
 }
 
@@ -58,5 +60,7 @@ export const apiUrls = {
   
   // 爬虫API
   youpinSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_SPIDER),
-  youpinFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_FULL_SPIDER)
+  youpinFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_FULL_SPIDER),
+  buffSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.BUFF_SPIDER),
+  buffFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.BUFF_FULL_SPIDER)
 }

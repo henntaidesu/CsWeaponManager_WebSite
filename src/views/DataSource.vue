@@ -156,20 +156,14 @@
           <el-form-item label="SteamID" required>
             <el-input v-model="editForm.steamID" placeholder="请输入SteamID" />
           </el-form-item>
-          <el-form-item label="休眠时间">
-            <el-select v-model="editForm.sleepTime" placeholder="选择休眠时间" style="width: 100%;">
-              <el-option label="1秒" :value="1" />
-              <el-option label="3秒" :value="3" />
-              <el-option label="5秒" :value="5" />
-              <el-option label="10秒" :value="10" />
-              <el-option label="30秒" :value="30" />
-              <el-option label="1分钟" :value="60" />
-              <el-option label="2分钟" :value="120" />
-              <el-option label="5分钟" :value="300" />
-              <el-option label="10分钟" :value="600" />
-              <el-option label="30分钟" :value="1800" />
-              <el-option label="1小时" :value="3600" />
-              <el-option label="2小时" :value="7200" />
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
             </el-select>
           </el-form-item>
         </template>
@@ -209,6 +203,15 @@
               :disabled="!editForm.enabled"
             >
               全部采集
+            </el-button>
+            <el-button 
+              v-if="editForm.type === 'buff'" 
+              type="warning" 
+              @click="handleEditBuffCollectAll"
+              :loading="collectingSourceIds.has(editingSourceId)"
+              :disabled="!editForm.enabled"
+            >
+              全部获取
             </el-button>
             <el-button 
               type="danger" 
@@ -833,10 +836,82 @@ export default {
       }
     }
 
+    // BUFF专用爬虫采集函数
+    const startBuffSpiderCollection = async (source) => {
+      if (!source.enabled) {
+        ElMessage.warning('请先启用数据源')
+        return
+      }
+
+      if (collectingSourceIds.value.has(source.dataID)) {
+        ElMessage.info('该数据源正在采集中...')
+        return
+      }
+
+      try {
+        // 添加到采集中的列表
+        collectingSourceIds.value.add(source.dataID)
+        
+        ElMessage.info(`开始使用爬虫采集BUFF数据: ${source.dataName}`)
+        
+        // 准备发送给爬虫的数据 - 按照后端API期望的字段名
+        const spiderData = {
+          // 后端API需要的字段
+          cookie: source.config?.cookie || '',
+          system_version: source.config?.system_version || '',
+          system_type: source.config?.system_type || '',
+          steamID: source.config?.steamID || '',
+          
+          // 额外的数据源信息（可选）
+          dataID: source.dataID,
+          dataName: source.dataName,
+          type: source.type,
+          enabled: source.enabled
+        }
+        
+        console.log('发送给BUFF爬虫的数据:', spiderData)
+        
+        // 调用爬虫API
+        const response = await axios.post(apiUrls.buffSpider(), spiderData)
+
+        // 后端成功返回 200 状态码和 "获取完成" 消息
+        if (response.status === 200) {
+          ElMessage.success(`${source.dataName} BUFF爬虫采集完成！`)
+          console.log('BUFF爬虫采集响应:', response.data)
+          
+          // 更新数据源的最后更新时间
+          source.lastUpdate = new Date()
+        } else {
+          ElMessage.error(`BUFF爬虫采集失败: ${response.data}`)
+        }
+      } catch (error) {
+        console.error('BUFF爬虫采集失败:', error)
+        let errorMessage = `BUFF爬虫采集 ${source.dataName} 失败`
+        
+        if (error.response) {
+          errorMessage = error.response.data?.message || `BUFF爬虫采集失败 (${error.response.status})`
+        } else if (error.request) {
+          errorMessage = '无法连接到BUFF爬虫服务器'
+        } else {
+          errorMessage = error.message || 'BUFF爬虫采集失败'
+        }
+        
+        ElMessage.error(errorMessage)
+      } finally {
+        // 从采集中的列表移除
+        collectingSourceIds.value.delete(source.dataID)
+      }
+    }
+
     const startCollection = async (source) => {
       // 如果是悠悠有品，调用爬虫采集
       if (source.type === 'youpin') {
         return startYoupinSpiderCollection(source)
+      }
+      
+      // 如果是BUFF，调用BUFF爬虫采集
+      if (source.type === 'buff') {
+        return startBuffSpiderCollection(source)
       }
       
       // 其他数据源使用原有的采集逻辑
@@ -933,7 +1008,9 @@ export default {
       
       console.log('开始编辑数据源:', {
         source: source,
-        config: config
+        config: config,
+        type: source.type,
+        configKeys: Object.keys(config)
       })
 
       // 基础信息
@@ -967,11 +1044,18 @@ export default {
         })
       } else if (source.type === 'buff') {
         // BUFF配置
-        editForm.value.cookie = config.buff_cookie || ''
-        editForm.value.systemVersion = config.buff_system_version || ''
-        editForm.value.systemType = config.buff_system_type || ''
-        editForm.value.steamID = config.buff_steamID || ''
-        editForm.value.sleepTime = parseInt(config.buff_sleep_time || '6000')
+        console.log('BUFF配置解析:', {
+          cookie: config.cookie,
+          system_version: config.system_version,
+          system_type: config.system_type,
+          steamID: config.steamID,
+          updateFreq: config.updateFreq
+        })
+        editForm.value.cookie = config.cookie || ''
+        editForm.value.systemVersion = config.system_version || ''
+        editForm.value.systemType = config.system_type || ''
+        editForm.value.steamID = config.steamID || ''
+        editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
       } else {
         // 通用配置 - 检查多种可能的字段名
         editForm.value.apiUrl = config.api_url || source.apiUrl || ''
@@ -1094,6 +1178,81 @@ export default {
           errorMessage = '无法连接到爬虫服务器'
         } else {
           errorMessage = error.message || '全部采集失败'
+        }
+        
+        ElMessage.error(errorMessage)
+      } finally {
+        // 从采集中的列表移除
+        collectingSourceIds.value.delete(editingSourceId.value)
+      }
+    }
+
+    // 编辑对话框中的BUFF"全部获取"功能
+    const handleEditBuffCollectAll = async () => {
+      if (!editForm.value.name) {
+        ElMessage.error('数据源信息不完整')
+        return
+      }
+
+      if (!editForm.value.enabled) {
+        ElMessage.warning('请先启用数据源')
+        return
+      }
+
+      // 确保只有BUFF类型才能调用全部获取
+      if (editForm.value.type !== 'buff') {
+        ElMessage.error('只有BUFF数据源才支持全部获取功能')
+        return
+      }
+
+      if (collectingSourceIds.value.has(editingSourceId.value)) {
+        ElMessage.info('该数据源正在采集中...')
+        return
+      }
+
+      try {
+        // 添加到采集中的列表
+        collectingSourceIds.value.add(editingSourceId.value)
+        
+        ElMessage.info(`开始执行BUFF全部获取: ${editForm.value.name}`)
+        
+        // 准备发送给爬虫的数据 - 按照采集接口一样的传值方法
+        const spiderData = {
+          // 后端API需要的字段
+          cookie: editForm.value.cookie || '',
+          system_version: editForm.value.systemVersion || '',
+          system_type: editForm.value.systemType || '',
+          steamID: editForm.value.steamID || '',
+
+          // 额外的数据源信息（可选）
+          dataID: editingSourceId.value,
+          dataName: editForm.value.name,
+          type: editForm.value.type,
+          enabled: editForm.value.enabled
+        }
+        
+        console.log('发送给BUFF全部获取爬虫的数据:', spiderData)
+        
+        // 调用全部获取爬虫API
+        const response = await axios.post(apiUrls.buffFullSpider(), spiderData)
+
+        // 后端成功返回 200 状态码
+        if (response.status === 200) {
+          ElMessage.success(`${editForm.value.name} BUFF全部获取完成！`)
+          console.log('BUFF全部获取响应:', response.data)
+        } else {
+          ElMessage.error(`BUFF全部获取失败: ${response.data}`)
+        }
+      } catch (error) {
+        console.error('BUFF全部获取失败:', error)
+        let errorMessage = `BUFF全部获取 ${editForm.value.name} 失败`
+        
+        if (error.response) {
+          errorMessage = error.response.data?.message || `BUFF全部获取失败 (${error.response.status})`
+        } else if (error.request) {
+          errorMessage = '无法连接到BUFF爬虫服务器'
+        } else {
+          errorMessage = error.message || 'BUFF全部获取失败'
         }
         
         ElMessage.error(errorMessage)
@@ -1264,7 +1423,8 @@ export default {
             system_version: editForm.value.systemVersion,
             system_type: editForm.value.systemType,
             steamID: editForm.value.steamID,
-            sleep_time: editForm.value.sleepTime?.toString() || '6000'
+            updateFreq: editForm.value.updateFreq,
+            sleep_time: '6000'
           })
         } else {
           requestData.configJson = JSON.stringify({
@@ -1474,6 +1634,7 @@ export default {
       handleEditDialogClose,
       handleEditSubmit,
       handleEditCollectAll,
+      handleEditBuffCollectAll,
       handleEditDelete,
       openAddDialog,
       handleAddDialogClose,
