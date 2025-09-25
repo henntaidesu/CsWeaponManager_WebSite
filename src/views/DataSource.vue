@@ -96,13 +96,13 @@
 
         <!-- 悠悠有品特有配置 -->
         <template v-if="editForm.type === 'youpin'">
-          <el-form-item label="手机号">
+          <el-form-item label="手机号" required>
             <el-input v-model="editForm.phone" placeholder="请输入手机号" />
           </el-form-item>
-          <el-form-item label="Session ID">
+          <el-form-item label="Session ID" required>
             <el-input v-model="editForm.sessionid" placeholder="请输入Session ID" />
           </el-form-item>
-          <el-form-item label="Token">
+          <el-form-item label="Token" required>
             <el-input 
               v-model="editForm.token" 
               type="textarea"
@@ -110,22 +110,29 @@
               placeholder="请输入Token"
             />
           </el-form-item>
-          <el-form-item label="设备名称">
+          <el-form-item label="设备名称" required>
             <el-input v-model="editForm.deviceName" placeholder="请输入设备名称" />
           </el-form-item>
-          <el-form-item label="应用版本">
+          <el-form-item label="应用版本" required>
             <el-input v-model="editForm.appVersion" placeholder="请输入应用版本" />
           </el-form-item>
-          <el-form-item label="休眠时间(秒)">
-            <el-input-number v-model="editForm.sleepTime" :min="1" :max="86400" style="width: 100%;" />
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
           </el-form-item>
-          <el-form-item label="应用类型">
+          <el-form-item label="应用类型" required>
             <el-input v-model="editForm.appType" placeholder="请输入应用类型" />
           </el-form-item>
-          <el-form-item label="用户ID">
+          <el-form-item label="用户ID" required>
             <el-input v-model="editForm.userId" placeholder="请输入用户ID" />
           </el-form-item>
-          <el-form-item label="SteamID">
+          <el-form-item label="SteamID" required>
             <el-input v-model="editForm.steamId" placeholder="请输入SteamID" />
           </el-form-item>
         </template>
@@ -149,8 +156,21 @@
           <el-form-item label="SteamID" required>
             <el-input v-model="editForm.steamID" placeholder="请输入SteamID" />
           </el-form-item>
-          <el-form-item label="休眠时间(秒)">
-            <el-input-number v-model="editForm.sleepTime" :min="1" :max="86400" style="width: 100%;" />
+          <el-form-item label="休眠时间">
+            <el-select v-model="editForm.sleepTime" placeholder="选择休眠时间" style="width: 100%;">
+              <el-option label="1秒" :value="1" />
+              <el-option label="3秒" :value="3" />
+              <el-option label="5秒" :value="5" />
+              <el-option label="10秒" :value="10" />
+              <el-option label="30秒" :value="30" />
+              <el-option label="1分钟" :value="60" />
+              <el-option label="2分钟" :value="120" />
+              <el-option label="5分钟" :value="300" />
+              <el-option label="10分钟" :value="600" />
+              <el-option label="30分钟" :value="1800" />
+              <el-option label="1小时" :value="3600" />
+              <el-option label="2小时" :value="7200" />
+            </el-select>
           </el-form-item>
         </template>
 
@@ -264,11 +284,11 @@
           </el-form-item>
           <el-form-item label="更新频率">
             <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="实时" value="realtime" />
-              <el-option label="每5分钟" value="5min" />
               <el-option label="每15分钟" value="15min" />
               <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
               <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
               <el-option label="每天" value="daily" />
             </el-select>
           </el-form-item>
@@ -292,11 +312,11 @@
           </el-form-item>
           <el-form-item label="更新频率">
             <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="实时" value="realtime" />
-              <el-option label="每5分钟" value="5min" />
               <el-option label="每15分钟" value="15min" />
               <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
               <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
               <el-option label="每天" value="daily" />
             </el-select>
           </el-form-item>
@@ -304,19 +324,19 @@
         
         <!-- 悠悠有品特有配置 -->
         <template v-if="inputForm.type === 'youpin'">
-          <el-form-item label="手机号">
+          <el-form-item label="手机号" required>
             <el-input 
               v-model="inputForm.phone" 
               placeholder="请输入手机号"
             />
           </el-form-item>
-          <el-form-item label="Session ID">
+          <el-form-item label="Session ID" required>
             <el-input 
               v-model="inputForm.sessionid" 
               placeholder="请输入Session ID"
             />
           </el-form-item>
-          <el-form-item label="Token">
+          <el-form-item label="Token" required>
             <el-input 
               v-model="inputForm.token" 
               type="textarea"
@@ -324,39 +344,41 @@
               placeholder="请输入Token"
             />
           </el-form-item>
-          <el-form-item label="设备名称">
+          <el-form-item label="设备名称" required>
             <el-input 
               v-model="inputForm.deviceName" 
               placeholder="请输入设备名称"
             />
           </el-form-item>
-          <el-form-item label="应用版本">
+          <el-form-item label="应用版本" required>
             <el-input 
               v-model="inputForm.appVersion" 
               placeholder="请输入应用版本"
             />
           </el-form-item>
-          <el-form-item label="休眠时间(秒)">
-            <el-input-number 
-              v-model="inputForm.sleepTime" 
-              :min="1" 
-              :max="86400" 
-              style="width: 100%;" 
-            />
+          <el-form-item label="更新频率">
+            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
           </el-form-item>
-          <el-form-item label="应用类型">
+          <el-form-item label="应用类型" required>
             <el-input 
               v-model="inputForm.appType" 
               placeholder="请输入应用类型"
             />
           </el-form-item>
-          <el-form-item label="用户ID">
+          <el-form-item label="用户ID" required>
             <el-input 
               v-model="inputForm.userId" 
               placeholder="请输入用户ID"
             />
           </el-form-item>
-          <el-form-item label="SteamID">
+          <el-form-item label="SteamID" required>
             <el-input 
               v-model="inputForm.steamId" 
               placeholder="请输入SteamID"
@@ -478,11 +500,11 @@ export default {
 
     const getUpdateFreqLabel = (freq) => {
       const labels = {
-        realtime: '实时',
-        '5min': '每5分钟',
         '15min': '每15分钟',
         '1hour': '每小时',
+        '3hour': '每3小时',
         '6hour': '每6小时',
+        '12hour': '每12小时',
         daily: '每天'
       }
       return labels[freq] || freq
@@ -513,6 +535,42 @@ export default {
           return
         }
         if (!inputForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
+      // 悠悠有品类型的字段校验
+      if (inputForm.value.type === 'youpin') {
+        if (!inputForm.value.phone) {
+          ElMessage.error('请填写手机号')
+          return
+        }
+        if (!inputForm.value.sessionid) {
+          ElMessage.error('请填写Session ID')
+          return
+        }
+        if (!inputForm.value.token) {
+          ElMessage.error('请填写Token')
+          return
+        }
+        if (!inputForm.value.deviceName) {
+          ElMessage.error('请填写设备名称')
+          return
+        }
+        if (!inputForm.value.appVersion) {
+          ElMessage.error('请填写应用版本')
+          return
+        }
+        if (!inputForm.value.appType) {
+          ElMessage.error('请填写应用类型')
+          return
+        }
+        if (!inputForm.value.userId) {
+          ElMessage.error('请填写用户ID')
+          return
+        }
+        if (!inputForm.value.steamId) {
           ElMessage.error('请填写SteamID')
           return
         }
@@ -1142,6 +1200,42 @@ export default {
         }
       }
 
+      // 悠悠有品类型的字段校验
+      if (editForm.value.type === 'youpin') {
+        if (!editForm.value.phone) {
+          ElMessage.error('请填写手机号')
+          return
+        }
+        if (!editForm.value.sessionid) {
+          ElMessage.error('请填写Session ID')
+          return
+        }
+        if (!editForm.value.token) {
+          ElMessage.error('请填写Token')
+          return
+        }
+        if (!editForm.value.deviceName) {
+          ElMessage.error('请填写设备名称')
+          return
+        }
+        if (!editForm.value.appVersion) {
+          ElMessage.error('请填写应用版本')
+          return
+        }
+        if (!editForm.value.appType) {
+          ElMessage.error('请填写应用类型')
+          return
+        }
+        if (!editForm.value.userId) {
+          ElMessage.error('请填写用户ID')
+          return
+        }
+        if (!editForm.value.steamId) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
       editSubmitting.value = true
       try {
         let requestData = {
@@ -1472,17 +1566,18 @@ export default {
 }
 
 :deep(.el-input__inner) {
-  background-color: #2a2a2a;
-  border-color: #333;
-  color: #fff;
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #ffffff !important;
   font-size: clamp(0.75rem, 1.2vw, 0.875rem);
 }
 
 :deep(.el-select .el-input__inner) {
-  background-color: #2a2a2a;
-  border-color: #333;
-  color: #fff;
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+  color: #ffffff !important;
 }
+
 
 :deep(.el-switch.is-checked .el-switch__core) {
   background-color: #4CAF50;
@@ -1652,6 +1747,19 @@ export default {
   color: #ffffff !important;
 }
 
+:deep(.el-select .el-input.is-focus .el-input__inner) {
+  background-color: #2a2a2a !important;
+  border-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+:deep(.el-select .el-input__inner:hover) {
+  background-color: #2a2a2a !important;
+  border-color: #666 !important;
+  color: #ffffff !important;
+}
+
+/* 下拉框样式 - 使用全局样式 */
 :deep(.el-select-dropdown) {
   background-color: #2a2a2a !important;
   border: 1px solid #444 !important;
@@ -1665,9 +1773,15 @@ export default {
 
 :deep(.el-option:hover) {
   background-color: #4CAF50 !important;
+  color: #ffffff !important;
 }
 
 :deep(.el-option.selected) {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+:deep(.el-option.is-selected) {
   background-color: #4CAF50 !important;
   color: #ffffff !important;
 }
@@ -1747,4 +1861,129 @@ export default {
   background-color: rgba(0, 0, 0, 0.7) !important;
 }
 
+</style>
+
+<!-- 全局样式，确保下拉框在所有情况下都显示暗色主题 -->
+<style>
+/* Element Plus 下拉框全局样式 - 使用更高优先级 */
+.el-select-dropdown,
+.el-select-dropdown.el-popper,
+.el-popper.is-dark,
+.el-popper[data-popper-placement] {
+  background-color: #2a2a2a !important;
+  border: 1px solid #444 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.el-select-dropdown .el-option,
+.el-select-dropdown.el-popper .el-option,
+.el-popper .el-option,
+.el-select__popper .el-option {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.el-select-dropdown .el-option:hover,
+.el-select-dropdown.el-popper .el-option:hover,
+.el-popper .el-option:hover,
+.el-select__popper .el-option:hover,
+.el-option.hover {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+.el-select-dropdown .el-option.selected,
+.el-select-dropdown .el-option.is-selected,
+.el-select-dropdown.el-popper .el-option.selected,
+.el-select-dropdown.el-popper .el-option.is-selected,
+.el-popper .el-option.selected,
+.el-popper .el-option.is-selected,
+.el-select__popper .el-option.selected,
+.el-select__popper .el-option.is-selected {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+.el-select-dropdown .el-option.is-disabled,
+.el-select-dropdown.el-popper .el-option.is-disabled,
+.el-popper .el-option.is-disabled,
+.el-select__popper .el-option.is-disabled {
+  background-color: #1a1a1a !important;
+  color: #888 !important;
+}
+
+/* 确保所有 popper 容器都使用暗色主题 */
+.el-popper,
+.el-popper[data-popper-placement],
+.el-select__popper {
+  background-color: #2a2a2a !important;
+  border: 1px solid #444 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.el-popper .el-popper__arrow::before,
+.el-popper[data-popper-placement] .el-popper__arrow::before {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+}
+
+/* 额外的选择器确保覆盖所有可能的情况 */
+div.el-select-dropdown,
+div.el-popper,
+div.el-select__popper {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+}
+
+div.el-select-dropdown li.el-option,
+div.el-popper li.el-option,
+div.el-select__popper li.el-option {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+div.el-select-dropdown li.el-option:hover,
+div.el-popper li.el-option:hover,
+div.el-select__popper li.el-option:hover {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+/* 使用CSS变量覆盖Element Plus主题 */
+:root {
+  --el-bg-color: #2a2a2a !important;
+  --el-bg-color-page: #2a2a2a !important;
+  --el-bg-color-overlay: #2a2a2a !important;
+  --el-text-color-primary: #ffffff !important;
+  --el-text-color-regular: #ffffff !important;
+  --el-border-color: #444 !important;
+  --el-border-color-light: #444 !important;
+  --el-border-color-lighter: #444 !important;
+  --el-color-primary: #4CAF50 !important;
+}
+
+/* 强制覆盖所有下拉框相关元素 */
+* .el-select-dropdown,
+* .el-popper,
+* .el-select__popper {
+  background-color: #2a2a2a !important;
+  border-color: #444 !important;
+}
+
+* .el-option {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+* .el-option:hover {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
+
+* .el-option.selected,
+* .el-option.is-selected {
+  background-color: #4CAF50 !important;
+  color: #ffffff !important;
+}
 </style>
