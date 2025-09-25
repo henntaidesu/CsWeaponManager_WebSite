@@ -131,17 +131,23 @@
         </template>
 
         <!-- BUFF特有配置 -->
-        <template v-else-if="editForm.name === 'BUFF'">
-          <el-form-item label="API地址">
-            <el-input v-model="editForm.apiUrl" placeholder="请输入API地址" />
-          </el-form-item>
-          <el-form-item label="API密钥">
+        <template v-else-if="editForm.type === 'buff'">
+          <el-form-item label="Cookie" required>
             <el-input 
-              v-model="editForm.apiKey" 
+              v-model="editForm.cookie" 
               type="textarea"
-              :rows="2"
-              placeholder="请输入API密钥"
+              :rows="3"
+              placeholder="请输入Cookie"
             />
+          </el-form-item>
+          <el-form-item label="system_version" required>
+            <el-input v-model="editForm.systemVersion" placeholder="请输入system_version" />
+          </el-form-item>
+          <el-form-item label="system_type" required>
+            <el-input v-model="editForm.systemType" placeholder="请输入system_type" />
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input v-model="editForm.steamID" placeholder="请输入SteamID" />
           </el-form-item>
           <el-form-item label="休眠时间(秒)">
             <el-input-number v-model="editForm.sleepTime" :min="1" :max="86400" style="width: 100%;" />
@@ -228,8 +234,48 @@
           </el-select>
         </el-form-item>
         
+        <!-- BUFF特有配置 -->
+        <template v-if="inputForm.type === 'buff'">
+          <el-form-item label="Cookie" required>
+            <el-input 
+              v-model="inputForm.cookie" 
+              type="textarea"
+              :rows="3"
+              placeholder="请输入Cookie"
+            />
+          </el-form-item>
+          <el-form-item label="system_version" required>
+            <el-input 
+              v-model="inputForm.systemVersion" 
+              placeholder="请输入system_version"
+            />
+          </el-form-item>
+          <el-form-item label="system_type" required>
+            <el-input 
+              v-model="inputForm.systemType" 
+              placeholder="请输入system_type"
+            />
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="inputForm.steamID" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="实时" value="realtime" />
+              <el-option label="每5分钟" value="5min" />
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+        </template>
+        
         <!-- 通用配置 -->
-        <template v-if="inputForm.type && inputForm.type !== 'youpin'">
+        <template v-else-if="inputForm.type && inputForm.type !== 'youpin'">
           <el-form-item label="API地址">
             <el-input 
               v-model="inputForm.apiUrl" 
@@ -372,7 +418,12 @@ export default {
       sleepTime: 6000,
       appType: '',
       userId: '',
-      steamId: ''
+      steamId: '',
+      // BUFF特有字段
+      cookie: '',
+      systemVersion: '',
+      systemType: '',
+      steamID: ''
     })
     
     const inputForm = ref({
@@ -391,7 +442,12 @@ export default {
       sleepTime: 6000,
       appType: '',
       userId: '',
-      steamId: ''
+      steamId: '',
+      // BUFF特有字段
+      cookie: '',
+      systemVersion: '',
+      systemType: '',
+      steamID: ''
     })
 
     const dataSources = ref([])
@@ -442,6 +498,26 @@ export default {
         return
       }
 
+      // BUFF类型的字段校验
+      if (inputForm.value.type === 'buff') {
+        if (!inputForm.value.cookie) {
+          ElMessage.error('请填写Cookie')
+          return
+        }
+        if (!inputForm.value.systemVersion) {
+          ElMessage.error('请填写system_version')
+          return
+        }
+        if (!inputForm.value.systemType) {
+          ElMessage.error('请填写system_type')
+          return
+        }
+        if (!inputForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
       submitting.value = true
       try {
         let requestData = {
@@ -463,6 +539,16 @@ export default {
             app_type: inputForm.value.appType,
             userId: inputForm.value.userId,
             steamId: inputForm.value.steamId
+          })
+        } else if (inputForm.value.type === 'buff') {
+          // BUFF特殊配置
+          requestData.configJson = JSON.stringify({
+            cookie: inputForm.value.cookie,
+            system_version: inputForm.value.systemVersion,
+            system_type: inputForm.value.systemType,
+            steamID: inputForm.value.steamID,
+            updateFreq: inputForm.value.updateFreq,
+            sleep_time: '6000'
           })
         } else {
           requestData.configJson = JSON.stringify({
@@ -536,7 +622,12 @@ export default {
         sleepTime: 6000,
         appType: '',
         userId: '',
-        steamId: ''
+        steamId: '',
+        // BUFF特有字段
+        cookie: '',
+        systemVersion: '',
+        systemType: '',
+        steamID: ''
       }
       editingSourceId.value = null
     }
@@ -818,8 +909,10 @@ export default {
         })
       } else if (source.type === 'buff') {
         // BUFF配置
-        editForm.value.apiUrl = config.buff_api_url || ''
-        editForm.value.apiKey = config.buff_token || config.buff_api_key || ''
+        editForm.value.cookie = config.buff_cookie || ''
+        editForm.value.systemVersion = config.buff_system_version || ''
+        editForm.value.systemType = config.buff_system_type || ''
+        editForm.value.steamID = config.buff_steamID || ''
         editForm.value.sleepTime = parseInt(config.buff_sleep_time || '6000')
       } else {
         // 通用配置 - 检查多种可能的字段名
@@ -852,7 +945,12 @@ export default {
         sleepTime: 6000,
         appType: '',
         userId: '',
-        steamId: ''
+        steamId: '',
+        // BUFF特有字段
+        cookie: '',
+        systemVersion: '',
+        systemType: '',
+        steamID: ''
       }
     }
 
@@ -1024,6 +1122,26 @@ export default {
         return
       }
 
+      // BUFF类型的字段校验
+      if (editForm.value.type === 'buff') {
+        if (!editForm.value.cookie) {
+          ElMessage.error('请填写Cookie')
+          return
+        }
+        if (!editForm.value.systemVersion) {
+          ElMessage.error('请填写system_version')
+          return
+        }
+        if (!editForm.value.systemType) {
+          ElMessage.error('请填写system_type')
+          return
+        }
+        if (!editForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
       editSubmitting.value = true
       try {
         let requestData = {
@@ -1044,6 +1162,15 @@ export default {
             app_type: editForm.value.appType,
             userId: editForm.value.userId,
             steamId: editForm.value.steamId
+          })
+        } else if (editForm.value.type === 'buff') {
+          // BUFF特殊配置
+          requestData.configJson = JSON.stringify({
+            cookie: editForm.value.cookie,
+            system_version: editForm.value.systemVersion,
+            system_type: editForm.value.systemType,
+            steamID: editForm.value.steamID,
+            sleep_time: editForm.value.sleepTime?.toString() || '6000'
           })
         } else {
           requestData.configJson = JSON.stringify({
