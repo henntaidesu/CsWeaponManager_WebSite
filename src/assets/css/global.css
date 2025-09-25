@@ -398,25 +398,47 @@ div, section, article, aside, main, header, footer, nav {
 }
 
 .el-input__wrapper {
-    background-color: var(--bg-tertiary) !important;
-    border: 1px solid var(--border-default) !important;
+    background-color: #2a2a2a !important;
+    border: 1px solid #444 !important;
     box-shadow: none !important;
 }
 
 .el-input__inner {
     background-color: transparent !important;
-    color: var(--text-primary) !important;
+    color: #ffffff !important;
 }
 
-.el-input__wrapper:hover,
+.el-input__wrapper:hover {
+    border-color: #666 !important;
+    background-color: #2a2a2a !important;
+}
+
 .el-input__wrapper.is-focus {
-    border-color: var(--text-accent) !important;
-    background-color: var(--bg-overlay) !important;
+    border-color: #4CAF50 !important;
+    background-color: #2a2a2a !important;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
 }
 
 .el-select .el-input__wrapper {
-    background-color: var(--bg-tertiary) !important;
-    border-color: var(--border-default) !important;
+    background-color: #2a2a2a !important;
+    border: 1px solid #444 !important;
+    box-shadow: none !important;
+}
+
+.el-select .el-input__wrapper:hover {
+    border-color: #666 !important;
+    background-color: #2a2a2a !important;
+}
+
+.el-select .el-input__wrapper.is-focus {
+    border-color: #4CAF50 !important;
+    background-color: #2a2a2a !important;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+.el-select .el-input__inner {
+    background-color: transparent !important;
+    color: #ffffff !important;
 }
 
 .el-select-dropdown {
@@ -432,13 +454,14 @@ div, section, article, aside, main, header, footer, nav {
 
 .el-select-dropdown__item:hover,
 .el-select-dropdown__item.is-hovering {
-    background-color: var(--bg-overlay) !important;
-    color: var(--text-primary) !important;
+    background-color: #4CAF50 !important;
+    color: #ffffff !important;
 }
 
 .el-select-dropdown__item.is-selected {
-    background-color: var(--accent-green) !important;
-    color: var(--text-primary) !important;
+    background-color: #3a3a3a !important;
+    color: #4CAF50 !important;
+    font-weight: 500 !important;
 }
 
 .el-button {

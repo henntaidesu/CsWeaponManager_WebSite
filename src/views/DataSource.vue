@@ -18,7 +18,7 @@
             </div>
           </div>
           
-          <div class="grid grid-auto">
+          <div class="grid grid-datasource">
             <div 
               v-for="source in dataSources" 
               :key="source.dataID" 
@@ -1515,7 +1515,9 @@ export default {
   padding: clamp(1rem, 2.5vw, 1.25rem);
   border: 1px solid #333;
   transition: all 0.3s;
-  max-width: 400px;
+  width: 100%;
+  height: fit-content;
+  box-sizing: border-box;
 }
 
 .source-card:hover {
@@ -1557,6 +1559,57 @@ export default {
   align-items: center;
   gap: clamp(0.5rem, 1.5vw, 0.625rem);
   flex-wrap: wrap;
+}
+
+/* 数据源网格布局 - 固定4列 */
+.grid-datasource {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  justify-items: stretch;
+  align-items: start;
+}
+
+/* 响应式调整 - 保持固定列数概念 */
+@media (max-width: 1200px) {
+  .grid-datasource {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .grid-datasource {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .grid-datasource {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 确保卡片内容自适应 */
+.source-card .source-header,
+.source-card .source-details,
+.source-card .source-actions {
+  width: 100%;
+  flex-shrink: 1;
+}
+
+.source-card .source-actions {
+  justify-content: flex-start;
+}
+
+/* 文字内容自适应 */
+.source-card h4 {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.source-card p {
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 
@@ -1707,20 +1760,37 @@ export default {
   font-size: 14px !important;
 }
 
-:deep(.el-input__inner) {
+/* 输入框包装器 - Element Plus 新版本结构 */
+:deep(.el-input__wrapper) {
   background-color: #2a2a2a !important;
-  border-color: #444 !important;
+  border: 1px solid #444 !important;
+  box-shadow: none !important;
+}
+
+:deep(.el-input__wrapper:hover) {
+  border-color: #666 !important;
+  box-shadow: none !important;
+}
+
+:deep(.el-input__wrapper.is-focus) {
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+:deep(.el-input__inner) {
+  background-color: transparent !important;
+  border: none !important;
   color: #ffffff !important;
   font-size: 14px !important;
 }
 
 :deep(.el-input__inner:focus) {
-  border-color: #4CAF50 !important;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 :deep(.el-input__inner:hover) {
-  border-color: #666 !important;
+  border: none !important;
 }
 
 :deep(.el-input.is-disabled .el-input__inner) {
@@ -1741,25 +1811,41 @@ export default {
   box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
 }
 
-:deep(.el-select .el-input__inner) {
+/* 下拉框特定样式 */
+:deep(.el-select .el-input__wrapper) {
   background-color: #2a2a2a !important;
-  border-color: #444 !important;
+  border: 1px solid #444 !important;
+  box-shadow: none !important;
+}
+
+:deep(.el-select .el-input__wrapper:hover) {
+  border-color: #666 !important;
+  box-shadow: none !important;
+}
+
+:deep(.el-select .el-input__wrapper.is-focus) {
+  border-color: #4CAF50 !important;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2) !important;
+}
+
+:deep(.el-select .el-input__inner) {
+  background-color: transparent !important;
+  border: none !important;
   color: #ffffff !important;
 }
 
 :deep(.el-select .el-input.is-focus .el-input__inner) {
-  background-color: #2a2a2a !important;
-  border-color: #4CAF50 !important;
+  background-color: transparent !important;
+  border: none !important;
   color: #ffffff !important;
 }
 
 :deep(.el-select .el-input__inner:hover) {
-  background-color: #2a2a2a !important;
-  border-color: #666 !important;
+  background-color: transparent !important;
+  border: none !important;
   color: #ffffff !important;
 }
 
-/* 下拉框样式 - 使用全局样式 */
 :deep(.el-select-dropdown) {
   background-color: #2a2a2a !important;
   border: 1px solid #444 !important;
@@ -1773,17 +1859,13 @@ export default {
 
 :deep(.el-option:hover) {
   background-color: #4CAF50 !important;
-  color: #ffffff !important;
 }
 
-:deep(.el-option.selected) {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
-}
-
+:deep(.el-option.selected),
 :deep(.el-option.is-selected) {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
+  background-color: #3a3a3a !important;
+  color: #4CAF50 !important;
+  font-weight: 500 !important;
 }
 
 /* 数字输入器样式 */
@@ -1861,129 +1943,4 @@ export default {
   background-color: rgba(0, 0, 0, 0.7) !important;
 }
 
-</style>
-
-<!-- 全局样式，确保下拉框在所有情况下都显示暗色主题 -->
-<style>
-/* Element Plus 下拉框全局样式 - 使用更高优先级 */
-.el-select-dropdown,
-.el-select-dropdown.el-popper,
-.el-popper.is-dark,
-.el-popper[data-popper-placement] {
-  background-color: #2a2a2a !important;
-  border: 1px solid #444 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
-}
-
-.el-select-dropdown .el-option,
-.el-select-dropdown.el-popper .el-option,
-.el-popper .el-option,
-.el-select__popper .el-option {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-  border: none !important;
-}
-
-.el-select-dropdown .el-option:hover,
-.el-select-dropdown.el-popper .el-option:hover,
-.el-popper .el-option:hover,
-.el-select__popper .el-option:hover,
-.el-option.hover {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
-}
-
-.el-select-dropdown .el-option.selected,
-.el-select-dropdown .el-option.is-selected,
-.el-select-dropdown.el-popper .el-option.selected,
-.el-select-dropdown.el-popper .el-option.is-selected,
-.el-popper .el-option.selected,
-.el-popper .el-option.is-selected,
-.el-select__popper .el-option.selected,
-.el-select__popper .el-option.is-selected {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
-}
-
-.el-select-dropdown .el-option.is-disabled,
-.el-select-dropdown.el-popper .el-option.is-disabled,
-.el-popper .el-option.is-disabled,
-.el-select__popper .el-option.is-disabled {
-  background-color: #1a1a1a !important;
-  color: #888 !important;
-}
-
-/* 确保所有 popper 容器都使用暗色主题 */
-.el-popper,
-.el-popper[data-popper-placement],
-.el-select__popper {
-  background-color: #2a2a2a !important;
-  border: 1px solid #444 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6) !important;
-}
-
-.el-popper .el-popper__arrow::before,
-.el-popper[data-popper-placement] .el-popper__arrow::before {
-  background-color: #2a2a2a !important;
-  border-color: #444 !important;
-}
-
-/* 额外的选择器确保覆盖所有可能的情况 */
-div.el-select-dropdown,
-div.el-popper,
-div.el-select__popper {
-  background-color: #2a2a2a !important;
-  border-color: #444 !important;
-}
-
-div.el-select-dropdown li.el-option,
-div.el-popper li.el-option,
-div.el-select__popper li.el-option {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-}
-
-div.el-select-dropdown li.el-option:hover,
-div.el-popper li.el-option:hover,
-div.el-select__popper li.el-option:hover {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
-}
-
-/* 使用CSS变量覆盖Element Plus主题 */
-:root {
-  --el-bg-color: #2a2a2a !important;
-  --el-bg-color-page: #2a2a2a !important;
-  --el-bg-color-overlay: #2a2a2a !important;
-  --el-text-color-primary: #ffffff !important;
-  --el-text-color-regular: #ffffff !important;
-  --el-border-color: #444 !important;
-  --el-border-color-light: #444 !important;
-  --el-border-color-lighter: #444 !important;
-  --el-color-primary: #4CAF50 !important;
-}
-
-/* 强制覆盖所有下拉框相关元素 */
-* .el-select-dropdown,
-* .el-popper,
-* .el-select__popper {
-  background-color: #2a2a2a !important;
-  border-color: #444 !important;
-}
-
-* .el-option {
-  background-color: #2a2a2a !important;
-  color: #ffffff !important;
-}
-
-* .el-option:hover {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
-}
-
-* .el-option.selected,
-* .el-option.is-selected {
-  background-color: #4CAF50 !important;
-  color: #ffffff !important;
-}
 </style>
