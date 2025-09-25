@@ -809,24 +809,24 @@ export default {
 
         // 后端成功返回 200 状态码和 "获取完成" 消息
         if (response.status === 200) {
-          ElMessage.success(`${source.dataName} 爬虫采集完成！`)
-          console.log('爬虫采集响应:', response.data)
+          ElMessage.success(`${source.dataName} 悠悠有品爬虫采集完成！`)
+          console.log('悠悠有品爬虫采集响应:', response.data)
           
           // 更新数据源的最后更新时间
           source.lastUpdate = new Date()
         } else {
-          ElMessage.error(`爬虫采集失败: ${response.data}`)
+          ElMessage.error(`悠悠有品爬虫采集失败: ${response.data}`)
         }
       } catch (error) {
-        console.error('爬虫采集失败:', error)
-        let errorMessage = `爬虫采集 ${source.dataName} 失败`
+        console.error('悠悠有品爬虫采集失败:', error)
+        let errorMessage = `悠悠有品爬虫采集 ${source.dataName} 失败`
         
         if (error.response) {
-          errorMessage = error.response.data?.message || `爬虫采集失败 (${error.response.status})`
+          errorMessage = error.response.data?.message || `悠悠有品爬虫采集失败 (${error.response.status})`
         } else if (error.request) {
-          errorMessage = '无法连接到爬虫服务器'
+          errorMessage = '无法连接到悠悠有品爬虫服务器'
         } else {
-          errorMessage = error.message || '爬虫采集失败'
+          errorMessage = error.message || '悠悠有品爬虫采集失败'
         }
         
         ElMessage.error(errorMessage)
@@ -853,7 +853,7 @@ export default {
         collectingSourceIds.value.add(source.dataID)
         
         ElMessage.info(`开始使用爬虫采集BUFF数据: ${source.dataName}`)
-        
+
         // 准备发送给爬虫的数据 - 按照后端API期望的字段名
         const spiderData = {
           // 后端API需要的字段
@@ -1156,28 +1156,28 @@ export default {
           sleepTime: editForm.value.sleepTime?.toString() || '6000'
         }
         
-        console.log('发送给全部采集爬虫的数据:', spiderData)
+        console.log('发送给悠悠有品全部采集爬虫的数据:', spiderData)
         
         // 调用全部采集爬虫API
         const response = await axios.post(apiUrls.youpinFullSpider(), spiderData)
 
         // 后端成功返回 200 状态码
         if (response.status === 200) {
-          ElMessage.success(`${editForm.value.name} 全部采集完成！`)
-          console.log('全部采集响应:', response.data)
+          ElMessage.success(`${editForm.value.name} 悠悠有品全部采集完成！`)
+          console.log('悠悠有品全部采集响应:', response.data)
         } else {
-          ElMessage.error(`全部采集失败: ${response.data}`)
+          ElMessage.error(`悠悠有品全部采集失败: ${response.data}`)
         }
       } catch (error) {
-        console.error('全部采集失败:', error)
-        let errorMessage = `全部采集 ${editForm.value.name} 失败`
+        console.error('悠悠有品全部采集失败:', error)
+        let errorMessage = `悠悠有品全部采集 ${editForm.value.name} 失败`
         
         if (error.response) {
-          errorMessage = error.response.data?.message || `全部采集失败 (${error.response.status})`
+          errorMessage = error.response.data?.message || `悠悠有品全部采集失败 (${error.response.status})`
         } else if (error.request) {
-          errorMessage = '无法连接到爬虫服务器'
+          errorMessage = '无法连接到悠悠有品爬虫服务器'
         } else {
-          errorMessage = error.message || '全部采集失败'
+          errorMessage = error.message || '悠悠有品全部采集失败'
         }
         
         ElMessage.error(errorMessage)

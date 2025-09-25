@@ -27,7 +27,9 @@ export const API_CONFIG = {
     YOUPIN_SPIDER: '/youping898SpiderV1/allDate',
     YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
     BUFF_SPIDER: '/buffSpiderV1/NewData',
-    BUFF_FULL_SPIDER: '/buffSpiderV1/NoneData'
+    BUFF_FULL_SPIDER: '/buffSpiderV1/allDate'
+
+    
   }
 }
 
