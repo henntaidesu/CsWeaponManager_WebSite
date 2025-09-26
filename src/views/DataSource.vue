@@ -792,6 +792,7 @@ export default {
           app_version: source.config?.yyyp_app_version || '',
           app_type: source.config?.yyyp_app_type || '',
           userId: source.config?.yyyp_userId || '',
+          steamId: source.config?.yyyp_steamId || '',
           
           // 额外的数据源信息（可选）
           dataID: source.dataID,
@@ -1406,15 +1407,15 @@ export default {
         // 根据数据源类型构建配置JSON字符串
         if (editForm.value.type === 'youpin') {
           requestData.configJson = JSON.stringify({
-            phone: editForm.value.phone,
-            Sessionid: editForm.value.sessionid,
-            token: editForm.value.token,
-            DeviceName: editForm.value.deviceName,
-            app_version: editForm.value.appVersion,
-            sleep_time: editForm.value.sleepTime.toString(),
-            app_type: editForm.value.appType,
-            userId: editForm.value.userId,
-            steamId: editForm.value.steamId
+            yyyp_phone: editForm.value.phone,
+            yyyp_Sessionid: editForm.value.sessionid,
+            yyyp_token: editForm.value.token,
+            yyyp_DeviceName: editForm.value.deviceName,
+            yyyp_app_version: editForm.value.appVersion,
+            yyyp_sleep_time: editForm.value.sleepTime.toString(),
+            yyyp_app_type: editForm.value.appType,
+            yyyp_userId: editForm.value.userId,
+            yyyp_steamId: editForm.value.steamId
           })
         } else if (editForm.value.type === 'buff') {
           // BUFF特殊配置
