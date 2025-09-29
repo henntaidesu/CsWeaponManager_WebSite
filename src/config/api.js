@@ -27,7 +27,9 @@ export const API_CONFIG = {
     YOUPIN_SPIDER: '/youping898SpiderV1/newData',
     YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
     BUFF_SPIDER: '/buffSpiderV1/NewData',
-    BUFF_FULL_SPIDER: '/buffSpiderV1/allDate'
+    BUFF_FULL_SPIDER: '/buffSpiderV1/allDate',
+    STEAM_SPIDER: '/steamSpiderV1/NewData',
+    STEAM_FULL_SPIDER: '/steamSpiderV1/allDate'
 
     
   }
@@ -64,5 +66,7 @@ export const apiUrls = {
   youpinSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_SPIDER),
   youpinFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_FULL_SPIDER),
   buffSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.BUFF_SPIDER),
-  buffFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.BUFF_FULL_SPIDER)
+  buffFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.BUFF_FULL_SPIDER),
+  steamSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_SPIDER),
+  steamFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_FULL_SPIDER)
 }
