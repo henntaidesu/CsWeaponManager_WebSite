@@ -178,6 +178,12 @@
               placeholder="请输入Steam市场的Cookies"
             />
           </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="editForm.steamID" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
           <el-form-item label="更新频率">
             <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
               <el-option label="每15分钟" value="15min" />
@@ -327,6 +333,12 @@
               type="textarea"
               :rows="3"
               placeholder="请输入Steam市场的Cookies"
+            />
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="inputForm.steamID" 
+              placeholder="请输入SteamID"
             />
           </el-form-item>
           <el-form-item label="更新频率">
@@ -597,6 +609,10 @@ export default {
           ElMessage.error('请填写Cookies')
           return
         }
+        if (!inputForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
       }
 
       // 悠悠有品类型的字段校验
@@ -671,6 +687,7 @@ export default {
           // Steam特殊配置
           requestData.configJson = JSON.stringify({
             cookies: inputForm.value.cookies,
+            steamID: inputForm.value.steamID,
             updateFreq: inputForm.value.updateFreq,
             sleep_time: '6000'
           })
@@ -1126,9 +1143,11 @@ export default {
         // Steam配置
         console.log('Steam配置解析:', {
           cookies: config.cookies,
+          steamID: config.steamID,
           updateFreq: config.updateFreq
         })
         editForm.value.cookies = config.cookies || ''
+        editForm.value.steamID = config.steamID || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
       } else {
         // 通用配置 - 检查多种可能的字段名
@@ -1441,6 +1460,10 @@ export default {
           ElMessage.error('请填写Cookies')
           return
         }
+        if (!editForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
       }
 
       // 悠悠有品类型的字段校验
@@ -1514,6 +1537,7 @@ export default {
           // Steam特殊配置
           requestData.configJson = JSON.stringify({
             cookies: editForm.value.cookies,
+            steamID: editForm.value.steamID,
             updateFreq: editForm.value.updateFreq,
             sleep_time: '6000'
           })
