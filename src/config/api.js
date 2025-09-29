@@ -24,7 +24,7 @@ export const API_CONFIG = {
     SELL_STATS: '/webSellV1/getSellStats',
     
     // 爬虫相关
-    YOUPIN_SPIDER: '/youping898SpiderV1/allDate',
+    YOUPIN_SPIDER: '/youping898SpiderV1/newData',
     YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
     BUFF_SPIDER: '/buffSpiderV1/NewData',
     BUFF_FULL_SPIDER: '/buffSpiderV1/allDate'

@@ -168,6 +168,28 @@
           </el-form-item>
         </template>
 
+        <!-- Steam特有配置 -->
+        <template v-else-if="editForm.type === 'steam'">
+          <el-form-item label="Cookies" required>
+            <el-input 
+              v-model="editForm.cookies" 
+              type="textarea"
+              :rows="3"
+              placeholder="请输入Steam市场的Cookies"
+            />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+        </template>
+
         <!-- 通用配置 -->
         <template v-else>
           <el-form-item label="API地址">
@@ -297,8 +319,30 @@
           </el-form-item>
         </template>
         
+        <!-- Steam特有配置 -->
+        <template v-else-if="inputForm.type === 'steam'">
+          <el-form-item label="Cookies" required>
+            <el-input 
+              v-model="inputForm.cookies" 
+              type="textarea"
+              :rows="3"
+              placeholder="请输入Steam市场的Cookies"
+            />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+        </template>
+        
         <!-- 通用配置 -->
-        <template v-else-if="inputForm.type && inputForm.type !== 'youpin'">
+        <template v-else-if="inputForm.type && inputForm.type !== 'youpin' && inputForm.type !== 'steam'">
           <el-form-item label="API地址">
             <el-input 
               v-model="inputForm.apiUrl" 
@@ -448,7 +492,9 @@ export default {
       cookie: '',
       systemVersion: '',
       systemType: '',
-      steamID: ''
+      steamID: '',
+      // Steam特有字段
+      cookies: ''
     })
     
     const inputForm = ref({
@@ -472,7 +518,9 @@ export default {
       cookie: '',
       systemVersion: '',
       systemType: '',
-      steamID: ''
+      steamID: '',
+      // Steam特有字段
+      cookies: ''
     })
 
     const dataSources = ref([])
@@ -543,6 +591,14 @@ export default {
         }
       }
 
+      // Steam类型的字段校验
+      if (inputForm.value.type === 'steam') {
+        if (!inputForm.value.cookies) {
+          ElMessage.error('请填写Cookies')
+          return
+        }
+      }
+
       // 悠悠有品类型的字段校验
       if (inputForm.value.type === 'youpin') {
         if (!inputForm.value.phone) {
@@ -608,6 +664,13 @@ export default {
             system_version: inputForm.value.systemVersion,
             system_type: inputForm.value.systemType,
             steamID: inputForm.value.steamID,
+            updateFreq: inputForm.value.updateFreq,
+            sleep_time: '6000'
+          })
+        } else if (inputForm.value.type === 'steam') {
+          // Steam特殊配置
+          requestData.configJson = JSON.stringify({
+            cookies: inputForm.value.cookies,
             updateFreq: inputForm.value.updateFreq,
             sleep_time: '6000'
           })
@@ -688,7 +751,9 @@ export default {
         cookie: '',
         systemVersion: '',
         systemType: '',
-        steamID: ''
+        steamID: '',
+        // Steam特有字段
+        cookies: ''
       }
       editingSourceId.value = null
     }
@@ -1057,6 +1122,14 @@ export default {
         editForm.value.systemType = config.system_type || ''
         editForm.value.steamID = config.steamID || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
+      } else if (source.type === 'steam') {
+        // Steam配置
+        console.log('Steam配置解析:', {
+          cookies: config.cookies,
+          updateFreq: config.updateFreq
+        })
+        editForm.value.cookies = config.cookies || ''
+        editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
       } else {
         // 通用配置 - 检查多种可能的字段名
         editForm.value.apiUrl = config.api_url || source.apiUrl || ''
@@ -1093,7 +1166,9 @@ export default {
         cookie: '',
         systemVersion: '',
         systemType: '',
-        steamID: ''
+        steamID: '',
+        // Steam特有字段
+        cookies: ''
       }
     }
 
@@ -1360,6 +1435,14 @@ export default {
         }
       }
 
+      // Steam类型的字段校验
+      if (editForm.value.type === 'steam') {
+        if (!editForm.value.cookies) {
+          ElMessage.error('请填写Cookies')
+          return
+        }
+      }
+
       // 悠悠有品类型的字段校验
       if (editForm.value.type === 'youpin') {
         if (!editForm.value.phone) {
@@ -1424,6 +1507,13 @@ export default {
             system_version: editForm.value.systemVersion,
             system_type: editForm.value.systemType,
             steamID: editForm.value.steamID,
+            updateFreq: editForm.value.updateFreq,
+            sleep_time: '6000'
+          })
+        } else if (editForm.value.type === 'steam') {
+          // Steam特殊配置
+          requestData.configJson = JSON.stringify({
+            cookies: editForm.value.cookies,
             updateFreq: editForm.value.updateFreq,
             sleep_time: '6000'
           })
