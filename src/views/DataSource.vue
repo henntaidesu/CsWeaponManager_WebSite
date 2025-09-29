@@ -28,12 +28,7 @@
               <div class="source-header">
                 <div class="source-info">
                   <h4>{{ source.dataName }}</h4>
-                  <el-tag :type="getSourceTypeColor(source.type)">{{ getSourceTypeLabel(source.type) }}</el-tag>
-                </div>
-                <div class="source-status">
-                  <el-tag :type="source.status === 'online' ? 'success' : 'danger'" size="small">
-                    {{ source.status === 'online' ? '在线' : '离线' }}
-                  </el-tag>
+                  <el-tag :type="getSourceTypeColor(source.enabled)">{{ getSourceTypeLabel(source.type) }}</el-tag>
                 </div>
               </div>
               
@@ -43,10 +38,6 @@
               </div>
               
               <div class="source-actions">
-                <el-switch 
-                  v-model="source.enabled" 
-                  @change="toggleSource(source)"
-                />
                 <el-button type="primary" size="small" @click="editSource(source)">
                   编辑
                 </el-button>
@@ -240,6 +231,15 @@
               :disabled="!editForm.enabled"
             >
               全部获取
+            </el-button>
+            <el-button 
+              v-if="editForm.type === 'steam'" 
+              type="warning" 
+              @click="handleEditSteamCollectAll"
+              :loading="collectingSourceIds.has(editingSourceId)"
+              :disabled="!editForm.enabled"
+            >
+              全部采集
             </el-button>
             <el-button 
               type="danger" 
@@ -549,16 +549,8 @@ export default {
       return labels[type] || type
     }
 
-    const getSourceTypeColor = (type) => {
-      const colors = {
-        buff: 'warning',
-        steam: 'primary',
-        youpin: 'success',
-        c5game: 'info',
-        igxe: 'danger',
-        other: ''
-      }
-      return colors[type] || ''
+    const getSourceTypeColor = (enabled) => {
+      return enabled ? 'success' : 'warning'
     }
 
     const getUpdateFreqLabel = (freq) => {
@@ -1744,7 +1736,6 @@ export default {
       testConnection,
       testSourceConnection,
       startCollection,
-      toggleSource,
       editSource,
       handleEditDialogClose,
       handleEditSubmit,
