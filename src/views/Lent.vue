@@ -62,11 +62,34 @@
               <el-button type="success" @click="handleTimeSearch" :loading="loading">
                 按时间搜索
               </el-button>
+              <el-button type="warning" @click="handleAdvancedSearch" :loading="loading" v-if="hasAdvancedFilters">
+                高级搜索
+              </el-button>
             </div>
           </div>
           
           <!-- 分隔线 -->
           <div class="search-stats-divider"></div>
+          
+          <!-- 当前筛选状态 -->
+          <div class="filter-status" v-if="hasAdvancedFilters">
+            <span class="filter-label">当前筛选：</span>
+            <el-tag v-if="searchText && searchText.trim()" type="primary" size="small" closable @close="searchText = ''">
+              关键词: {{ searchText }}
+            </el-tag>
+            <el-tag v-if="statusFilter && statusFilter !== 'all'" type="success" size="small" closable @close="statusFilter = 'all'">
+              状态: {{ statusFilter }}
+            </el-tag>
+            <el-tag v-if="weaponTypeFilter" type="warning" size="small" closable @close="weaponTypeFilter = ''">
+              类型: {{ weaponTypeFilter }}
+            </el-tag>
+            <el-tag v-if="floatRangeFilter" type="info" size="small" closable @close="floatRangeFilter = ''">
+              磨损: {{ floatRangeFilter }}
+            </el-tag>
+            <el-tag v-if="dateRange && dateRange.length === 2" type="danger" size="small" closable @close="dateRange = null">
+              时间: {{ dateRange[0] }} ~ {{ dateRange[1] }}
+            </el-tag>
+          </div>
           
           <!-- 统计数据 -->
           <div class="stats-container">
@@ -226,6 +249,15 @@ export default {
     const totalItems = ref(0)
     const dateRange = ref(null)
     const isTimeSearchMode = ref(false)
+    
+    // 高级搜索相关
+    const hasAdvancedFilters = computed(() => {
+      return (searchText.value && searchText.value.trim()) || 
+             (statusFilter.value && statusFilter.value !== 'all') ||
+             (weaponTypeFilter.value) ||
+             (floatRangeFilter.value) ||
+             (dateRange.value && dateRange.value.length === 2)
+    })
     const activeTab = ref('yyyp')
 
     // 全部数据统计（通过API获取）
@@ -604,6 +636,8 @@ export default {
     const handleClearSearch = () => {
       searchText.value = ''
       statusFilter.value = 'all'
+      weaponTypeFilter.value = ''
+      floatRangeFilter.value = ''
       dateRange.value = null
       currentPage.value = 1
       isSearchMode.value = false
@@ -627,6 +661,41 @@ export default {
 
     const handleDateRangeChange = (value) => {
       console.log('日期范围变更:', value)
+    }
+
+    // 高级搜索处理
+    const handleAdvancedSearch = async () => {
+      loading.value = true
+      currentPage.value = 1
+      
+      try {
+        // 构建高级搜索参数
+        const searchParams = {
+          searchText: searchText.value?.trim() || '',
+          statusFilter: statusFilter.value !== 'all' ? statusFilter.value : '',
+          weaponType: weaponTypeFilter.value || '',
+          floatRange: floatRangeFilter.value || '',
+          dateRange: dateRange.value || null,
+          page: currentPage.value,
+          pageSize: pageSize.value
+        }
+        
+        // 如果有类型或磨损筛选，优先使用类型磨损搜索
+        if (searchParams.weaponType || searchParams.floatRange) {
+          await searchByTypeAndWear()
+        } else if (searchParams.dateRange) {
+          await handleTimeSearch()
+        } else {
+          await loadLentData()
+        }
+        
+        ElMessage.success('高级搜索完成')
+      } catch (error) {
+        console.error('高级搜索失败:', error)
+        ElMessage.error('高级搜索失败')
+      } finally {
+        loading.value = false
+      }
     }
 
     const handleTimeSearch = async () => {
@@ -757,9 +826,148 @@ export default {
       }
     }
 
+    // 加载武器类型数据
+    const loadWeaponTypes = async () => {
+      try {
+        const response = await fetch(apiUrls.lentWeaponTypes())
+        const result = await response.json()
+        if (result.success) {
+          weaponTypes.value = result.data
+        }
+      } catch (error) {
+        console.error('获取武器类型失败:', error)
+      }
+    }
+
+    // 加载磨损等级数据
+    const loadFloatRanges = async () => {
+      try {
+        const response = await fetch(apiUrls.lentFloatRanges())
+        const result = await response.json()
+        if (result.success) {
+          floatRanges.value = result.data
+        }
+      } catch (error) {
+        console.error('获取磨损等级失败:', error)
+      }
+    }
+
+    // 类型筛选处理
+    const handleTypeChange = async () => {
+      if (weaponTypeFilter.value || floatRangeFilter.value) {
+        await searchByTypeAndWear()
+      } else {
+        await loadLentData()
+      }
+    }
+
+    // 磨损等级筛选处理
+    const handleWearChange = async () => {
+      if (weaponTypeFilter.value || floatRangeFilter.value) {
+        await searchByTypeAndWear()
+      } else {
+        await loadLentData()
+      }
+    }
+
+    // 按类型和磨损等级搜索
+    const searchByTypeAndWear = async () => {
+      if (!weaponTypeFilter.value && !floatRangeFilter.value) {
+        return
+      }
+
+      loading.value = true
+      try {
+        const requestData = {
+          weapon_type: weaponTypeFilter.value,
+          float_range: floatRangeFilter.value,
+          page: currentPage.value,
+          page_size: pageSize.value
+        }
+
+        const response = await fetch(apiUrls.lentSearchByTypeWear(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        })
+        
+        const result = await response.json()
+        
+        if (result.success) {
+          // 格式化数据
+          const formattedData = result.data.map((item, index) => {
+            return {
+              id: index + 1,
+              ID: item[0] || '',
+              weapon_name: item[1] || '',
+              item_name: item[2] || '',
+              weapon_float: item[3] || 0,
+              float_range: item[4] || '',
+              unit_price: item[5] || 0,
+              lease_day: item[6] || 0,
+              status: item[7] || '',
+              create_time: item[8] || '',
+              leaser_name: item[9] || '',
+              deposit: item[10] || 0
+            }
+          })
+          
+          lentData.value = formattedData
+          totalItems.value = result.total
+          
+          // 获取筛选后的统计数据
+          await loadStatsByTypeAndWear()
+        } else {
+          ElMessage.error(result.message || '搜索失败')
+        }
+      } catch (error) {
+        console.error('按类型和磨损搜索失败:', error)
+        ElMessage.error('搜索失败')
+      } finally {
+        loading.value = false
+      }
+    }
+
+    // 获取按类型和磨损筛选的统计数据
+    const loadStatsByTypeAndWear = async () => {
+      try {
+        const requestData = {
+          weapon_type: weaponTypeFilter.value,
+          float_range: floatRangeFilter.value
+        }
+
+        const response = await fetch(apiUrls.lentStatsByTypeWear(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        })
+        
+        const result = await response.json()
+        
+        if (result.success) {
+          allDataStats.value = {
+            totalCount: result.data.totalCount,
+            totalAmount: result.data.totalAmount.toFixed(2),
+            avgPrice: result.data.avgPrice.toFixed(2),
+            totalLeaseDays: result.data.totalLeaseDays,
+            avgLeaseDays: result.data.avgLeaseDays.toFixed(2),
+            rentingCount: result.data.rentingCount
+          }
+        }
+      } catch (error) {
+        console.error('获取筛选统计数据失败:', error)
+      }
+    }
+
     onMounted(() => {
       loadLentData()
       loadAllDataStats()
+      loadWeaponTypes()
+      loadFloatRanges()
     })
 
     return {
@@ -770,6 +978,10 @@ export default {
       currentPageStats,
       searchText,
       statusFilter,
+      weaponTypeFilter,
+      floatRangeFilter,
+      weaponTypes,
+      floatRanges,
       dateRange,
       isTimeSearchMode,
       currentPage,
@@ -788,6 +1000,10 @@ export default {
       handleSearch,
       handleClearSearch,
       handleStatusChange,
+      handleTypeChange,
+      handleWearChange,
+      handleAdvancedSearch,
+      hasAdvancedFilters,
       handleDateRangeChange,
       handleTimeSearch
     }
@@ -809,6 +1025,16 @@ export default {
 .status-select {
   min-width: 120px;
   max-width: 150px;
+}
+
+.type-select {
+  min-width: 140px;
+  max-width: 160px;
+}
+
+.wear-select {
+  min-width: 140px;
+  max-width: 160px;
 }
 
 .date-picker {
@@ -838,6 +1064,24 @@ export default {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
   margin: 1.5rem 0;
+}
+
+.filter-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  border: 1px solid var(--border-default);
+}
+
+.filter-label {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-right: 0.5rem;
 }
 
 .stats-container {
