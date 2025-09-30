@@ -49,40 +49,43 @@
           <!-- Steam购买统计数据 -->
           <div class="stats-summary">
             <div class="card">
-              <h3>Steam购买统计</h3>
-              <div class="grid grid-3">
-                <div class="stat-item">
-                  <span class="stat-label">总购买数量:</span>
-                  <span class="stat-value">{{ buyTotalStats.totalCount }} 件</span>
+              <div class="stats-container">
+                <div class="stats-section">
+                  <h3>Steam购买统计</h3>
+                  <div class="grid grid-3">
+                    <div class="stat-item">
+                      <span class="stat-label">总购买数量:</span>
+                      <span class="stat-value">{{ buyTotalStats.totalCount }} 件</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">总购买金额:</span>
+                      <span class="stat-value">¥{{ buyTotalStats.totalAmount }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">平均购买价格:</span>
+                      <span class="stat-value">¥{{ buyTotalStats.avgPrice }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="stat-item">
-                  <span class="stat-label">总购买金额:</span>
-                  <span class="stat-value">¥{{ buyTotalStats.totalAmount }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">平均购买价格:</span>
-                  <span class="stat-value">¥{{ buyTotalStats.avgPrice }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 当前页面统计 -->
-          <div class="stats-summary">
-            <div class="card">
-              <h3>当前页面统计</h3>
-              <div class="grid grid-3">
-                <div class="stat-item">
-                  <span class="stat-label">页面数量:</span>
-                  <span class="stat-value">{{ buyCurrentPageStats.totalCount }} 件</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">页面金额:</span>
-                  <span class="stat-value">¥{{ buyCurrentPageStats.totalAmount }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">平均购买价格:</span>
-                  <span class="stat-value">¥{{ buyCurrentPageStats.avgPrice }}</span>
+                
+                <div class="stats-divider"></div>
+                
+                <div class="stats-section">
+                  <h3>当前页面统计</h3>
+                  <div class="grid grid-3">
+                    <div class="stat-item">
+                      <span class="stat-label">页面数量:</span>
+                      <span class="stat-value">{{ buyCurrentPageStats.totalCount }} 件</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">页面金额:</span>
+                      <span class="stat-value">¥{{ buyCurrentPageStats.totalAmount }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">平均购买价格:</span>
+                      <span class="stat-value">¥{{ buyCurrentPageStats.avgPrice }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -112,10 +115,14 @@
               :scrollbar-always-on="true"
             >
               <el-table-column prop="order_id" label="交易ID" min-width="150" show-overflow-tooltip align="left" />
+              <el-table-column label="游戏" min-width="120" show-overflow-tooltip>
+                <template #default="scope">
+                  {{ scope.row.game_name || 'Counter-Strike 2' }}
+                </template>
+              </el-table-column>
               <el-table-column prop="weapon_type" label="类型" min-width="50" />
               <el-table-column prop="item_name" label="饰品名称" min-width="150" show-overflow-tooltip />
               <el-table-column prop="weapon_name" label="武器名称" min-width="100" />
-              <el-table-column prop="game_name" label="游戏" min-width="120" show-overflow-tooltip />
               <el-table-column prop="weapon_float" label="Float" min-width="180" align="left">
                 <template #default="scope">
                   {{ scope.row.weapon_float }}
@@ -127,7 +134,6 @@
                   ¥{{ scope.row.price }}
                 </template>
               </el-table-column>
-              <el-table-column prop="from" label="来源" min-width="80" />
               <el-table-column prop="order_time" label="购买时间" min-width="160">
                 <template #default="scope">
                   {{ formatTime(scope.row.order_time) }}
@@ -208,40 +214,43 @@
           <!-- Steam销售统计数据 -->
           <div class="stats-summary">
             <div class="card">
-              <h3>Steam销售统计</h3>
-              <div class="grid grid-3">
-                <div class="stat-item">
-                  <span class="stat-label">总销售数量:</span>
-                  <span class="stat-value">{{ sellTotalStats.totalCount }} 件</span>
+              <div class="stats-container">
+                <div class="stats-section">
+                  <h3>Steam销售统计</h3>
+                  <div class="grid grid-3">
+                    <div class="stat-item">
+                      <span class="stat-label">总销售数量:</span>
+                      <span class="stat-value">{{ sellTotalStats.totalCount }} 件</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">总销售金额:</span>
+                      <span class="stat-value">¥{{ sellTotalStats.totalAmount }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">平均销售价格:</span>
+                      <span class="stat-value">¥{{ sellTotalStats.avgPrice }}</span>
+                    </div>
+                  </div>
                 </div>
-                <div class="stat-item">
-                  <span class="stat-label">总销售金额:</span>
-                  <span class="stat-value">¥{{ sellTotalStats.totalAmount }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">平均销售价格:</span>
-                  <span class="stat-value">¥{{ sellTotalStats.avgPrice }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 当前页面统计 -->
-          <div class="stats-summary">
-            <div class="card">
-              <h3>当前页面统计</h3>
-              <div class="grid grid-3">
-                <div class="stat-item">
-                  <span class="stat-label">页面数量:</span>
-                  <span class="stat-value">{{ sellCurrentPageStats.totalCount }} 件</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">页面金额:</span>
-                  <span class="stat-value">¥{{ sellCurrentPageStats.totalAmount }}</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-label">平均销售价格:</span>
-                  <span class="stat-value">¥{{ sellCurrentPageStats.avgPrice }}</span>
+                
+                <div class="stats-divider"></div>
+                
+                <div class="stats-section">
+                  <h3>当前页面统计</h3>
+                  <div class="grid grid-3">
+                    <div class="stat-item">
+                      <span class="stat-label">页面数量:</span>
+                      <span class="stat-value">{{ sellCurrentPageStats.totalCount }} 件</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">页面金额:</span>
+                      <span class="stat-value">¥{{ sellCurrentPageStats.totalAmount }}</span>
+                    </div>
+                    <div class="stat-item">
+                      <span class="stat-label">平均销售价格:</span>
+                      <span class="stat-value">¥{{ sellCurrentPageStats.avgPrice }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -271,10 +280,14 @@
               :scrollbar-always-on="true"
             >
               <el-table-column prop="order_id" label="交易ID" min-width="150" show-overflow-tooltip align="left" />
+              <el-table-column label="游戏" min-width="120" show-overflow-tooltip>
+                <template #default="scope">
+                  {{ scope.row.game_name || 'Counter-Strike 2' }}
+                </template>
+              </el-table-column>
               <el-table-column prop="weapon_type" label="类型" min-width="50" />
               <el-table-column prop="item_name" label="饰品名称" min-width="150" show-overflow-tooltip />
               <el-table-column prop="weapon_name" label="武器名称" min-width="100" />
-              <el-table-column prop="game_name" label="游戏" min-width="120" show-overflow-tooltip />
               <el-table-column prop="weapon_float" label="Float" min-width="180" align="left">
                 <template #default="scope">
                   {{ scope.row.weapon_float }}
@@ -286,7 +299,6 @@
                   ¥{{ scope.row.price }}
                 </template>
               </el-table-column>
-              <el-table-column prop="from" label="来源" min-width="80" />
               <el-table-column prop="order_time" label="销售时间" min-width="160">
                 <template #default="scope">
                   {{ formatTime(scope.row.order_time) }}
@@ -1258,6 +1270,50 @@ export default {
 
 .stats-summary {
   margin-bottom: clamp(1rem, 3vw, 1.25rem);
+}
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stats-section {
+  flex: 1;
+}
+
+.stats-section h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 600;
+}
+
+.stats-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+  margin: 0.5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .stats-container {
+    flex-direction: row;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  
+  .stats-divider {
+    width: 1px;
+    height: auto;
+    min-height: 120px;
+    background: linear-gradient(180deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+    margin: 0;
+  }
+  
+  .stats-section {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .grid-3 {
