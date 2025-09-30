@@ -27,14 +27,30 @@
               <el-option label="已取消" value="已取消" />
               <el-option label="待收货" value="待收货" />
             </el-select>
-            <el-select v-model="weaponTypeFilter" placeholder="选择武器类型" class="type-select" @change="handleTypeChange" clearable>
-              <el-option label="全部类型" value="" />
-              <el-option v-for="type in weaponTypes" :key="type" :label="type" :value="type" />
-            </el-select>
-            <el-select v-model="floatRangeFilter" placeholder="选择磨损等级" class="wear-select" @change="handleWearChange" clearable>
-              <el-option label="全部磨损" value="" />
-              <el-option v-for="range in floatRanges" :key="range" :label="range" :value="range" />
-            </el-select>
+              <el-select 
+                v-model="weaponTypeFilter" 
+                placeholder="选择武器类型（可多选）" 
+                class="type-select" 
+                @change="handleTypeChange" 
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                clearable
+              >
+                <el-option v-for="type in weaponTypes" :key="type" :label="type" :value="type" />
+              </el-select>
+              <el-select 
+                v-model="floatRangeFilter" 
+                placeholder="选择磨损等级（可多选）" 
+                class="wear-select" 
+                @change="handleWearChange" 
+                multiple
+                collapse-tags
+                collapse-tags-tooltip
+                clearable
+              >
+                <el-option v-for="range in floatRanges" :key="range" :label="range" :value="range" />
+              </el-select>
             <el-date-picker
               v-model="dateRange"
               type="daterange"
@@ -68,11 +84,25 @@
           <el-tag v-if="statusFilter && statusFilter !== 'all'" type="success" size="small" closable @close="statusFilter = 'all'">
             状态: {{ statusFilter }}
           </el-tag>
-          <el-tag v-if="weaponTypeFilter" type="warning" size="small" closable @close="weaponTypeFilter = ''">
-            类型: {{ weaponTypeFilter }}
+          <el-tag 
+            v-for="type in weaponTypeFilter" 
+            :key="type" 
+            type="warning" 
+            size="small" 
+            closable 
+            @close="removeWeaponType(type)"
+          >
+            类型: {{ type }}
           </el-tag>
-          <el-tag v-if="floatRangeFilter" type="info" size="small" closable @close="floatRangeFilter = ''">
-            磨损: {{ floatRangeFilter }}
+          <el-tag 
+            v-for="range in floatRangeFilter" 
+            :key="range" 
+            type="info" 
+            size="small" 
+            closable 
+            @close="removeFloatRange(range)"
+          >
+            磨损: {{ range }}
           </el-tag>
           <el-tag v-if="dateRange && dateRange.length === 2" type="danger" size="small" closable @close="dateRange = null">
             时间: {{ dateRange[0] }} ~ {{ dateRange[1] }}
@@ -234,8 +264,8 @@ export default {
     const sellData = ref([])
     const searchText = ref('')
     const statusFilter = ref('all')
-    const weaponTypeFilter = ref('')
-    const floatRangeFilter = ref('')
+    const weaponTypeFilter = ref([])
+    const floatRangeFilter = ref([])
     const weaponTypes = ref([])
     const floatRanges = ref([])
     const currentPage = ref(1)
@@ -248,8 +278,8 @@ export default {
     const hasAdvancedFilters = computed(() => {
       return (searchText.value && searchText.value.trim()) || 
              (statusFilter.value && statusFilter.value !== 'all') ||
-             (weaponTypeFilter.value) ||
-             (floatRangeFilter.value) ||
+             (weaponTypeFilter.value && weaponTypeFilter.value.length > 0) ||
+             (floatRangeFilter.value && floatRangeFilter.value.length > 0) ||
              (dateRange.value && dateRange.value.length === 2)
     })
     const totalStats = ref({
@@ -602,14 +632,32 @@ export default {
     const handleClearSearch = () => {
       searchText.value = ''
       statusFilter.value = 'all'
-      weaponTypeFilter.value = ''
-      floatRangeFilter.value = ''
+      weaponTypeFilter.value = []
+      floatRangeFilter.value = []
       dateRange.value = null
       currentPage.value = 1
       isSearchMode.value = false
       isTimeSearchMode.value = false
       allSearchResults.value = []
       loadSellData()
+    }
+
+    // 移除单个武器类型
+    const removeWeaponType = (type) => {
+      const index = weaponTypeFilter.value.indexOf(type)
+      if (index > -1) {
+        weaponTypeFilter.value.splice(index, 1)
+        handleTypeChange()
+      }
+    }
+
+    // 移除单个磨损等级
+    const removeFloatRange = (range) => {
+      const index = floatRangeFilter.value.indexOf(range)
+      if (index > -1) {
+        floatRangeFilter.value.splice(index, 1)
+        handleWearChange()
+      }
     }
 
     const handleStatusChange = async () => {
