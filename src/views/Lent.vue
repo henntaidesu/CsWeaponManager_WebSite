@@ -232,6 +232,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { apiUrls } from '@/config/api'
 
 export default {
   name: 'Lent',

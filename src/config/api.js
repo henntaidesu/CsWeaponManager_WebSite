@@ -1,7 +1,7 @@
 // API 配置文件
 export const API_CONFIG = {
   // API 基础地址
-  BASE_URL: 'http://localhost:9001',
+  BASE_URL: '/api',
   
   // 爬虫服务器地址
   SPIDER_BASE_URL: 'http://127.0.0.1:9002',
