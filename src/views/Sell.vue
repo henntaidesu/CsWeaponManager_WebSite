@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h1 class="page-title">我的出售</h1>
-    
     <div class="filters card">
       <div class="flex flex-wrap gap-4 items-center">
         <el-input
@@ -49,7 +47,7 @@
         <div class="stats-container">
           <div class="stats-section">
             <h3>统计数据</h3>
-            <div class="grid grid-3">
+            <div class="stats-grid-3x2">
               <div class="stat-item">
                 <span class="stat-label">总出售数量:</span>
                 <span class="stat-value">{{ totalStats.totalCount }} 件</span>
@@ -81,7 +79,7 @@
           
           <div class="stats-section">
             <h3>当前页面统计</h3>
-            <div class="grid grid-3">
+            <div class="stats-grid-3x2">
               <div class="stat-item">
                 <span class="stat-label">页面数量:</span>
                 <span class="stat-value">{{ currentPageStats.totalCount }} 件</span>
@@ -734,6 +732,7 @@ export default {
 </script>
 
 <style scoped>
+
 .search-input {
   min-width: 200px;
   flex: 1;
@@ -786,6 +785,14 @@ export default {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
   margin: 0.5rem 0;
+}
+
+.stats-grid-3x2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(0.75rem, 2vw, 1rem);
+  align-items: stretch;
 }
 
 @media (min-width: 1024px) {
@@ -846,6 +853,11 @@ export default {
     min-width: unset;
     width: 100%;
     max-width: none;
+  }
+  
+  .stats-grid-3x2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, 1fr);
   }
   
   .grid-3 {

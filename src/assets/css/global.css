@@ -52,6 +52,10 @@ div, section, article, aside, main, header, footer, nav {
 
 /* 侧边栏样式 */
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
     min-width: 15rem;
     max-width: 20rem;
     width: 18vw;
@@ -60,13 +64,25 @@ div, section, article, aside, main, header, footer, nav {
     flex-shrink: 0;
     border-right: 1px solid var(--border-default);
     transition: all 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar.collapsed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
     min-width: 4rem;
     max-width: 4rem;
     width: 4rem;
     padding: 1rem 0.5rem;
+    z-index: 1000;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar h1 {
@@ -104,11 +120,19 @@ div, section, article, aside, main, header, footer, nav {
 
 /* 主内容区域 */
 .main-content {
-    flex: 1;
+    margin-left: 18vw;
+    margin-right: 10px;
+    width: calc(100vw - 18vw - 10px);
     padding: clamp(1rem, 3vw, 2.5rem);
     background-color: var(--bg-primary);
     overflow-y: auto;
-    min-width: 0;
+    transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed + .main-content {
+    margin-left: 4rem;
+    margin-right: 10px;
+    width: calc(100vw - 4rem - 10px);
 }
 
 /* 表格样式 */
@@ -283,17 +307,38 @@ div, section, article, aside, main, header, footer, nav {
     }
     
     .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
+        height: auto;
         min-width: unset;
         max-width: none;
         padding: 1rem;
+        z-index: 1001;
+        border-right: none;
+        border-bottom: 1px solid var(--border-default);
     }
     
     .sidebar.collapsed {
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
+        height: auto;
         min-width: unset;
         max-width: none;
         padding: 0.5rem;
+        z-index: 1001;
+        border-right: none;
+        border-bottom: 1px solid var(--border-default);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        margin-right: 10px; /* 移动端也使用10px右边距 */
+        margin-top: 120px; /* 为移动端侧边栏留出空间 */
+        width: calc(100vw - 10px);
     }
     
     .sidebar ul {
@@ -361,12 +406,36 @@ div, section, article, aside, main, header, footer, nav {
         width: 16vw;
         min-width: 18rem;
     }
+    
+    .main-content {
+        margin-left: 16vw;
+        margin-right: 10px;
+        width: calc(100vw - 16vw - 10px);
+    }
+    
+    .sidebar.collapsed + .main-content {
+        margin-left: 4rem;
+        margin-right: 10px;
+        width: calc(100vw - 4rem - 10px);
+    }
 }
 
 @media (min-width: 1600px) {
     .sidebar {
         width: 14vw;
         min-width: 20rem;
+    }
+    
+    .main-content {
+        margin-left: 14vw;
+        margin-right: 10px;
+        width: calc(100vw - 14vw - 10px);
+    }
+    
+    .sidebar.collapsed + .main-content {
+        margin-left: 4rem;
+        margin-right: 10px;
+        width: calc(100vw - 4rem - 10px);
     }
 }
 

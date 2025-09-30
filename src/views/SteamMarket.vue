@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h1 class="page-title">Steam市场</h1>
-    
     <!-- Tab切换 -->
     <div class="tab-container">
       <el-tabs v-model="activeTab" @tab-click="handleTabClick" class="steam-tabs">
@@ -1240,6 +1238,7 @@ export default {
 :deep(.el-tabs__active-bar) {
   background-color: var(--text-accent);
 }
+
 
 .search-input {
   min-width: 200px;
