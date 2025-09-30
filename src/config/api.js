@@ -42,6 +42,22 @@ export const API_CONFIG = {
     STEAM_SELL_SEARCH_BY_TIME: (startDate, endDate) => `/webSteamMarketV1/searchSteamSellByTimeRange/${startDate}/${endDate}`,
     STEAM_SELL_STATS_BY_TIME: (startDate, endDate) => `/webSteamMarketV1/getSteamSellStatsByTimeRange/${startDate}/${endDate}`,
     
+    // 类型和磨损等级搜索相关
+    BUY_WEAPON_TYPES: '/webBuyPageV1/getWeaponTypes',
+    BUY_FLOAT_RANGES: '/webBuyPageV1/getFloatRanges',
+    BUY_SEARCH_BY_TYPE_WEAR: '/webBuyPageV1/searchByTypeAndWear',
+    BUY_STATS_BY_TYPE_WEAR: '/webBuyPageV1/getStatsByTypeAndWear',
+    
+    SELL_WEAPON_TYPES: '/webSellPageV1/getWeaponTypes',
+    SELL_FLOAT_RANGES: '/webSellPageV1/getFloatRanges',
+    SELL_SEARCH_BY_TYPE_WEAR: '/webSellPageV1/searchByTypeAndWear',
+    SELL_STATS_BY_TYPE_WEAR: '/webSellPageV1/getStatsByTypeAndWear',
+    
+    LENT_WEAPON_TYPES: '/webLentPageV1/getWeaponTypes',
+    LENT_FLOAT_RANGES: '/webLentPageV1/getFloatRanges',
+    LENT_SEARCH_BY_TYPE_WEAR: '/webLentPageV1/searchByTypeAndWear',
+    LENT_STATS_BY_TYPE_WEAR: '/webLentPageV1/getStatsByTypeAndWear',
+    
     // 爬虫相关
     YOUPIN_SPIDER: '/youping898SpiderV1/newData',
     YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
@@ -100,6 +116,22 @@ export const apiUrls = {
   steamSellSearchByName: (itemName) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_SEARCH_BY_NAME(itemName)),
   steamSellSearchByTime: (startDate, endDate) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_SEARCH_BY_TIME(startDate, endDate)),
   steamSellStatsByTime: (startDate, endDate) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_STATS_BY_TIME(startDate, endDate)),
+  
+  // 类型和磨损等级搜索
+  buyWeaponTypes: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_WEAPON_TYPES),
+  buyFloatRanges: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_FLOAT_RANGES),
+  buySearchByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_SEARCH_BY_TYPE_WEAR),
+  buyStatsByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_STATS_BY_TYPE_WEAR),
+  
+  sellWeaponTypes: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_WEAPON_TYPES),
+  sellFloatRanges: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_FLOAT_RANGES),
+  sellSearchByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_SEARCH_BY_TYPE_WEAR),
+  sellStatsByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_STATS_BY_TYPE_WEAR),
+  
+  lentWeaponTypes: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_WEAPON_TYPES),
+  lentFloatRanges: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_FLOAT_RANGES),
+  lentSearchByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_SEARCH_BY_TYPE_WEAR),
+  lentStatsByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_STATS_BY_TYPE_WEAR),
   
   // 爬虫API
   youpinSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_SPIDER),

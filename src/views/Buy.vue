@@ -27,6 +27,14 @@
               <el-option label="已取消" value="已取消" />
               <el-option label="待收货" value="待收货" />
             </el-select>
+            <el-select v-model="weaponTypeFilter" placeholder="选择武器类型" class="type-select" @change="handleTypeChange" clearable>
+              <el-option label="全部类型" value="" />
+              <el-option v-for="type in weaponTypes" :key="type" :label="type" :value="type" />
+            </el-select>
+            <el-select v-model="floatRangeFilter" placeholder="选择磨损等级" class="wear-select" @change="handleWearChange" clearable>
+              <el-option label="全部磨损" value="" />
+              <el-option v-for="range in floatRanges" :key="range" :label="range" :value="range" />
+            </el-select>
             <el-date-picker
               v-model="dateRange"
               type="daterange"
@@ -202,6 +210,10 @@ export default {
     const buyData = ref([])
     const searchText = ref('')
     const statusFilter = ref('all')
+    const weaponTypeFilter = ref('')
+    const floatRangeFilter = ref('')
+    const weaponTypes = ref([])
+    const floatRanges = ref([])
     const currentPage = ref(1)
     const pageSize = ref(20)
     const totalItems = ref(0)
@@ -601,6 +613,8 @@ export default {
     const handleClearSearch = () => {
       searchText.value = ''
       statusFilter.value = 'all'
+      weaponTypeFilter.value = ''
+      floatRangeFilter.value = ''
       dateRange.value = null
       currentPage.value = 1
       isSearchMode.value = false
@@ -738,8 +752,147 @@ export default {
       }
     }
 
+    // 加载武器类型数据
+    const loadWeaponTypes = async () => {
+      try {
+        const response = await fetch(apiUrls.buyWeaponTypes())
+        const result = await response.json()
+        if (result.success) {
+          weaponTypes.value = result.data
+        }
+      } catch (error) {
+        console.error('获取武器类型失败:', error)
+      }
+    }
+
+    // 加载磨损等级数据
+    const loadFloatRanges = async () => {
+      try {
+        const response = await fetch(apiUrls.buyFloatRanges())
+        const result = await response.json()
+        if (result.success) {
+          floatRanges.value = result.data
+        }
+      } catch (error) {
+        console.error('获取磨损等级失败:', error)
+      }
+    }
+
+    // 类型筛选处理
+    const handleTypeChange = async () => {
+      if (weaponTypeFilter.value || floatRangeFilter.value) {
+        await searchByTypeAndWear()
+      } else {
+        await loadBuyData()
+      }
+    }
+
+    // 磨损等级筛选处理
+    const handleWearChange = async () => {
+      if (weaponTypeFilter.value || floatRangeFilter.value) {
+        await searchByTypeAndWear()
+      } else {
+        await loadBuyData()
+      }
+    }
+
+    // 按类型和磨损等级搜索
+    const searchByTypeAndWear = async () => {
+      if (!weaponTypeFilter.value && !floatRangeFilter.value) {
+        return
+      }
+
+      loading.value = true
+      try {
+        const requestData = {
+          weapon_type: weaponTypeFilter.value,
+          float_range: floatRangeFilter.value,
+          page: currentPage.value,
+          page_size: pageSize.value
+        }
+
+        const response = await fetch(apiUrls.buySearchByTypeWear(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        })
+        
+        const result = await response.json()
+        
+        if (result.success) {
+          // 格式化数据
+          const formattedData = result.data.map((item, index) => {
+            return {
+              id: index + 1,
+              order_id: item[0] || '',
+              item_name: item[1] || '',
+              weapon_name: item[2] || '',
+              weapon_type: item[3] || '',
+              weapon_float: item[4] || 0,
+              float_range: item[5] || '',
+              price: item[6] || 0,
+              from: item[7] || '',
+              order_time: item[8] || '',
+              status: item[9] || '',
+              seller_name: item[10] || ''
+            }
+          })
+          
+          buyData.value = formattedData
+          totalItems.value = result.total
+          
+          // 获取筛选后的统计数据
+          await loadStatsByTypeAndWear()
+        } else {
+          ElMessage.error(result.message || '搜索失败')
+        }
+      } catch (error) {
+        console.error('按类型和磨损搜索失败:', error)
+        ElMessage.error('搜索失败')
+      } finally {
+        loading.value = false
+      }
+    }
+
+    // 获取按类型和磨损筛选的统计数据
+    const loadStatsByTypeAndWear = async () => {
+      try {
+        const requestData = {
+          weapon_type: weaponTypeFilter.value,
+          float_range: floatRangeFilter.value
+        }
+
+        const response = await fetch(apiUrls.buyStatsByTypeWear(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        })
+        
+        const result = await response.json()
+        
+        if (result.success) {
+          totalStats.value = {
+            totalCount: result.data.totalCount,
+            totalAmount: result.data.totalAmount.toFixed(2),
+            avgPrice: result.data.avgPrice.toFixed(2),
+            completedCount: result.data.completedCount,
+            cancelledCount: result.data.cancelledCount,
+            pendingCount: result.data.pendingCount
+          }
+        }
+      } catch (error) {
+        console.error('获取筛选统计数据失败:', error)
+      }
+    }
+
     onMounted(() => {
       loadBuyData()
+      loadWeaponTypes()
+      loadFloatRanges()
     })
 
     return {
@@ -750,6 +903,10 @@ export default {
       currentPageStats,
       searchText,
       statusFilter,
+      weaponTypeFilter,
+      floatRangeFilter,
+      weaponTypes,
+      floatRanges,
       dateRange,
       isTimeSearchMode,
       currentPage,
@@ -769,6 +926,8 @@ export default {
       handleSearch,
       handleClearSearch,
       handleStatusChange,
+      handleTypeChange,
+      handleWearChange,
       handleDateRangeChange,
       handleTimeSearch
     }
@@ -787,6 +946,16 @@ export default {
 .status-select {
   min-width: 120px;
   max-width: 150px;
+}
+
+.type-select {
+  min-width: 140px;
+  max-width: 160px;
+}
+
+.wear-select {
+  min-width: 140px;
+  max-width: 160px;
 }
 
 .date-picker {

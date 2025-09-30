@@ -39,6 +39,14 @@
                 <el-option label="已完成" value="已完成" />
                 <el-option label="已取消" value="已取消" />
               </el-select>
+              <el-select v-model="weaponTypeFilter" placeholder="选择武器类型" class="type-select" @change="handleTypeChange" clearable>
+                <el-option label="全部类型" value="" />
+                <el-option v-for="type in weaponTypes" :key="type" :label="type" :value="type" />
+              </el-select>
+              <el-select v-model="floatRangeFilter" placeholder="选择磨损等级" class="wear-select" @change="handleWearChange" clearable>
+                <el-option label="全部磨损" value="" />
+                <el-option v-for="range in floatRanges" :key="range" :label="range" :value="range" />
+              </el-select>
               <el-date-picker
                 v-model="dateRange"
                 type="daterange"
@@ -209,6 +217,10 @@ export default {
     const lentData = ref([])
     const searchText = ref('')
     const statusFilter = ref('all')
+    const weaponTypeFilter = ref('')
+    const floatRangeFilter = ref('')
+    const weaponTypes = ref([])
+    const floatRanges = ref([])
     const currentPage = ref(1)
     const pageSize = ref(20)
     const totalItems = ref(0)
