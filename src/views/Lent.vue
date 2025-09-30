@@ -53,67 +53,70 @@
         </div>
       </div>
 
-      <!-- 全部数据统计 -->
+      <!-- 统计数据 -->
       <div class="stats-summary">
         <div class="card">
-          <h3>全部出租统计</h3>
-          <div class="grid grid-3">
-            <div class="stat-item">
-              <span class="stat-label">总出租数量:</span>
-              <span class="stat-value">{{ allDataStats.totalCount }}</span>
+          <div class="stats-container">
+            <div class="stats-section">
+              <h3>全部出租统计</h3>
+              <div class="stats-grid-3x2">
+                <div class="stat-item">
+                  <span class="stat-label">总出租数量:</span>
+                  <span class="stat-value">{{ allDataStats.totalCount }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">总出租收入:</span>
+                  <span class="stat-value">¥{{ allDataStats.totalAmount }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">平均租金:</span>
+                  <span class="stat-value">¥{{ allDataStats.avgPrice }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">总租赁天数:</span>
+                  <span class="stat-value">{{ allDataStats.totalLeaseDays }} 天</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">平均租期:</span>
+                  <span class="stat-value">{{ allDataStats.avgLeaseDays }} 天</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">租赁中数量:</span>
+                  <span class="stat-value">{{ allDataStats.rentingCount }}</span>
+                </div>
+              </div>
             </div>
-            <div class="stat-item">
-              <span class="stat-label">总出租收入:</span>
-              <span class="stat-value">¥{{ allDataStats.totalAmount }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">平均租金:</span>
-              <span class="stat-value">¥{{ allDataStats.avgPrice }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">总租赁天数:</span>
-              <span class="stat-value">{{ allDataStats.totalLeaseDays }} 天</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">平均租期:</span>
-              <span class="stat-value">{{ allDataStats.avgLeaseDays }} 天</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">租赁中数量:</span>
-              <span class="stat-value">{{ allDataStats.rentingCount }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 当前页面统计 -->
-      <div class="stats-summary">
-        <div class="card">
-          <h3>当前页面统计</h3>
-          <div class="grid grid-3">
-            <div class="stat-item">
-              <span class="stat-label">当前数量:</span>
-              <span class="stat-value">{{ currentPageStats.totalCount }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">当前收入:</span>
-              <span class="stat-value">¥{{ currentPageStats.totalAmount }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">平均租金:</span>
-              <span class="stat-value">¥{{ currentPageStats.avgPrice }}</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">当前租赁天数:</span>
-              <span class="stat-value">{{ currentPageStats.totalLeaseDays }} 天</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">平均租期:</span>
-              <span class="stat-value">{{ currentPageStats.avgLeaseDays }} 天</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">租赁中数量:</span>
-              <span class="stat-value">{{ currentPageStats.rentingCount }}</span>
+            
+            <div class="stats-divider"></div>
+            
+            <div class="stats-section">
+              <h3>当前页面统计</h3>
+              <div class="stats-grid-3x2">
+                <div class="stat-item">
+                  <span class="stat-label">当前数量:</span>
+                  <span class="stat-value">{{ currentPageStats.totalCount }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">当前收入:</span>
+                  <span class="stat-value">¥{{ currentPageStats.totalAmount }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">平均租金:</span>
+                  <span class="stat-value">¥{{ currentPageStats.avgPrice }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">当前租赁天数:</span>
+                  <span class="stat-value">{{ currentPageStats.totalLeaseDays }} 天</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">平均租期:</span>
+                  <span class="stat-value">{{ currentPageStats.avgLeaseDays }} 天</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">租赁中数量:</span>
+                  <span class="stat-value">{{ currentPageStats.rentingCount }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -810,6 +813,58 @@ export default {
   margin-bottom: clamp(1rem, 3vw, 1.25rem);
 }
 
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stats-section {
+  flex: 1;
+}
+
+.stats-section h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 600;
+}
+
+.stats-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+  margin: 0.5rem 0;
+}
+
+.stats-grid-3x2 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: clamp(0.75rem, 2vw, 1rem);
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .stats-container {
+    flex-direction: row;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  
+  .stats-divider {
+    width: 1px;
+    height: auto;
+    min-height: 120px;
+    background: linear-gradient(180deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+    margin: 0;
+  }
+  
+  .stats-section {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1060,6 +1115,11 @@ export default {
     min-width: unset;
     width: 100%;
     max-width: none;
+  }
+  
+  .stats-grid-3x2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(6, 1fr);
   }
   
   .grid-3 {
