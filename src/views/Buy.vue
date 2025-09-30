@@ -46,64 +46,67 @@
     <!-- 统计数据 -->
     <div class="stats-summary">
       <div class="card">
-        <h3>统计数据</h3>
-        <div class="grid grid-3">
-          <div class="stat-item">
-            <span class="stat-label">总购买数量:</span>
-            <span class="stat-value">{{ totalStats.totalCount }} 件</span>
+        <div class="stats-container">
+          <div class="stats-section">
+            <h3>统计数据</h3>
+            <div class="grid grid-3">
+              <div class="stat-item">
+                <span class="stat-label">总购买数量:</span>
+                <span class="stat-value">{{ totalStats.totalCount }} 件</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">总购买金额:</span>
+                <span class="stat-value">¥{{ totalStats.totalAmount }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">平均购买价格:</span>
+                <span class="stat-value">¥{{ totalStats.avgPrice }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">已完成数量:</span>
+                <span class="stat-value">{{ totalStats.completedCount }} 件</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">已取消数量:</span>
+                <span class="stat-value">{{ totalStats.cancelledCount }} 件</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">待收货数量:</span>
+                <span class="stat-value">{{ totalStats.pendingCount }} 件</span>
+              </div>
+            </div>
           </div>
-          <div class="stat-item">
-            <span class="stat-label">总购买金额:</span>
-            <span class="stat-value">¥{{ totalStats.totalAmount }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">平均购买价格:</span>
-            <span class="stat-value">¥{{ totalStats.avgPrice }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">已完成数量:</span>
-            <span class="stat-value">{{ totalStats.completedCount }} 件</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">已取消数量:</span>
-            <span class="stat-value">{{ totalStats.cancelledCount }} 件</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">待收货数量:</span>
-            <span class="stat-value">{{ totalStats.pendingCount }} 件</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 当前页面统计 -->
-    <div class="stats-summary">
-      <div class="card">
-        <h3>当前页面统计</h3>
-        <div class="grid grid-3">
-          <div class="stat-item">
-            <span class="stat-label">页面数量:</span>
-            <span class="stat-value">{{ currentPageStats.totalCount }} 件</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">页面金额:</span>
-            <span class="stat-value">¥{{ currentPageStats.totalAmount }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">平均购买价格:</span>
-            <span class="stat-value">¥{{ currentPageStats.avgPrice }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">已完成数量:</span>
-            <span class="stat-value">{{ currentPageStats.completedCount }} 件</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">已取消数量:</span>
-            <span class="stat-value">{{ currentPageStats.cancelledCount }} 件</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">待收货数量:</span>
-            <span class="stat-value">{{ currentPageStats.pendingCount }} 件</span>
+          
+          <div class="stats-divider"></div>
+          
+          <div class="stats-section">
+            <h3>当前页面统计</h3>
+            <div class="grid grid-3">
+              <div class="stat-item">
+                <span class="stat-label">页面数量:</span>
+                <span class="stat-value">{{ currentPageStats.totalCount }} 件</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">页面金额:</span>
+                <span class="stat-value">¥{{ currentPageStats.totalAmount }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">平均购买价格:</span>
+                <span class="stat-value">¥{{ currentPageStats.avgPrice }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">已完成数量:</span>
+                <span class="stat-value">{{ currentPageStats.completedCount }} 件</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">已取消数量:</span>
+                <span class="stat-value">{{ currentPageStats.cancelledCount }} 件</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-label">待收货数量:</span>
+                <span class="stat-value">{{ currentPageStats.pendingCount }} 件</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1204,6 +1207,50 @@ export default {
 
 .stats-summary {
   margin-bottom: clamp(1rem, 3vw, 1.25rem);
+}
+
+.stats-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stats-section {
+  flex: 1;
+}
+
+.stats-section h3 {
+  margin: 0 0 1rem 0;
+  color: var(--text-primary);
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 600;
+}
+
+.stats-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+  margin: 0.5rem 0;
+}
+
+@media (min-width: 1024px) {
+  .stats-container {
+    flex-direction: row;
+    gap: 2rem;
+    align-items: flex-start;
+  }
+  
+  .stats-divider {
+    width: 1px;
+    height: auto;
+    min-height: 120px;
+    background: linear-gradient(180deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+    margin: 0;
+  }
+  
+  .stats-section {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .grid-3 {
