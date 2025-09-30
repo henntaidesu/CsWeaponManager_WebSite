@@ -23,6 +23,25 @@ export const API_CONFIG = {
     SELL_DATA: (page, limit) => `/webSellV1/getSellData/${page}/${limit}`,
     SELL_STATS: '/webSellV1/getSellStats',
     
+    // Steam市场数据相关
+    STEAM_BUY_DATA: (page, limit) => `/webSteamMarketV1/getSteamBuyData/${page}/${limit}`,
+    STEAM_BUY_STATS: '/webSteamMarketV1/getSteamBuyStats',
+    STEAM_BUY_STATS_BY_SEARCH: (keyword) => `/webSteamMarketV1/getSteamBuyStatsBySearch/${encodeURIComponent(keyword)}`,
+    STEAM_BUY_STATS_BY_STATUS: (status) => `/webSteamMarketV1/getSteamBuyStatsByStatus/${status}`,
+    STEAM_BUY_DATA_BY_STATUS: (status, page, limit) => `/webSteamMarketV1/getSteamBuyDataByStatus/${status}/${page}/${limit}`,
+    STEAM_BUY_SEARCH_BY_NAME: (itemName) => `/webSteamMarketV1/selectSteamBuyWeaponName/${encodeURIComponent(itemName)}`,
+    STEAM_BUY_SEARCH_BY_TIME: (startDate, endDate) => `/webSteamMarketV1/searchSteamBuyByTimeRange/${startDate}/${endDate}`,
+    STEAM_BUY_STATS_BY_TIME: (startDate, endDate) => `/webSteamMarketV1/getSteamBuyStatsByTimeRange/${startDate}/${endDate}`,
+    
+    STEAM_SELL_DATA: (page, limit) => `/webSteamMarketV1/getSteamSellData/${page}/${limit}`,
+    STEAM_SELL_STATS: '/webSteamMarketV1/getSteamSellStats',
+    STEAM_SELL_STATS_BY_SEARCH: (keyword) => `/webSteamMarketV1/getSteamSellStatsBySearch/${encodeURIComponent(keyword)}`,
+    STEAM_SELL_STATS_BY_STATUS: (status) => `/webSteamMarketV1/getSteamSellStatsByStatus/${status}`,
+    STEAM_SELL_DATA_BY_STATUS: (status, page, limit) => `/webSteamMarketV1/getSteamSellDataByStatus/${status}/${page}/${limit}`,
+    STEAM_SELL_SEARCH_BY_NAME: (itemName) => `/webSteamMarketV1/selectSteamSellWeaponName/${encodeURIComponent(itemName)}`,
+    STEAM_SELL_SEARCH_BY_TIME: (startDate, endDate) => `/webSteamMarketV1/searchSteamSellByTimeRange/${startDate}/${endDate}`,
+    STEAM_SELL_STATS_BY_TIME: (startDate, endDate) => `/webSteamMarketV1/getSteamSellStatsByTimeRange/${startDate}/${endDate}`,
+    
     // 爬虫相关
     YOUPIN_SPIDER: '/youping898SpiderV1/newData',
     YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
@@ -61,6 +80,26 @@ export const apiUrls = {
   // 销售数据
   sellData: (page, limit) => getApiUrl(API_CONFIG.ENDPOINTS.SELL_DATA(page, limit)),
   sellStats: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_STATS),
+  
+  // Steam购买数据
+  steamBuyData: (page, limit) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_DATA(page, limit)),
+  steamBuyStats: () => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_STATS),
+  steamBuyStatsBySearch: (keyword) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_STATS_BY_SEARCH(keyword)),
+  steamBuyStatsByStatus: (status) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_STATS_BY_STATUS(status)),
+  steamBuyDataByStatus: (status, page, limit) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_DATA_BY_STATUS(status, page, limit)),
+  steamBuySearchByName: (itemName) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_SEARCH_BY_NAME(itemName)),
+  steamBuySearchByTime: (startDate, endDate) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_SEARCH_BY_TIME(startDate, endDate)),
+  steamBuyStatsByTime: (startDate, endDate) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_BUY_STATS_BY_TIME(startDate, endDate)),
+  
+  // Steam销售数据
+  steamSellData: (page, limit) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_DATA(page, limit)),
+  steamSellStats: () => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_STATS),
+  steamSellStatsBySearch: (keyword) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_STATS_BY_SEARCH(keyword)),
+  steamSellStatsByStatus: (status) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_STATS_BY_STATUS(status)),
+  steamSellDataByStatus: (status, page, limit) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_DATA_BY_STATUS(status, page, limit)),
+  steamSellSearchByName: (itemName) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_SEARCH_BY_NAME(itemName)),
+  steamSellSearchByTime: (startDate, endDate) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_SEARCH_BY_TIME(startDate, endDate)),
+  steamSellStatsByTime: (startDate, endDate) => getApiUrl(API_CONFIG.ENDPOINTS.STEAM_SELL_STATS_BY_TIME(startDate, endDate)),
   
   // 爬虫API
   youpinSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_SPIDER),

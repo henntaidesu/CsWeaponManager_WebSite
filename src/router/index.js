@@ -7,6 +7,7 @@ import Lent from '@/views/Lent.vue'
 import Inventory from '@/views/Inventory.vue'
 import Setting from '@/views/Setting.vue'
 import DataSource from '@/views/DataSource.vue'
+import SteamMarket from '@/views/SteamMarket.vue'
 
 const routes = [
   {
@@ -55,6 +56,12 @@ const routes = [
         name: 'DataSource',
         component: DataSource,
         meta: { title: '数据来源' }
+      },
+      {
+        path: '/steam-market',
+        name: 'SteamMarket',
+        component: SteamMarket,
+        meta: { title: 'Steam市场' }
       }
     ]
   }

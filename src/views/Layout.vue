@@ -56,6 +56,11 @@ export default {
           icon: '/icons/sell.png'
         },
         {
+          path: '/steam-market',
+          title: 'Steam市场',
+          icon: '/icons/sell.png'
+        },
+        {
           path: '/rent',
           title: '正在出租',
           icon: '/icons/label-zuhu.png'
