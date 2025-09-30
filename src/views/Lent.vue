@@ -212,17 +212,23 @@
           </el-table-column>
           <el-table-column prop="status" label="状态" min-width="80">
             <template #default="scope">
-              <el-tag 
-                :type="getStatusType(scope.row.status)" 
-                size="small"
-                :style="{
-                  backgroundColor: getStatusColor(scope.row.status),
-                  borderColor: getStatusColor(scope.row.status),
-                  color: getStatusTextColor(scope.row.status)
-                }"
+              <el-tooltip 
+                :content="scope.row.status_sub || scope.row.status" 
+                placement="top"
+                :disabled="!scope.row.status_sub"
               >
-                {{ scope.row.status }}
-              </el-tag>
+                <el-tag 
+                  :type="getStatusType(scope.row.status)" 
+                  size="small"
+                  :style="{
+                    backgroundColor: getStatusColor(scope.row.status),
+                    borderColor: getStatusColor(scope.row.status),
+                    color: getStatusTextColor(scope.row.status)
+                  }"
+                >
+                  {{ scope.row.status }}
+                </el-tag>
+              </el-tooltip>
             </template>
           </el-table-column>
         </el-table>

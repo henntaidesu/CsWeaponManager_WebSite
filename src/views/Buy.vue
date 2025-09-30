@@ -220,17 +220,25 @@
         </el-table-column>
         <el-table-column prop="status" label="状态" min-width="80">
           <template #default="scope">
-            <el-tag 
-              :type="getStatusType(scope.row.status)" 
-              size="small"
-              :style="{
-                backgroundColor: getStatusColor(scope.row.status),
-                borderColor: getStatusColor(scope.row.status),
-                color: getStatusTextColor(scope.row.status)
-              }"
+            <el-tooltip 
+              :content="scope.row.status_sub || scope.row.status" 
+              placement="top"
+              :disabled="!scope.row.status_sub"
             >
-              {{ scope.row.status }}
-            </el-tag>
+              <span>
+                <el-tag 
+                  :type="getStatusType(scope.row.status)" 
+                  size="small"
+                  :style="{
+                    backgroundColor: getStatusColor(scope.row.status),
+                    borderColor: getStatusColor(scope.row.status),
+                    color: getStatusTextColor(scope.row.status)
+                  }"
+                >
+                  {{ scope.row.status }}
+                </el-tag>
+              </span>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -500,7 +508,8 @@ export default {
           price: item[6] || 0,
           from: item[7] || '',
           order_time: item[8] || '',
-          status: item[9] || ''
+          status: item[9] || '',
+          status_sub: item[10] || ''
         }))
         
         // 进入搜索模式
@@ -604,7 +613,8 @@ export default {
             price: item[6] || 0,         // 价格
             from: item[7] || '',         // 来源
             order_time: item[8] || '',   // 订单时间
-            status: item[9] || ''        // 状态
+            status: item[9] || '',       // 状态
+            status_sub: item[10] || ''   // 状态详情
           }
         }).filter(item => item !== null)
         
@@ -790,7 +800,8 @@ export default {
           price: item[6] || 0,
           from: item[7] || '',
           order_time: item[8] || '',
-          status: item[9] || ''
+          status: item[9] || '',
+          status_sub: item[10] || ''
         }))
         
         // 进入时间搜索模式
@@ -968,7 +979,8 @@ export default {
               from: item[7] || '',
               order_time: item[8] || '',
               status: item[9] || '',
-              seller_name: item[10] || ''
+              status_sub: item[10] || '',
+              seller_name: item[11] || ''
             }
           })
           
