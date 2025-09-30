@@ -1,49 +1,54 @@
 <template>
   <div>
-    <div class="filters card">
-      <div class="flex flex-wrap gap-4 items-center">
-        <el-input
-          v-model="searchText"
-          placeholder="搜索饰品名称..."
-          prefix-icon="Search"
-          class="search-input"
-          @keyup.enter="handleSearch"
-          @clear="handleClearSearch"
-          clearable
-        />
-        <el-button type="primary" @click="handleSearch" :loading="loading">
-          搜索
-        </el-button>
-        <el-button @click="handleClearSearch" :disabled="loading">
-          重置
-        </el-button>
-        <el-select v-model="statusFilter" placeholder="选择状态" class="status-select" @change="handleStatusChange">
-          <el-option label="全部" value="all" />
-          <el-option label="已完成" value="已完成" />
-          <el-option label="已取消" value="已取消" />
-          <el-option label="待收货" value="待收货" />
-        </el-select>
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          class="date-picker"
-          @change="handleDateRangeChange"
-          clearable
-        />
-        <el-button type="success" @click="handleTimeSearch" :loading="loading">
-          按时间搜索
-        </el-button>
-      </div>
-    </div>
-
-    <!-- 统计数据 -->
+    <!-- 搜索与统计数据 -->
     <div class="stats-summary">
       <div class="card">
+        <!-- 搜索栏 -->
+        <div class="search-section">
+          <div class="flex flex-wrap gap-4 items-center">
+            <el-input
+              v-model="searchText"
+              placeholder="搜索饰品名称..."
+              prefix-icon="Search"
+              class="search-input"
+              @keyup.enter="handleSearch"
+              @clear="handleClearSearch"
+              clearable
+            />
+            <el-button type="primary" @click="handleSearch" :loading="loading">
+              搜索
+            </el-button>
+            <el-button @click="handleClearSearch" :disabled="loading">
+              重置
+            </el-button>
+            <el-select v-model="statusFilter" placeholder="选择状态" class="status-select" @change="handleStatusChange">
+              <el-option label="全部" value="all" />
+              <el-option label="已完成" value="已完成" />
+              <el-option label="已取消" value="已取消" />
+              <el-option label="待收货" value="待收货" />
+            </el-select>
+            <el-date-picker
+              v-model="dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              format="YYYY-MM-DD"
+              value-format="YYYY-MM-DD"
+              class="date-picker"
+              @change="handleDateRangeChange"
+              clearable
+            />
+            <el-button type="success" @click="handleTimeSearch" :loading="loading">
+              按时间搜索
+            </el-button>
+          </div>
+        </div>
+        
+        <!-- 分隔线 -->
+        <div class="search-stats-divider"></div>
+        
+        <!-- 统计数据 -->
         <div class="stats-container">
           <div class="stats-section">
             <h3>统计数据</h3>
@@ -1206,6 +1211,16 @@ export default {
 
 .stats-summary {
   margin-bottom: clamp(1rem, 3vw, 1.25rem);
+}
+
+.search-section {
+  margin-bottom: 1.5rem;
+}
+
+.search-stats-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
+  margin: 1.5rem 0;
 }
 
 .stats-container {
