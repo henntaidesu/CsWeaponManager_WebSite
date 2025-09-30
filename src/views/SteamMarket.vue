@@ -22,9 +22,15 @@
               <el-button @click="handleBuyClearSearch" :disabled="buyLoading">
                 重置
               </el-button>
-              <el-select v-model="buyStatusFilter" placeholder="选择状态" class="status-select" @change="handleBuyStatusChange">
-                <el-option label="全部" value="all" />
-                <el-option label="已完成" value="已完成" />
+              <el-select 
+                v-model="buyGameNameFilter" 
+                placeholder="选择游戏" 
+                class="game-select" 
+                @change="handleBuyGameChange"
+                clearable
+              >
+                <el-option label="全部游戏" value="all" />
+                <el-option v-for="game in buyGameNamesList" :key="game" :label="game" :value="game" />
               </el-select>
               <el-date-picker
                 v-model="buyDateRange"
@@ -187,9 +193,15 @@
               <el-button @click="handleSellClearSearch" :disabled="sellLoading">
                 重置
               </el-button>
-              <el-select v-model="sellStatusFilter" placeholder="选择状态" class="status-select" @change="handleSellStatusChange">
-                <el-option label="全部" value="all" />
-                <el-option label="已完成" value="已完成" />
+              <el-select 
+                v-model="sellGameNameFilter" 
+                placeholder="选择游戏" 
+                class="game-select" 
+                @change="handleSellGameChange"
+                clearable
+              >
+                <el-option label="全部游戏" value="all" />
+                <el-option v-for="game in sellGameNamesList" :key="game" :label="game" :value="game" />
               </el-select>
               <el-date-picker
                 v-model="sellDateRange"
@@ -346,12 +358,14 @@ export default {
   name: 'SteamMarket',
   setup() {
     const activeTab = ref('buy')
+    const buyGameNamesList = ref([])
+    const sellGameNamesList = ref([])
 
     // Buy相关状态
     const buyLoading = ref(false)
     const buyData = ref([])
     const buySearchText = ref('')
-    const buyStatusFilter = ref('all')
+    const buyGameNameFilter = ref('all')
     const buyCurrentPage = ref(1)
     const buyPageSize = ref(20)
     const buyTotalItems = ref(0)
@@ -369,7 +383,7 @@ export default {
     const sellLoading = ref(false)
     const sellData = ref([])
     const sellSearchText = ref('')
-    const sellStatusFilter = ref('all')
+    const sellGameNameFilter = ref('all')
     const sellCurrentPage = ref(1)
     const sellPageSize = ref(20)
     const sellTotalItems = ref(0)
@@ -416,17 +430,9 @@ export default {
       if (buyIsSearchMode.value && buyAllSearchResults.value.length > 0) {
         filtered = buyAllSearchResults.value
         
-        if (buyStatusFilter.value !== 'all') {
-          filtered = filtered.filter(item => item.status === buyStatusFilter.value)
-        }
-        
         const start = (buyCurrentPage.value - 1) * buyPageSize.value
         const end = start + buyPageSize.value
         return filtered.slice(start, end)
-      }
-
-      if (buyStatusFilter.value !== 'all') {
-        filtered = filtered.filter(item => item.status === buyStatusFilter.value)
       }
 
       return filtered
@@ -438,17 +444,9 @@ export default {
       if (sellIsSearchMode.value && sellAllSearchResults.value.length > 0) {
         filtered = sellAllSearchResults.value
         
-        if (sellStatusFilter.value !== 'all') {
-          filtered = filtered.filter(item => item.status === sellStatusFilter.value)
-        }
-        
         const start = (sellCurrentPage.value - 1) * sellPageSize.value
         const end = start + sellPageSize.value
         return filtered.slice(start, end)
-      }
-
-      if (sellStatusFilter.value !== 'all') {
-        filtered = filtered.filter(item => item.status === sellStatusFilter.value)
       }
 
       return filtered
@@ -473,17 +471,14 @@ export default {
     }
 
     // Buy相关方法
-    const loadBuyTotalStats = async (searchKeyword = null, filterStatus = null) => {
+    const loadBuyTotalStats = async (searchKeyword = null) => {
       try {
         let apiUrl
         
         const keyword = searchKeyword || buySearchText.value.trim()
-        const status = filterStatus || buyStatusFilter.value
         
         if (keyword) {
           apiUrl = apiUrls.steamBuyStatsBySearch(keyword)
-        } else if (status !== 'all') {
-          apiUrl = apiUrls.steamBuyStatsByStatus(status)
         } else {
           apiUrl = apiUrls.steamBuyStats()
         }
@@ -601,9 +596,11 @@ export default {
         const min = (buyCurrentPage.value - 1) * buyPageSize.value
         const max = buyPageSize.value
         
-        let apiUrl = `/api/webSteamMarketV1/getSteamBuyData/${min}/${max}`
-        if (buyStatusFilter.value !== 'all') {
-          apiUrl = `/api/webSteamMarketV1/getSteamBuyDataByStatus/${buyStatusFilter.value}/${min}/${max}`
+        let apiUrl
+        if (buyGameNameFilter.value !== 'all') {
+          apiUrl = `/api/webSteamMarketV1/getSteamBuyDataByGameName/${encodeURIComponent(buyGameNameFilter.value)}/${min}/${max}`
+        } else {
+          apiUrl = `/api/webSteamMarketV1/getSteamBuyData/${min}/${max}`
         }
         
         const response = await fetch(apiUrl, {
@@ -644,7 +641,11 @@ export default {
           }
         }).filter(item => item !== null)
         
-        await loadBuyTotalStats(null, buyStatusFilter.value)
+        if (buyGameNameFilter.value !== 'all') {
+          await loadBuyStatsByGameName(buyGameNameFilter.value)
+        } else {
+          await loadBuyTotalStats()
+        }
         
         if (buyData.value.length === 0) {
           ElMessage.info('暂无Steam购买数据')
@@ -767,17 +768,14 @@ export default {
     }
 
     // Sell相关方法（类似Buy方法）
-    const loadSellTotalStats = async (searchKeyword = null, filterStatus = null) => {
+    const loadSellTotalStats = async (searchKeyword = null) => {
       try {
         let apiUrl = '/api/webSteamMarketV1/getSteamSellStats'
         
         const keyword = searchKeyword || sellSearchText.value.trim()
-        const status = filterStatus || sellStatusFilter.value
         
         if (keyword) {
           apiUrl = `/api/webSteamMarketV1/getSteamSellStatsBySearch/${encodeURIComponent(keyword)}`
-        } else if (status !== 'all') {
-          apiUrl = `/api/webSteamMarketV1/getSteamSellStatsByStatus/${status}`
         }
         
         const response = await fetch(apiUrl, {
@@ -893,9 +891,11 @@ export default {
         const min = (sellCurrentPage.value - 1) * sellPageSize.value
         const max = sellPageSize.value
         
-        let apiUrl = `/api/webSteamMarketV1/getSteamSellData/${min}/${max}`
-        if (sellStatusFilter.value !== 'all') {
-          apiUrl = `/api/webSteamMarketV1/getSteamSellDataByStatus/${sellStatusFilter.value}/${min}/${max}`
+        let apiUrl
+        if (sellGameNameFilter.value !== 'all') {
+          apiUrl = `/api/webSteamMarketV1/getSteamSellDataByGameName/${encodeURIComponent(sellGameNameFilter.value)}/${min}/${max}`
+        } else {
+          apiUrl = `/api/webSteamMarketV1/getSteamSellData/${min}/${max}`
         }
         
         const response = await fetch(apiUrl, {
@@ -936,7 +936,11 @@ export default {
           }
         }).filter(item => item !== null)
         
-        await loadSellTotalStats(null, sellStatusFilter.value)
+        if (sellGameNameFilter.value !== 'all') {
+          await loadSellStatsByGameName(sellGameNameFilter.value)
+        } else {
+          await loadSellTotalStats()
+        }
         
         if (sellData.value.length === 0) {
           ElMessage.info('暂无Steam销售数据')
@@ -1086,7 +1090,7 @@ export default {
 
     const handleBuyClearSearch = () => {
       buySearchText.value = ''
-      buyStatusFilter.value = 'all'
+      buyGameNameFilter.value = 'all'
       buyDateRange.value = null
       buyCurrentPage.value = 1
       buyIsSearchMode.value = false
@@ -1095,9 +1099,44 @@ export default {
       loadBuyData()
     }
 
-    const handleBuyStatusChange = () => {
+    const handleBuyGameChange = () => {
       buyCurrentPage.value = 1
       loadBuyData()
+    }
+
+    const loadBuyStatsByGameName = async (gameName) => {
+      try {
+        const response = await fetch(`/api/webSteamMarketV1/getSteamBuyStatsByGameName/${encodeURIComponent(gameName)}`, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const statsData = await response.json()
+        
+        if (statsData) {
+          buyTotalStats.value = {
+            totalCount: statsData.total_count || 0,
+            totalAmount: statsData.total_amount?.toFixed(2) || '0.00',
+            avgPrice: statsData.avg_price?.toFixed(2) || '0.00'
+          }
+          buyTotalItems.value = statsData.total_count || 0
+        }
+      } catch (error) {
+        console.error('根据游戏名称获取Steam购买统计失败:', error)
+        buyTotalStats.value = {
+          totalCount: 0,
+          totalAmount: '0.00',
+          avgPrice: '0.00'
+        }
+        buyTotalItems.value = 0
+      }
     }
 
     const handleBuyDateRangeChange = (value) => {
@@ -1123,7 +1162,7 @@ export default {
 
     const handleSellClearSearch = () => {
       sellSearchText.value = ''
-      sellStatusFilter.value = 'all'
+      sellGameNameFilter.value = 'all'
       sellDateRange.value = null
       sellCurrentPage.value = 1
       sellIsSearchMode.value = false
@@ -1132,21 +1171,106 @@ export default {
       loadSellData()
     }
 
-    const handleSellStatusChange = () => {
+    const handleSellGameChange = () => {
       sellCurrentPage.value = 1
       loadSellData()
+    }
+
+    const loadSellStatsByGameName = async (gameName) => {
+      try {
+        const response = await fetch(`/api/webSteamMarketV1/getSteamSellStatsByGameName/${encodeURIComponent(gameName)}`, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const statsData = await response.json()
+        
+        if (statsData) {
+          sellTotalStats.value = {
+            totalCount: statsData.total_count || 0,
+            totalAmount: statsData.total_amount?.toFixed(2) || '0.00',
+            avgPrice: statsData.avg_price?.toFixed(2) || '0.00'
+          }
+          sellTotalItems.value = statsData.total_count || 0
+        }
+      } catch (error) {
+        console.error('根据游戏名称获取Steam销售统计失败:', error)
+        sellTotalStats.value = {
+          totalCount: 0,
+          totalAmount: '0.00',
+          avgPrice: '0.00'
+        }
+        sellTotalItems.value = 0
+      }
     }
 
     const handleSellDateRangeChange = (value) => {
       console.log('销售日期范围变更:', value)
     }
 
+    // 加载Buy游戏名称列表
+    const loadBuyGameNames = async () => {
+      try {
+        const response = await fetch('/api/webSteamMarketV1/getBuyGameNames', {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        buyGameNamesList.value = data || []
+      } catch (error) {
+        console.error('加载Buy游戏名称列表失败:', error)
+        buyGameNamesList.value = []
+      }
+    }
+
+    // 加载Sell游戏名称列表
+    const loadSellGameNames = async () => {
+      try {
+        const response = await fetch('/api/webSteamMarketV1/getSellGameNames', {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            'Accept': 'application/json',
+          },
+        })
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        sellGameNamesList.value = data || []
+      } catch (error) {
+        console.error('加载Sell游戏名称列表失败:', error)
+        sellGameNamesList.value = []
+      }
+    }
+
     onMounted(() => {
+      loadBuyGameNames() // 加载Buy游戏名称列表
+      loadSellGameNames() // 加载Sell游戏名称列表
       loadBuyData() // 默认加载购买数据
     })
 
     return {
       activeTab,
+      buyGameNamesList,
+      sellGameNamesList,
       // Buy相关
       buyLoading,
       buyData,
@@ -1154,7 +1278,7 @@ export default {
       buyTotalStats,
       buyCurrentPageStats,
       buySearchText,
-      buyStatusFilter,
+      buyGameNameFilter,
       buyDateRange,
       buyIsTimeSearchMode,
       buyCurrentPage,
@@ -1169,7 +1293,7 @@ export default {
       sellTotalStats,
       sellCurrentPageStats,
       sellSearchText,
-      sellStatusFilter,
+      sellGameNameFilter,
       sellDateRange,
       sellIsTimeSearchMode,
       sellCurrentPage,
@@ -1185,7 +1309,7 @@ export default {
       handleBuyCurrentChange,
       handleBuySearch,
       handleBuyClearSearch,
-      handleBuyStatusChange,
+      handleBuyGameChange,
       handleBuyDateRangeChange,
       handleBuyTimeSearch,
       // Sell方法
@@ -1193,7 +1317,7 @@ export default {
       handleSellCurrentChange,
       handleSellSearch,
       handleSellClearSearch,
-      handleSellStatusChange,
+      handleSellGameChange,
       handleSellDateRangeChange,
       handleSellTimeSearch
     }
@@ -1249,6 +1373,11 @@ export default {
 .status-select {
   min-width: 120px;
   max-width: 150px;
+}
+
+.game-select {
+  min-width: 150px;
+  max-width: 200px;
 }
 
 .date-picker {
