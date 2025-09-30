@@ -45,16 +45,19 @@ export const API_CONFIG = {
     // 类型和磨损等级搜索相关
     BUY_WEAPON_TYPES: '/webBuyPageV1/getWeaponTypes',
     BUY_FLOAT_RANGES: '/webBuyPageV1/getFloatRanges',
+    BUY_STATUS_LIST: '/webBuyPageV1/getStatusList',
     BUY_SEARCH_BY_TYPE_WEAR: '/webBuyPageV1/searchByTypeAndWear',
     BUY_STATS_BY_TYPE_WEAR: '/webBuyPageV1/getStatsByTypeAndWear',
     
     SELL_WEAPON_TYPES: '/webSellPageV1/getWeaponTypes',
     SELL_FLOAT_RANGES: '/webSellPageV1/getFloatRanges',
+    SELL_STATUS_LIST: '/webSellPageV1/getStatusList',
     SELL_SEARCH_BY_TYPE_WEAR: '/webSellPageV1/searchByTypeAndWear',
     SELL_STATS_BY_TYPE_WEAR: '/webSellPageV1/getStatsByTypeAndWear',
     
     LENT_WEAPON_TYPES: '/webLentPageV1/getWeaponTypes',
     LENT_FLOAT_RANGES: '/webLentPageV1/getFloatRanges',
+    LENT_STATUS_LIST: '/webLentPageV1/getStatusList',
     LENT_SEARCH_BY_TYPE_WEAR: '/webLentPageV1/searchByTypeAndWear',
     LENT_STATS_BY_TYPE_WEAR: '/webLentPageV1/getStatsByTypeAndWear',
     
@@ -120,16 +123,19 @@ export const apiUrls = {
   // 类型和磨损等级搜索
   buyWeaponTypes: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_WEAPON_TYPES),
   buyFloatRanges: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_FLOAT_RANGES),
+  buyStatusList: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_STATUS_LIST),
   buySearchByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_SEARCH_BY_TYPE_WEAR),
   buyStatsByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.BUY_STATS_BY_TYPE_WEAR),
   
   sellWeaponTypes: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_WEAPON_TYPES),
   sellFloatRanges: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_FLOAT_RANGES),
+  sellStatusList: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_STATUS_LIST),
   sellSearchByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_SEARCH_BY_TYPE_WEAR),
   sellStatsByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.SELL_STATS_BY_TYPE_WEAR),
   
   lentWeaponTypes: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_WEAPON_TYPES),
   lentFloatRanges: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_FLOAT_RANGES),
+  lentStatusList: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_STATUS_LIST),
   lentSearchByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_SEARCH_BY_TYPE_WEAR),
   lentStatsByTypeWear: () => getApiUrl(API_CONFIG.ENDPOINTS.LENT_STATS_BY_TYPE_WEAR),
   

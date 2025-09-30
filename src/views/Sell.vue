@@ -23,9 +23,7 @@
             </el-button>
             <el-select v-model="statusFilter" placeholder="选择状态" class="status-select" @change="handleStatusChange">
               <el-option label="全部" value="all" />
-              <el-option label="已完成" value="已完成" />
-              <el-option label="已取消" value="已取消" />
-              <el-option label="待收货" value="待收货" />
+              <el-option v-for="status in statusList" :key="status" :label="status" :value="status" />
             </el-select>
               <el-select 
                 v-model="weaponTypeFilter" 
@@ -199,8 +197,8 @@
         :flexible="true"
         :scrollbar-always-on="true"
       >
-        <el-table-column prop="order_id" label="订单ID" min-width="150" show-overflow-tooltip align="left" />
-        <el-table-column prop="weapon_type" label="类型" min-width="50" />
+        <el-table-column prop="order_id" label="订单ID" width="180" show-overflow-tooltip align="left" />
+        <el-table-column prop="weapon_type" label="类型" width="120" />
         <el-table-column prop="item_name" label="饰品名称" min-width="150" show-overflow-tooltip />
         <el-table-column prop="weapon_name" label="武器名称" min-width="100" />
         <el-table-column prop="weapon_float" label="Float" min-width="180" align="left">
@@ -268,6 +266,7 @@ export default {
     const floatRangeFilter = ref([])
     const weaponTypes = ref([])
     const floatRanges = ref([])
+    const statusList = ref([])
     const currentPage = ref(1)
     const pageSize = ref(20)
     const totalItems = ref(0)
@@ -857,6 +856,19 @@ export default {
       }
     }
 
+    // 加载状态列表数据
+    const loadStatusList = async () => {
+      try {
+        const response = await fetch(apiUrls.sellStatusList())
+        const result = await response.json()
+        if (result.success) {
+          statusList.value = result.data
+        }
+      } catch (error) {
+        console.error('获取状态列表失败:', error)
+      }
+    }
+
     // 类型筛选处理
     const handleTypeChange = async () => {
       if (weaponTypeFilter.value || floatRangeFilter.value) {
@@ -972,6 +984,7 @@ export default {
       loadSellData()
       loadWeaponTypes()
       loadFloatRanges()
+      loadStatusList()
     })
 
     return {
@@ -986,6 +999,7 @@ export default {
       floatRangeFilter,
       weaponTypes,
       floatRanges,
+      statusList,
       dateRange,
       isTimeSearchMode,
       currentPage,
