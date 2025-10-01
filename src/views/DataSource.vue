@@ -76,12 +76,10 @@
         </el-form-item>
         <el-form-item label="数据源类型">
           <el-select v-model="editForm.type" placeholder="选择数据源类型" style="width: 100%;" disabled>
-            <el-option label="BUFF" value="buff" />
             <el-option label="Steam市场" value="steam" />
+            <el-option label="完美世界APP" value="perfectworld" />
+            <el-option label="网易BUFF" value="buff" />
             <el-option label="悠悠有品" value="youpin" />
-            <el-option label="C5GAME" value="c5game" />
-            <el-option label="IGXE" value="igxe" />
-            <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
 
@@ -187,6 +185,51 @@
           </el-form-item>
         </template>
 
+        <!-- 完美世界APP特有配置 -->
+        <template v-else-if="editForm.type === 'perfectworld'">
+          <el-form-item label="appversion" required>
+            <el-input v-model="editForm.appversion" placeholder="请输入appversion" />
+          </el-form-item>
+          <el-form-item label="device" required>
+            <el-input v-model="editForm.device" placeholder="请输入device" />
+          </el-form-item>
+          <el-form-item label="gameType" required>
+            <el-input v-model="editForm.gameType" placeholder="请输入gameType" />
+          </el-form-item>
+          <el-form-item label="platform" required>
+            <el-input v-model="editForm.platform" placeholder="请输入platform" />
+          </el-form-item>
+          <el-form-item label="token" required>
+            <el-input 
+              v-model="editForm.pwToken" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入token"
+            />
+          </el-form-item>
+          <el-form-item label="tdSign" required>
+            <el-input 
+              v-model="editForm.tdSign" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入tdSign"
+            />
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input v-model="editForm.pwSteamID" placeholder="请输入SteamID" />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+        </template>
+
         <!-- 通用配置 -->
         <template v-else>
           <el-form-item label="API地址">
@@ -276,12 +319,10 @@
         </el-form-item>
         <el-form-item label="数据源类型" required>
           <el-select v-model="inputForm.type" placeholder="选择数据源类型" style="width: 100%;">
-            <el-option label="BUFF" value="buff" />
             <el-option label="Steam市场" value="steam" />
+            <el-option label="完美世界APP" value="perfectworld" />
+            <el-option label="网易BUFF" value="buff" />
             <el-option label="悠悠有品" value="youpin" />
-            <el-option label="C5GAME" value="c5game" />
-            <el-option label="IGXE" value="igxe" />
-            <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
         
@@ -352,9 +393,69 @@
             </el-select>
           </el-form-item>
         </template>
+
+        <!-- 完美世界APP特有配置 -->
+        <template v-else-if="inputForm.type === 'perfectworld'">
+          <el-form-item label="appversion" required>
+            <el-input 
+              v-model="inputForm.appversion" 
+              placeholder="请输入appversion"
+            />
+          </el-form-item>
+          <el-form-item label="device" required>
+            <el-input 
+              v-model="inputForm.device" 
+              placeholder="请输入device"
+            />
+          </el-form-item>
+          <el-form-item label="gameType" required>
+            <el-input 
+              v-model="inputForm.gameType" 
+              placeholder="请输入gameType"
+            />
+          </el-form-item>
+          <el-form-item label="platform" required>
+            <el-input 
+              v-model="inputForm.platform" 
+              placeholder="请输入platform"
+            />
+          </el-form-item>
+          <el-form-item label="token" required>
+            <el-input 
+              v-model="inputForm.pwToken" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入token"
+            />
+          </el-form-item>
+          <el-form-item label="tdSign" required>
+            <el-input 
+              v-model="inputForm.tdSign" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入tdSign"
+            />
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="inputForm.pwSteamID" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+        </template>
         
         <!-- 通用配置 -->
-        <template v-else-if="inputForm.type && inputForm.type !== 'youpin' && inputForm.type !== 'steam'">
+        <template v-else-if="inputForm.type && inputForm.type !== 'youpin' && inputForm.type !== 'steam' && inputForm.type !== 'perfectworld'">
           <el-form-item label="API地址">
             <el-input 
               v-model="inputForm.apiUrl" 
@@ -506,7 +607,15 @@ export default {
       systemType: '',
       steamID: '',
       // Steam特有字段
-      cookies: ''
+      cookies: '',
+      // 完美世界APP特有字段
+      appversion: '',
+      device: '',
+      gameType: '',
+      platform: '',
+      pwToken: '',
+      tdSign: '',
+      pwSteamID: ''
     })
     
     const inputForm = ref({
@@ -532,19 +641,25 @@ export default {
       systemType: '',
       steamID: '',
       // Steam特有字段
-      cookies: ''
+      cookies: '',
+      // 完美世界APP特有字段
+      appversion: '',
+      device: '',
+      gameType: '',
+      platform: '',
+      pwToken: '',
+      tdSign: '',
+      pwSteamID: ''
     })
 
     const dataSources = ref([])
 
     const getSourceTypeLabel = (type) => {
       const labels = {
-        buff: 'BUFF',
-        steam: 'Steam',
-        youpin: '悠悠有品',
-        c5game: 'C5GAME',
-        igxe: 'IGXE',
-        other: '其他'
+        steam: 'Steam市场',
+        perfectworld: '完美世界APP',
+        buff: '网易BUFF',
+        youpin: '悠悠有品'
       }
       return labels[type] || type
     }
@@ -643,6 +758,38 @@ export default {
         }
       }
 
+      // 完美世界APP类型的字段校验
+      if (inputForm.value.type === 'perfectworld') {
+        if (!inputForm.value.appversion) {
+          ElMessage.error('请填写appversion')
+          return
+        }
+        if (!inputForm.value.device) {
+          ElMessage.error('请填写device')
+          return
+        }
+        if (!inputForm.value.gameType) {
+          ElMessage.error('请填写gameType')
+          return
+        }
+        if (!inputForm.value.platform) {
+          ElMessage.error('请填写platform')
+          return
+        }
+        if (!inputForm.value.pwToken) {
+          ElMessage.error('请填写token')
+          return
+        }
+        if (!inputForm.value.tdSign) {
+          ElMessage.error('请填写tdSign')
+          return
+        }
+        if (!inputForm.value.pwSteamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
       submitting.value = true
       try {
         let requestData = {
@@ -664,6 +811,19 @@ export default {
             app_type: inputForm.value.appType,
             userId: inputForm.value.userId,
             steamId: inputForm.value.steamId
+          })
+        } else if (inputForm.value.type === 'perfectworld') {
+          // 完美世界APP特殊配置
+          requestData.configJson = JSON.stringify({
+            appversion: inputForm.value.appversion,
+            device: inputForm.value.device,
+            gameType: inputForm.value.gameType,
+            platform: inputForm.value.platform,
+            token: inputForm.value.pwToken,
+            tdSign: inputForm.value.tdSign,
+            steamID: inputForm.value.pwSteamID,
+            updateFreq: inputForm.value.updateFreq,
+            sleep_time: '6000'
           })
         } else if (inputForm.value.type === 'buff') {
           // BUFF特殊配置
@@ -762,7 +922,15 @@ export default {
         systemType: '',
         steamID: '',
         // Steam特有字段
-        cookies: ''
+        cookies: '',
+        // 完美世界APP特有字段
+        appversion: '',
+        device: '',
+        gameType: '',
+        platform: '',
+        pwToken: '',
+        tdSign: '',
+        pwSteamID: ''
       }
       editingSourceId.value = null
     }
@@ -1211,6 +1379,26 @@ export default {
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
+      } else if (source.type === 'perfectworld') {
+        // 完美世界APP配置
+        console.log('完美世界APP配置解析:', {
+          appversion: config.appversion,
+          device: config.device,
+          gameType: config.gameType,
+          platform: config.platform,
+          token: config.token,
+          tdSign: config.tdSign,
+          steamID: config.steamID,
+          updateFreq: config.updateFreq
+        })
+        editForm.value.appversion = config.appversion || ''
+        editForm.value.device = config.device || ''
+        editForm.value.gameType = config.gameType || ''
+        editForm.value.platform = config.platform || ''
+        editForm.value.pwToken = config.token || ''
+        editForm.value.tdSign = config.tdSign || ''
+        editForm.value.pwSteamID = config.steamID || ''
+        editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
       } else {
         // 通用配置 - 检查多种可能的字段名
         editForm.value.apiUrl = config.api_url || source.apiUrl || ''
@@ -1249,7 +1437,15 @@ export default {
         systemType: '',
         steamID: '',
         // Steam特有字段
-        cookies: ''
+        cookies: '',
+        // 完美世界APP特有字段
+        appversion: '',
+        device: '',
+        gameType: '',
+        platform: '',
+        pwToken: '',
+        tdSign: '',
+        pwSteamID: ''
       }
     }
 
@@ -1637,6 +1833,38 @@ export default {
         }
       }
 
+      // 完美世界APP类型的字段校验
+      if (editForm.value.type === 'perfectworld') {
+        if (!editForm.value.appversion) {
+          ElMessage.error('请填写appversion')
+          return
+        }
+        if (!editForm.value.device) {
+          ElMessage.error('请填写device')
+          return
+        }
+        if (!editForm.value.gameType) {
+          ElMessage.error('请填写gameType')
+          return
+        }
+        if (!editForm.value.platform) {
+          ElMessage.error('请填写platform')
+          return
+        }
+        if (!editForm.value.pwToken) {
+          ElMessage.error('请填写token')
+          return
+        }
+        if (!editForm.value.tdSign) {
+          ElMessage.error('请填写tdSign')
+          return
+        }
+        if (!editForm.value.pwSteamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
       editSubmitting.value = true
       try {
         let requestData = {
@@ -1657,6 +1885,19 @@ export default {
             yyyp_app_type: editForm.value.appType,
             yyyp_userId: editForm.value.userId,
             yyyp_steamId: editForm.value.steamId
+          })
+        } else if (editForm.value.type === 'perfectworld') {
+          // 完美世界APP特殊配置
+          requestData.configJson = JSON.stringify({
+            appversion: editForm.value.appversion,
+            device: editForm.value.device,
+            gameType: editForm.value.gameType,
+            platform: editForm.value.platform,
+            token: editForm.value.pwToken,
+            tdSign: editForm.value.tdSign,
+            steamID: editForm.value.pwSteamID,
+            updateFreq: editForm.value.updateFreq,
+            sleep_time: '6000'
           })
         } else if (editForm.value.type === 'buff') {
           // BUFF特殊配置
