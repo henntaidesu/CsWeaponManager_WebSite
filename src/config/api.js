@@ -66,8 +66,8 @@ export const API_CONFIG = {
     YOUPIN_FULL_SPIDER: '/youping898SpiderV1/NoneData',
     BUFF_SPIDER: '/buffSpiderV1/NewData',
     BUFF_FULL_SPIDER: '/buffSpiderV1/allDate',
-    STEAM_SPIDER: '/steamSpiderV1/NewData',
-    STEAM_FULL_SPIDER: '/steamSpiderV1/allDate'
+    STEAM_SPIDER: '/steamSpiderV1/getNewData',  // Steam增量采集（获取新数据）
+    STEAM_FULL_SPIDER: '/steamSpiderV1/NoneData'  // Steam全量采集
 
     
   }

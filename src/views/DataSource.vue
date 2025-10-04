@@ -1146,7 +1146,7 @@ export default {
       }
     }
 
-    // Steam专用爬虫采集函数
+    // Steam专用爬虫采集函数（增量采集 - 只获取新数据）
     const startSteamSpiderCollection = async (source) => {
       if (!source.enabled) {
         ElMessage.warning('请先启用数据源')
@@ -1162,7 +1162,7 @@ export default {
         // 添加到采集中的列表
         collectingSourceIds.value.add(source.dataID)
         
-        ElMessage.info(`开始使用爬虫采集Steam数据: ${source.dataName}`)
+        ElMessage.info(`开始增量采集Steam新数据: ${source.dataName}`)
 
         // 准备发送给爬虫的数据 - 按照后端API期望的字段名
         const spiderData = {
@@ -1179,29 +1179,30 @@ export default {
         
         console.log('发送给Steam爬虫的数据:', spiderData)
         
-        // 调用爬虫API
+        // 调用增量采集爬虫API（getNewData接口）
         const response = await axios.post(apiUrls.steamSpider(), spiderData)
 
-        // 后端成功返回 200 状态码和 "获取完成" 消息
+        // 后端成功返回 200 状态码
         if (response.status === 200) {
-          ElMessage.success(`${source.dataName} Steam爬虫采集完成！`)
-          console.log('Steam爬虫采集响应:', response.data)
+          const message = response.data?.message || 'Steam增量采集完成'
+          ElMessage.success(`${source.dataName} - ${message}`)
+          console.log('Steam增量采集响应:', response.data)
           
           // 更新数据源的最后更新时间
           source.lastUpdate = new Date()
         } else {
-          ElMessage.error(`Steam爬虫采集失败: ${response.data}`)
+          ElMessage.error(`Steam增量采集失败: ${response.data}`)
         }
       } catch (error) {
-        console.error('Steam爬虫采集失败:', error)
-        let errorMessage = `Steam爬虫采集 ${source.dataName} 失败`
+        console.error('Steam增量采集失败:', error)
+        let errorMessage = `Steam增量采集 ${source.dataName} 失败`
         
         if (error.response) {
-          errorMessage = error.response.data?.message || `Steam爬虫采集失败 (${error.response.status})`
+          errorMessage = error.response.data?.message || `Steam增量采集失败 (${error.response.status})`
         } else if (error.request) {
           errorMessage = '无法连接到Steam爬虫服务器'
         } else {
-          errorMessage = error.message || 'Steam爬虫采集失败'
+          errorMessage = error.message || 'Steam增量采集失败'
         }
         
         ElMessage.error(errorMessage)
@@ -1615,7 +1616,7 @@ export default {
       }
     }
 
-    // 编辑对话框中的Steam"全部采集"功能
+    // 编辑对话框中的Steam"全部采集"功能（全量采集 - 从数据库已有数据的下一页开始获取所有数据）
     const handleEditSteamCollectAll = async () => {
       if (!editForm.value.name) {
         ElMessage.error('数据源信息不完整')
@@ -1642,13 +1643,13 @@ export default {
         // 添加到采集中的列表
         collectingSourceIds.value.add(editingSourceId.value)
         
-        ElMessage.info(`开始执行Steam全部采集: ${editForm.value.name}`)
+        ElMessage.info(`开始执行Steam全量采集（从数据库已有数据继续获取）: ${editForm.value.name}`)
         
         // 准备发送给爬虫的数据 - 按照采集接口一样的传值方法
         const spiderData = {
           // 后端API需要的字段
-          cookies: editForm.value.cookies || '',
-          steamID: editForm.value.steamID || '',
+          cookie: editForm.value.cookies || '',
+          steamId: editForm.value.steamID || '',
 
           // 额外的数据源信息（可选）
           dataID: editingSourceId.value,
@@ -1657,28 +1658,28 @@ export default {
           enabled: editForm.value.enabled
         }
         
-        console.log('发送给Steam全部采集爬虫的数据:', spiderData)
+        console.log('发送给Steam全量采集爬虫的数据:', spiderData)
         
-        // 调用全部采集爬虫API
+        // 调用全量采集爬虫API（NoneData接口）
         const response = await axios.post(apiUrls.steamFullSpider(), spiderData)
 
         // 后端成功返回 200 状态码
         if (response.status === 200) {
-          ElMessage.success(`${editForm.value.name} Steam全部采集完成！`)
-          console.log('Steam全部采集响应:', response.data)
+          ElMessage.success(`${editForm.value.name} Steam全量采集完成！`)
+          console.log('Steam全量采集响应:', response.data)
         } else {
-          ElMessage.error(`Steam全部采集失败: ${response.data}`)
+          ElMessage.error(`Steam全量采集失败: ${response.data}`)
         }
       } catch (error) {
-        console.error('Steam全部采集失败:', error)
-        let errorMessage = `Steam全部采集 ${editForm.value.name} 失败`
+        console.error('Steam全量采集失败:', error)
+        let errorMessage = `Steam全量采集 ${editForm.value.name} 失败`
         
         if (error.response) {
-          errorMessage = error.response.data?.message || `Steam全部采集失败 (${error.response.status})`
+          errorMessage = error.response.data?.message || `Steam全量采集失败 (${error.response.status})`
         } else if (error.request) {
           errorMessage = '无法连接到Steam爬虫服务器'
         } else {
-          errorMessage = error.message || 'Steam全部采集失败'
+          errorMessage = error.message || 'Steam全量采集失败'
         }
         
         ElMessage.error(errorMessage)
