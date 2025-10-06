@@ -62,7 +62,7 @@ export default {
         },
         {
           path: '/steam-market',
-          title: 'Steam市场',
+          title: 'Steam市场记录',
           icon: '/icons/sell.png'
         },
         {

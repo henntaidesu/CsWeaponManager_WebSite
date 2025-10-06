@@ -298,7 +298,12 @@ export default {
     const currentPageStats = computed(() => {
       const currentData = lentData.value
       const totalCount = currentData.length
-      const totalAmount = currentData.reduce((sum, item) => sum + (item.price || 0), 0).toFixed(2)
+      // 修改：总收入 = 租金 * 天数
+      const totalAmount = currentData.reduce((sum, item) => {
+        const price = item.price || 0
+        const days = item.total_Lease_Days || 0
+        return sum + (price * days)
+      }, 0).toFixed(2)
       const avgPrice = totalCount > 0 ? (totalAmount / totalCount).toFixed(2) : '0.00'
       const totalLeaseDays = currentData.reduce((sum, item) => sum + (item.total_Lease_Days || 0), 0)
       const avgLeaseDays = totalCount > 0 ? (totalLeaseDays / totalCount).toFixed(1) : '0.0'
