@@ -47,13 +47,18 @@ export default {
         },
         {
           path: '/buy',
-          title: '已购入',
+          title: '购入列表',
           icon: '/icons/buy.png'
         },
         {
           path: '/sell',
-          title: '已售出',
+          title: '出售列表',
           icon: '/icons/sell.png'
+        },
+        {
+          path: '/rent',
+          title: '出租列表',
+          icon: '/icons/label-zuhu.png'
         },
         {
           path: '/steam-market',
@@ -61,20 +66,20 @@ export default {
           icon: '/icons/sell.png'
         },
         {
-          path: '/rent',
-          title: '正在出租',
-          icon: '/icons/label-zuhu.png'
-        },
-        {
-          path: '/sublet',
-          title: '正在转租',
-          icon: '/icons/Sublet.png'
-        },
-        {
-          path: '/rental-records',
-          title: '出租记录',
+          path: '/steam-inventory-history',
+          title: 'Steam交易历史',
           icon: '/icons/Rental_records.png'
         },
+        // {
+        //   path: '/sublet',
+        //   title: '正在转租',
+        //   icon: '/icons/Sublet.png'
+        // },
+        // {
+        //   path: '/rental-records',
+        //   title: '出租记录',
+        //   icon: '/icons/Rental_records.png'
+        // },
         {
           path: '/inventory',
           title: 'Steam库存',
@@ -89,12 +94,12 @@ export default {
           path: '/data-source',
           title: '数据来源',
           icon: '/icons/data_from.png'
-        },
-        {
-          path: '/setting',
-          title: '设置',
-          icon: '/icons/setting.png'
         }
+        // {
+        //   path: '/setting',
+        //   title: '设置',
+        //   icon: '/icons/setting.png'
+        // }
       ]
     }
   },

@@ -8,6 +8,7 @@ import Inventory from '@/views/Inventory.vue'
 import Setting from '@/views/Setting.vue'
 import DataSource from '@/views/DataSource.vue'
 import SteamMarket from '@/views/SteamMarket.vue'
+import SteamInventoryHistory from '@/views/SteamInventoryHistory.vue'
 
 const routes = [
   {
@@ -61,7 +62,13 @@ const routes = [
         path: '/steam-market',
         name: 'SteamMarket',
         component: SteamMarket,
-        meta: { title: 'Steam市场' }
+        meta: { title: 'Steam市场历史' }
+      },
+      {
+        path: '/steam-inventory-history',
+        name: 'SteamInventoryHistory',
+        component: SteamInventoryHistory,
+        meta: { title: 'Steam交易历史' }
       }
     ]
   }
