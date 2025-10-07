@@ -1166,9 +1166,9 @@ export default {
 
         // 准备发送给爬虫的数据 - 按照后端API期望的字段名
         const spiderData = {
-          // 后端API需要的字段
-          cookies: source.config?.cookies || '',
-          steamID: source.config?.steamID || '',
+          // 后端API需要的字段（注意：后端期望 cookie 和 steamId，不是 cookies 和 steamID）
+          cookie: source.config?.cookies || '',
+          steamId: source.config?.steamID || '',
           
           // 额外的数据源信息（可选）
           dataID: source.dataID,
@@ -1177,7 +1177,21 @@ export default {
           enabled: source.enabled
         }
         
+        console.log('Steam数据源完整信息:', source)
+        console.log('Steam配置对象:', source.config)
         console.log('发送给Steam爬虫的数据:', spiderData)
+        
+        // 验证必要参数
+        if (!spiderData.cookie) {
+          ElMessage.error('Steam Cookie 未配置，请先在数据源配置中添加 Cookie')
+          collectingSourceIds.value.delete(source.dataID)
+          return
+        }
+        if (!spiderData.steamId) {
+          ElMessage.error('Steam ID 未配置，请先在数据源配置中添加 Steam ID')
+          collectingSourceIds.value.delete(source.dataID)
+          return
+        }
         
         // 调用增量采集爬虫API（getNewData接口）
         const response = await axios.post(apiUrls.steamSpider(), spiderData)
