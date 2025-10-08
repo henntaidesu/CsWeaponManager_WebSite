@@ -2,62 +2,86 @@
   <div>
     <div class="data-source-container">
       <div class="data-sources-list">
-        <div class="card">
-          <!-- 按SteamID分组显示（默认） -->
-          <div v-for="(group, steamID) in groupedDataSources" :key="steamID" class="steam-group">
-            <div class="steam-group-header">
-              <div class="steam-group-header-left">
-                <h4>
-                  <el-icon><User /></el-icon>
-                  SteamID: {{ steamID === '未设置' ? '未设置' : steamID }}
-                  <el-tag size="small" type="info" style="margin-left: 10px;">{{ group.length }} 个数据源</el-tag>
-                </h4>
+        <!-- 空状态提示 -->
+        <div v-if="dataSources.length === 0" class="card">
+          <div class="empty-state">
+            <el-empty description="暂无数据源">
+              <div class="empty-actions">
+                <el-button type="primary" @click="openAddDialogForNewSteam" size="large">
+                  <el-icon :size="20" style="margin-right: 8px;"><Plus /></el-icon>
+                  创建第一个数据源
+                </el-button>
               </div>
-              <div class="steam-group-header-right">
-                <div class="add-source-button" @click="openAddDialog(steamID)">
-                  <el-icon :size="20"><Plus /></el-icon>
-                  <span>添加数据源</span>
+            </el-empty>
+          </div>
+        </div>
+
+        <!-- 按SteamID分组显示（有数据时） - 每个分组独立的BOX -->
+        <template v-else>
+          <div v-for="(group, steamID) in groupedDataSources" :key="steamID" class="steam-group-box">
+            <div class="card">
+              <div class="steam-group-header">
+                <div class="steam-group-header-left">
+                  <h4>
+                    <el-icon><User /></el-icon>
+                    SteamID: {{ steamID === '未设置' ? '未设置' : steamID }}
+                    <el-tag size="small" type="info" style="margin-left: 10px;">{{ group.length }} 个数据源</el-tag>
+                  </h4>
                 </div>
-              </div>
-            </div>
-            <div class="grid grid-datasource">
-              <!-- 现有数据源卡片 -->
-              <div 
-                v-for="source in group" 
-                :key="source.dataID" 
-                class="source-card"
-                :class="{ disabled: !source.enabled }"
-              >
-                <div class="source-header">
-                  <div class="source-info">
-                    <h4>{{ source.dataName }}</h4>
-                    <el-tag :type="getSourceTypeColor(source.enabled)">{{ getSourceTypeLabel(source.type) }}</el-tag>
+                <div class="steam-group-header-right">
+                  <div class="add-source-button" @click="openAddDialog(steamID)">
+                    <el-icon :size="20"><Plus /></el-icon>
+                    <span>添加数据源</span>
                   </div>
                 </div>
-                
-                <div class="source-details">
-                  <p><strong>SteamID:</strong> {{ source.steamID || '未设置' }}</p>
-                  <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
-                  <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
-                </div>
-                
-                <div class="source-actions">
-                  <el-button type="primary" size="small" @click="editSource(source)">
-                    编辑
-                  </el-button>
-                  <el-button 
-                    type="warning" 
-                    size="small" 
-                    @click="startCollection(source)" 
-                    :disabled="!source.enabled"
-                    :loading="collectingSourceIds.has(source.dataID)"
-                  >
-                    {{ collectingSourceIds.has(source.dataID) ? '采集中...' : '采集' }}
-                  </el-button>
+              </div>
+              <div class="grid grid-datasource">
+                <!-- 现有数据源卡片 -->
+                <div 
+                  v-for="source in group" 
+                  :key="source.dataID" 
+                  class="source-card"
+                  :class="{ disabled: !source.enabled }"
+                >
+                  <div class="source-header">
+                    <div class="source-info">
+                      <h4>{{ source.dataName }}</h4>
+                      <el-tag :type="getSourceTypeColor(source.enabled)">{{ getSourceTypeLabel(source.type) }}</el-tag>
+                    </div>
+                  </div>
+                  
+                  <div class="source-details">
+                    <p><strong>SteamID:</strong> {{ source.steamID || '未设置' }}</p>
+                    <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
+                    <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
+                  </div>
+                  
+                  <div class="source-actions">
+                    <el-button type="primary" size="small" @click="editSource(source)">
+                      编辑
+                    </el-button>
+                    <el-button 
+                      type="warning" 
+                      size="small" 
+                      @click="startCollection(source)" 
+                      :disabled="!source.enabled"
+                      :loading="collectingSourceIds.has(source.dataID)"
+                    >
+                      {{ collectingSourceIds.has(source.dataID) ? '采集中...' : '采集' }}
+                    </el-button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </template>
+      </div>
+
+      <!-- 新建SteamID分组区域 -->
+      <div class="additional-box">
+        <div class="card new-steam-group-card" @click="openAddDialogForNewSteam">
+          <el-icon :size="32"><Plus /></el-icon>
+          <span>新建SteamID分组</span>
         </div>
       </div>
 
@@ -1533,6 +1557,13 @@ export default {
       addDialogVisible.value = true
     }
 
+    // 打开新建SteamID分组的对话框（不限制类型）
+    const openAddDialogForNewSteam = () => {
+      currentSteamID.value = null // 清空steamID，不限制类型
+      resetForm() // 先重置表单
+      addDialogVisible.value = true
+    }
+
     // 关闭添加数据源对话框
     const handleAddDialogClose = () => {
       resetForm() // 关闭时重置表单
@@ -2218,6 +2249,7 @@ export default {
       handleEditSteamCollectAll,
       handleEditDelete,
       openAddDialog,
+      openAddDialogForNewSteam,
       handleAddDialogClose,
       removeSource,
       refreshAllSources
@@ -2239,7 +2271,77 @@ export default {
 }
 
 .data-sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2.5vw, 1.5rem);
   margin-bottom: clamp(1.5rem, 4vw, 1.875rem);
+}
+
+.steam-group-box {
+  width: 100%;
+}
+
+.steam-group-box .card {
+  background-color: #1e1e1e;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border: 1px solid #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.additional-box {
+  margin-bottom: clamp(1.5rem, 4vw, 1.875rem);
+}
+
+.additional-box .card {
+  background-color: #1e1e1e;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  border: 1px solid #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 新建SteamID分组卡片 - 整个BOX作为按钮 */
+.new-steam-group-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  height: 120px;
+  cursor: pointer;
+  border: 2px dashed #666 !important;
+  background-color: transparent !important;
+  transition: all 0.3s;
+  padding: 1rem !important;
+}
+
+.new-steam-group-card .el-icon {
+  color: #999;
+  transition: all 0.3s;
+}
+
+.new-steam-group-card span {
+  color: #999;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.new-steam-group-card:hover {
+  border-color: #4CAF50 !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(76, 175, 80, 0.2) !important;
+}
+
+.new-steam-group-card:hover .el-icon {
+  color: #4CAF50;
+  transform: scale(1.1);
+}
+
+.new-steam-group-card:hover span {
+  color: #4CAF50;
 }
 
 .card-header {
@@ -2536,6 +2638,18 @@ export default {
 .steam-group-header .el-icon {
   color: #4CAF50;
   font-size: 1.2em;
+}
+
+/* 空状态样式 */
+.empty-state {
+  padding: 4rem 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-actions {
+  margin-top: 1rem;
 }
 
 /* 对话框样式 */
