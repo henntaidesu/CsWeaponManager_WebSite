@@ -54,6 +54,9 @@
           搜索
         </el-button>
         <el-button @click="handleReset">重置</el-button>
+        <el-button type="success" @click="fetchSteamInventory" :loading="fetchingInventory" icon="Refresh" style="min-width: 140px; text-align: center;">
+          更新Steam库存
+        </el-button>
         <el-button 
           @click="togglePriceSort" 
           :type="priceSortOrder ? 'success' : 'default'"
@@ -243,6 +246,7 @@ export default {
   name: 'Inventory',
   setup() {
     const loading = ref(false)
+    const fetchingInventory = ref(false) // 获取库存中
     const inventoryData = ref([])
     const groupedData = ref([])
     const searchText = ref('')
@@ -547,6 +551,40 @@ export default {
       }
     }
 
+    // 获取Steam库存
+    const fetchSteamInventory = async () => {
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+
+      try {
+        fetchingInventory.value = true
+
+        // 直接调用Spider接口，只传steamId
+        // Spider会自己调用后端API查询config表获取cookie
+        const spiderResponse = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/steamSpiderV1/getInventory`,
+          {
+            steamId: selectedSteamId.value
+          }
+        )
+
+        if (spiderResponse.data.success) {
+          ElMessage.success(spiderResponse.data.message || '库存获取成功')
+          // 重新加载库存数据
+          await loadInventoryData()
+        } else {
+          ElMessage.error(spiderResponse.data.message || '库存获取失败')
+        }
+      } catch (error) {
+        console.error('获取Steam库存失败:', error)
+        ElMessage.error('获取库存失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        fetchingInventory.value = false
+      }
+    }
+
     onMounted(async () => {
       await loadSteamIdList()
       if (selectedSteamId.value) {
@@ -556,6 +594,7 @@ export default {
 
     return {
       loading,
+      fetchingInventory,
       inventoryData,
       groupedData,
       inventoryStats,
@@ -580,7 +619,8 @@ export default {
       editingPrice,
       startEdit,
       finishEdit,
-      cancelEdit
+      cancelEdit,
+      fetchSteamInventory
     }
   }
 }
