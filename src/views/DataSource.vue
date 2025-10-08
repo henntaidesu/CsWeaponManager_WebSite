@@ -18,38 +18,49 @@
             </div>
           </div>
           
-          <div class="grid grid-datasource">
-            <div 
-              v-for="source in dataSources" 
-              :key="source.dataID" 
-              class="source-card"
-              :class="{ disabled: !source.enabled }"
-            >
-              <div class="source-header">
-                <div class="source-info">
-                  <h4>{{ source.dataName }}</h4>
-                  <el-tag :type="getSourceTypeColor(source.enabled)">{{ getSourceTypeLabel(source.type) }}</el-tag>
+          <!-- 按SteamID分组显示（默认） -->
+          <div v-for="(group, steamID) in groupedDataSources" :key="steamID" class="steam-group">
+            <div class="steam-group-header">
+              <h4>
+                <el-icon><User /></el-icon>
+                SteamID: {{ steamID || '未设置' }}
+                <el-tag size="small" type="info" style="margin-left: 10px;">{{ group.length }} 个数据源</el-tag>
+              </h4>
+            </div>
+            <div class="grid grid-datasource">
+              <div 
+                v-for="source in group" 
+                :key="source.dataID" 
+                class="source-card"
+                :class="{ disabled: !source.enabled }"
+              >
+                <div class="source-header">
+                  <div class="source-info">
+                    <h4>{{ source.dataName }}</h4>
+                    <el-tag :type="getSourceTypeColor(source.enabled)">{{ getSourceTypeLabel(source.type) }}</el-tag>
+                  </div>
                 </div>
-              </div>
-              
-              <div class="source-details">
-                <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
-                <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
-              </div>
-              
-              <div class="source-actions">
-                <el-button type="primary" size="small" @click="editSource(source)">
-                  编辑
-                </el-button>
-                <el-button 
-                  type="warning" 
-                  size="small" 
-                  @click="startCollection(source)" 
-                  :disabled="!source.enabled"
-                  :loading="collectingSourceIds.has(source.dataID)"
-                >
-                  {{ collectingSourceIds.has(source.dataID) ? '采集中...' : '采集' }}
-                </el-button>
+                
+                <div class="source-details">
+                  <p><strong>SteamID:</strong> {{ source.steamID || '未设置' }}</p>
+                  <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
+                  <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
+                </div>
+                
+                <div class="source-actions">
+                  <el-button type="primary" size="small" @click="editSource(source)">
+                    编辑
+                  </el-button>
+                  <el-button 
+                    type="warning" 
+                    size="small" 
+                    @click="startCollection(source)" 
+                    :disabled="!source.enabled"
+                    :loading="collectingSourceIds.has(source.dataID)"
+                  >
+                    {{ collectingSourceIds.has(source.dataID) ? '采集中...' : '采集' }}
+                  </el-button>
+                </div>
               </div>
             </div>
           </div>
@@ -566,14 +577,15 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, User } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { apiUrls } from '@/config/api.js'
 
 export default {
   name: 'DataSource',
   components: {
-    Plus
+    Plus,
+    User
   },
   setup() {
     const submitting = ref(false)
@@ -653,6 +665,21 @@ export default {
     })
 
     const dataSources = ref([])
+
+    // 按SteamID分组的计算属性
+    const groupedDataSources = computed(() => {
+      const groups = {}
+      
+      dataSources.value.forEach(source => {
+        const steamID = source.steamID || '未设置'
+        if (!groups[steamID]) {
+          groups[steamID] = []
+        }
+        groups[steamID].push(source)
+      })
+      
+      return groups
+    })
 
     const getSourceTypeLabel = (type) => {
       const labels = {
@@ -2061,6 +2088,20 @@ export default {
         if (result.success) {
           console.log('成功获取数据源，数量:', result.data.length)
           dataSources.value = result.data.map(item => {
+            const config = item.config || {}
+            
+            // 从不同类型的数据源配置中提取steamID
+            let steamID = ''
+            if (item.type === 'steam') {
+              steamID = config.steamID || ''
+            } else if (item.type === 'buff') {
+              steamID = config.steamID || ''
+            } else if (item.type === 'youpin') {
+              steamID = config.yyyp_steamId || ''
+            } else if (item.type === 'perfectworld') {
+              steamID = config.steamID || ''
+            }
+            
             return {
               id: item.dataID,
               dataID: item.dataID,
@@ -2072,7 +2113,8 @@ export default {
               enabled: item.enabled,
               status: item.enabled ? 'online' : 'offline',
               lastUpdate: item.lastUpdate ? new Date(item.lastUpdate) : new Date(),
-              config: item.config || {}
+              config: item.config || {},
+              steamID: steamID  // 新增steamID字段
             }
           })
           console.log('处理后的数据源:', dataSources.value)
@@ -2126,6 +2168,7 @@ export default {
       editForm,
       inputForm,
       dataSources,
+      groupedDataSources,
       getSourceTypeLabel,
       getSourceTypeColor,
       getUpdateFreqLabel,
@@ -2362,6 +2405,35 @@ export default {
   .source-actions .el-switch {
     align-self: center;
   }
+}
+
+/* SteamID分组样式 */
+.steam-group {
+  margin-bottom: 2rem;
+}
+
+.steam-group-header {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #4CAF50;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.steam-group-header h4 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1rem, 1.8vw, 1.125rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.steam-group-header .el-icon {
+  color: #4CAF50;
+  font-size: 1.2em;
 }
 
 /* 对话框样式 */
