@@ -54,8 +54,14 @@
           搜索
         </el-button>
         <el-button @click="handleReset">重置</el-button>
-        <el-button type="success" @click="fetchSteamInventory" :loading="fetchingInventory" icon="Refresh" style="min-width: 140px; text-align: center;">
+        <el-button type="success" @click="fetchSteamInventory" :loading="fetchingInventory" icon="Refresh" class="action-button">
           更新Steam库存
+        </el-button>
+        <el-button type="success" @click="fetchYYYPPrice" :loading="fetchingYYYPPrice" icon="Money" class="action-button">
+          获取悠悠有品价格
+        </el-button>
+        <el-button type="success" @click="fetchBuffPrice" :loading="fetchingBuffPrice" icon="Money" class="action-button">
+          获取BUFF价格
         </el-button>
         <el-switch
           v-model="groupByItem"
@@ -320,6 +326,8 @@ export default {
   setup() {
     const loading = ref(false)
     const fetchingInventory = ref(false) // 获取库存中
+    const fetchingYYYPPrice = ref(false) // 获取悠悠有品价格中
+    const fetchingBuffPrice = ref(false) // 获取BUFF价格中
     const inventoryData = ref([])
     const groupedData = ref([])
     const searchText = ref('')
@@ -722,6 +730,62 @@ export default {
       }
     }
 
+    // 获取悠悠有品价格
+    const fetchYYYPPrice = async () => {
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+
+      try {
+        fetchingYYYPPrice.value = true
+        
+        // TODO: 调用Spider API获取悠悠有品价格
+        // const response = await axios.post(
+        //   `${API_CONFIG.SPIDER_BASE_URL}/youpingSpiderV1/getPrice`,
+        //   {
+        //     steamId: selectedSteamId.value
+        //   }
+        // )
+        
+        ElMessage.info('获取悠悠有品价格功能待实现')
+        
+      } catch (error) {
+        console.error('获取悠悠有品价格失败:', error)
+        ElMessage.error('获取价格失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        fetchingYYYPPrice.value = false
+      }
+    }
+
+    // 获取BUFF价格
+    const fetchBuffPrice = async () => {
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+
+      try {
+        fetchingBuffPrice.value = true
+        
+        // TODO: 调用Spider API获取BUFF价格
+        // const response = await axios.post(
+        //   `${API_CONFIG.SPIDER_BASE_URL}/buffSpiderV1/getPrice`,
+        //   {
+        //     steamId: selectedSteamId.value
+        //   }
+        // )
+        
+        ElMessage.info('获取BUFF价格功能待实现')
+        
+      } catch (error) {
+        console.error('获取BUFF价格失败:', error)
+        ElMessage.error('获取价格失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        fetchingBuffPrice.value = false
+      }
+    }
+
     onMounted(async () => {
       await loadSteamIdList()
       if (selectedSteamId.value) {
@@ -732,6 +796,8 @@ export default {
     return {
       loading,
       fetchingInventory,
+      fetchingYYYPPrice,
+      fetchingBuffPrice,
       inventoryData,
       groupedData,
       inventoryStats,
@@ -759,7 +825,9 @@ export default {
       startEdit,
       finishEdit,
       cancelEdit,
-      fetchSteamInventory
+      fetchSteamInventory,
+      fetchYYYPPrice,
+      fetchBuffPrice
     }
   }
 }
@@ -781,6 +849,17 @@ export default {
 .wear-select {
   min-width: 120px;
   max-width: 180px;
+}
+
+.action-button {
+  min-width: 140px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-button :deep(.el-icon) {
+  margin-right: 4px;
 }
 
 .inventory-stats {
