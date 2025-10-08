@@ -57,14 +57,6 @@
         <el-button type="success" @click="fetchSteamInventory" :loading="fetchingInventory" icon="Refresh" style="min-width: 140px; text-align: center;">
           更新Steam库存
         </el-button>
-        <el-button 
-          @click="togglePriceSort" 
-          :type="priceSortOrder ? 'success' : 'default'"
-        >
-          价格排序
-          <span v-if="priceSortOrder === 'asc'">↑</span>
-          <span v-else-if="priceSortOrder === 'desc'">↓</span>
-        </el-button>
         <el-switch
           v-model="groupByItem"
           active-text="分组显示"
@@ -97,12 +89,24 @@
         :row-style="{ backgroundColor: 'transparent' }"
         :header-row-style="{ backgroundColor: 'var(--bg-tertiary)' }"
         height="calc(100vh - 400px)"
+        :default-sort="{ prop: 'buy_price', order: 'descending' }"
+        @sort-change="handleSortChange"
       >
         <el-table-column prop="weapon_name" label="武器" min-width="120" />
         <el-table-column prop="weapon_type" label="类型" min-width="100" />
         <el-table-column prop="item_name" label="饰品名称" min-width="250" show-overflow-tooltip />
-        <el-table-column prop="float_range" label="磨损等级" min-width="100" />
-        <el-table-column prop="weapon_float" label="磨损值" min-width="150">
+        <el-table-column 
+          prop="float_range" 
+          label="磨损等级" 
+          min-width="100" 
+          sortable="custom"
+        />
+        <el-table-column 
+          prop="weapon_float" 
+          label="磨损值" 
+          min-width="150" 
+          sortable="custom"
+        >
           <template #default="scope">
             <span v-if="scope.row.weapon_float" style="font-family: monospace;">
               {{ scope.row.weapon_float }}
@@ -110,7 +114,12 @@
             <span v-else style="color: #888;">N/A</span>
           </template>
         </el-table-column>
-        <el-table-column prop="buy_price" label="购入价格" width="150">
+        <el-table-column 
+          prop="buy_price" 
+          label="购入价格" 
+          width="150" 
+          sortable="custom"
+        >
           <template #default="scope">
             <div v-if="editingAssetId !== scope.row.assetid" 
                  @click="startEdit(scope.row)" 
@@ -132,7 +141,13 @@
             />
           </template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" width="120" fixed="right">
+        <el-table-column 
+          prop="remark" 
+          label="备注" 
+          width="120" 
+          fixed="right" 
+          sortable="custom"
+        >
           <template #default="scope">
             <el-tooltip v-if="scope.row.remark" :content="scope.row.remark" placement="left" effect="dark">
               <el-tag type="warning" size="small" style="cursor: help;">
@@ -214,19 +229,6 @@
             <el-tag type="primary" size="small">{{ scope.row.count }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="120" fixed="right">
-          <template #default="scope">
-            <el-button
-              v-if="scope.row.count > 1"
-              type="primary"
-              size="small"
-              @click="toggleExpand(scope.row)"
-            >
-              {{ isExpanded(scope.row.item_name) ? '收起' : '展开详情' }}
-            </el-button>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
       </el-table>
       
       <div class="table-footer">
@@ -271,7 +273,7 @@ export default {
     })
     const steamIdList = ref([])
     const selectedSteamId = ref('')
-    const priceSortOrder = ref('') // '', 'asc', 'desc'
+    const sortConfig = ref({ prop: 'buy_price', order: 'desc' }) // 默认按购入价格降序排序
 
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
@@ -368,12 +370,12 @@ export default {
           if (response.data.success) {
             inventoryData.value = response.data.data
             
-            // 应用价格排序
-            if (priceSortOrder.value) {
-              sortByPrice()
+            // 应用排序（包括默认排序）
+            if (sortConfig.value.prop) {
+              applySorting()
             }
             
-            console.log('数据已加载，总计:', inventoryData.value.length)
+            console.log('数据已加载，总计:', inventoryData.value.length, '排序:', sortConfig.value)
           } else {
             ElMessage.error(response.data.error || '加载数据失败')
           }
@@ -410,7 +412,7 @@ export default {
       searchText.value = ''
       weaponTypeFilter.value = ''
       floatRangeFilter.value = ''
-      priceSortOrder.value = ''
+      sortConfig.value = { prop: '', order: '' }
       loadInventoryData()
     }
 
@@ -419,36 +421,67 @@ export default {
       loadInventoryData()
     }
 
-    const sortByPrice = () => {
-      if (!priceSortOrder.value) return
+    // 统一的排序函数
+    const applySorting = () => {
+      if (!sortConfig.value.prop || !sortConfig.value.order) return
+      
+      const { prop, order } = sortConfig.value
       
       inventoryData.value.sort((a, b) => {
-        const priceA = parseFloat(a.buy_price) || 0
-        const priceB = parseFloat(b.buy_price) || 0
+        let valueA, valueB
         
-        if (priceSortOrder.value === 'asc') {
-          return priceA - priceB
+        if (prop === 'buy_price') {
+          // 价格排序
+          valueA = parseFloat(a.buy_price) || 0
+          valueB = parseFloat(b.buy_price) || 0
+        } else if (prop === 'weapon_float') {
+          // 磨损值排序
+          valueA = parseFloat(a.weapon_float) || 999999 // 没有磨损值的排在最后
+          valueB = parseFloat(b.weapon_float) || 999999
+        } else if (prop === 'float_range') {
+          // 磨损等级排序（按照游戏内的品质顺序）
+          const floatRangeOrder = {
+            '崭新出厂': 1,
+            '略有磨损': 2,
+            '久经沙场': 3,
+            '破损不堪': 4,
+            '战痕累累': 5
+          }
+          valueA = floatRangeOrder[a.float_range] || 999
+          valueB = floatRangeOrder[b.float_range] || 999
+        } else if (prop === 'remark') {
+          // 备注排序（有备注的在前，无备注的在后）
+          valueA = a.remark ? 0 : 1
+          valueB = b.remark ? 0 : 1
+        }
+        
+        if (order === 'asc') {
+          return valueA - valueB
         } else {
-          return priceB - priceA
+          return valueB - valueA
         }
       })
     }
 
-    const togglePriceSort = () => {
-      if (!priceSortOrder.value) {
-        priceSortOrder.value = 'desc' // 第一次点击：降序
-      } else if (priceSortOrder.value === 'desc') {
-        priceSortOrder.value = 'asc' // 第二次点击：升序
-      } else {
-        priceSortOrder.value = '' // 第三次点击：取消排序
+    // Element Plus 表格的排序事件处理
+    const handleSortChange = ({ prop, order }) => {
+      console.log('排序改变:', prop, order)
+      
+      if (!order) {
+        // 取消排序
+        sortConfig.value = { prop: '', order: '' }
+        loadInventoryData()
+        return
       }
       
-      if (priceSortOrder.value) {
-        sortByPrice()
-      } else {
-        // 取消排序，重新加载数据
-        loadInventoryData()
+      // 设置排序配置
+      sortConfig.value = { 
+        prop, 
+        order: order === 'ascending' ? 'asc' : 'desc' 
       }
+      
+      // 应用排序
+      applySorting()
     }
 
     const isExpanded = (itemName) => {
@@ -606,12 +639,12 @@ export default {
       expandedRows,
       steamIdList,
       selectedSteamId,
-      priceSortOrder,
+      sortConfig,
       loadInventoryData,
       handleReset,
       handleGroupChange,
       handleSteamIdChange,
-      togglePriceSort,
+      handleSortChange,
       isExpanded,
       toggleExpand,
       handleExpandChange,
@@ -766,6 +799,10 @@ export default {
 
 :deep(.el-table .el-table__cell) {
   word-break: break-word;
+}
+
+:deep(.el-table__header th) {
+  user-select: none;
 }
 
 @media (max-width: 768px) {
