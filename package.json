@@ -4,7 +4,7 @@
   "description": "CS武器管理器",
   "main": "src/main.js",
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "set NODE_OPTIONS=--no-deprecation && vue-cli-service serve",
     "build": "vue-cli-service build",
     "dev": "npm run serve"
   },
