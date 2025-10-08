@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h1 class="page-title">Steam库存</h1>
-    
     <div class="filters card">
       <div class="flex flex-wrap gap-4 items-center">
         <el-select 
@@ -84,11 +82,21 @@
         </div>
         <div class="card">
           <h3>悠悠有品总价值</h3>
-          <p class="stat-number">¥{{ yyypPriceStats.total_price }}</p>
+          <div class="stat-price-container">
+            <p class="stat-number">¥{{ yyypPriceStats.total_price }}</p>
+            <p class="stat-diff-right" :style="{ color: yyypPriceStats.diff >= 0 ? '#f56c6c' : '#4CAF50' }">
+              {{ yyypPriceStats.diff >= 0 ? '+' : '' }}¥{{ yyypPriceStats.diff }}
+            </p>
+          </div>
         </div>
         <div class="card">
           <h3>BUFF总价值</h3>
-          <p class="stat-number">¥{{ buffPriceStats.total_price }}</p>
+          <div class="stat-price-container">
+            <p class="stat-number">¥{{ buffPriceStats.total_price }}</p>
+            <p class="stat-diff-right" :style="{ color: buffPriceStats.diff >= 0 ? '#f56c6c' : '#4CAF50' }">
+              {{ buffPriceStats.diff >= 0 ? '+' : '' }}¥{{ buffPriceStats.diff }}
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -139,7 +147,7 @@
                  @click="startEdit(scope.row)" 
                  style="cursor: pointer; padding: 5px;">
               <div v-if="scope.row.buy_price" style="display: flex; align-items: center; gap: 5px;">
-                <span style="color: #4CAF50; font-weight: bold;">¥{{ parseFloat(scope.row.buy_price).toFixed(2) }}</span>
+                <span style="color: #fff; font-weight: bold;">¥{{ parseFloat(scope.row.buy_price).toFixed(2) }}</span>
               </div>
               <span v-else style="color: #888;">点击输入</span>
             </div>
@@ -158,11 +166,26 @@
         <el-table-column 
           prop="yyyp_price" 
           label="悠悠有品" 
-          width="150" 
+          width="180" 
           sortable="custom"
         >
           <template #default="scope">
-            <span v-if="scope.row.yyyp_price" style="color: #FF9800; font-weight: bold;">
+            <div v-if="scope.row.yyyp_price && scope.row.buy_price" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+              <span style="color: #fff; font-weight: bold;">
+                ¥{{ parseFloat(scope.row.yyyp_price).toFixed(2) }}
+              </span>
+              <span 
+                :style="{
+                  color: parseFloat(scope.row.yyyp_price) < parseFloat(scope.row.buy_price) ? '#4CAF50' : '#f56c6c',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }"
+              >
+                {{ parseFloat(scope.row.yyyp_price) < parseFloat(scope.row.buy_price) ? '-' : '+' }}
+                ¥{{ Math.abs(parseFloat(scope.row.yyyp_price) - parseFloat(scope.row.buy_price)).toFixed(2) }}
+              </span>
+            </div>
+            <span v-else-if="scope.row.yyyp_price" style="color: #fff; font-weight: bold;">
               ¥{{ parseFloat(scope.row.yyyp_price).toFixed(2) }}
             </span>
             <span v-else style="color: #888;">-</span>
@@ -171,11 +194,26 @@
         <el-table-column 
           prop="buff_price" 
           label="BUFF" 
-          width="150" 
+          width="180" 
           sortable="custom"
         >
           <template #default="scope">
-            <span v-if="scope.row.buff_price" style="color: #2196F3; font-weight: bold;">
+            <div v-if="scope.row.buff_price && scope.row.buy_price" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+              <span style="color: #fff; font-weight: bold;">
+                ¥{{ parseFloat(scope.row.buff_price).toFixed(2) }}
+              </span>
+              <span 
+                :style="{
+                  color: parseFloat(scope.row.buff_price) < parseFloat(scope.row.buy_price) ? '#4CAF50' : '#f56c6c',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }"
+              >
+                {{ parseFloat(scope.row.buff_price) < parseFloat(scope.row.buy_price) ? '-' : '+' }}
+                ¥{{ Math.abs(parseFloat(scope.row.buff_price) - parseFloat(scope.row.buy_price)).toFixed(2) }}
+              </span>
+            </div>
+            <span v-else-if="scope.row.buff_price" style="color: #fff; font-weight: bold;">
               ¥{{ parseFloat(scope.row.buff_price).toFixed(2) }}
             </span>
             <span v-else style="color: #888;">-</span>
@@ -253,23 +291,53 @@
                 <el-table-column prop="buy_price" label="购入价格" min-width="120">
                   <template #default="props">
                     <div v-if="props.row.buy_price">
-                      <span style="color: #4CAF50; font-weight: bold;">¥{{ parseFloat(props.row.buy_price).toFixed(2) }}</span>
+                      <span style="color: #fff; font-weight: bold;">¥{{ parseFloat(props.row.buy_price).toFixed(2) }}</span>
                       <el-tag v-if="!props.row.weapon_float" type="info" size="small" style="margin-left: 5px;">均</el-tag>
                     </div>
                     <span v-else style="color: #888;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="yyyp_price" label="悠悠有品" min-width="130">
+                <el-table-column prop="yyyp_price" label="悠悠有品" min-width="160">
                   <template #default="props">
-                    <span v-if="props.row.yyyp_price" style="color: #FF9800; font-weight: bold;">
+                    <div v-if="props.row.yyyp_price && props.row.buy_price" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+                      <span style="color: #fff; font-weight: bold;">
+                        ¥{{ parseFloat(props.row.yyyp_price).toFixed(2) }}
+                      </span>
+                      <span 
+                        :style="{
+                          color: parseFloat(props.row.yyyp_price) < parseFloat(props.row.buy_price) ? '#4CAF50' : '#f56c6c',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }"
+                      >
+                        {{ parseFloat(props.row.yyyp_price) < parseFloat(props.row.buy_price) ? '-' : '+' }}
+                        ¥{{ Math.abs(parseFloat(props.row.yyyp_price) - parseFloat(props.row.buy_price)).toFixed(2) }}
+                      </span>
+                    </div>
+                    <span v-else-if="props.row.yyyp_price" style="color: #fff; font-weight: bold;">
                       ¥{{ parseFloat(props.row.yyyp_price).toFixed(2) }}
                     </span>
                     <span v-else style="color: #888;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="buff_price" label="BUFF" min-width="120">
+                <el-table-column prop="buff_price" label="BUFF" min-width="160">
                   <template #default="props">
-                    <span v-if="props.row.buff_price" style="color: #2196F3; font-weight: bold;">
+                    <div v-if="props.row.buff_price && props.row.buy_price" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px;">
+                      <span style="color: #fff; font-weight: bold;">
+                        ¥{{ parseFloat(props.row.buff_price).toFixed(2) }}
+                      </span>
+                      <span 
+                        :style="{
+                          color: parseFloat(props.row.buff_price) < parseFloat(props.row.buy_price) ? '#4CAF50' : '#f56c6c',
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }"
+                      >
+                        {{ parseFloat(props.row.buff_price) < parseFloat(props.row.buy_price) ? '-' : '+' }}
+                        ¥{{ Math.abs(parseFloat(props.row.buff_price) - parseFloat(props.row.buy_price)).toFixed(2) }}
+                      </span>
+                    </div>
+                    <span v-else-if="props.row.buff_price" style="color: #fff; font-weight: bold;">
                       ¥{{ parseFloat(props.row.buff_price).toFixed(2) }}
                     </span>
                     <span v-else style="color: #888;">-</span>
@@ -359,6 +427,10 @@ export default {
     const CONFIG_API = `${API_CONFIG.BASE_URL}/configV1`
 
     const inventoryStats = computed(() => {
+      // 基于当前显示的数据计算统计
+      const currentData = inventoryData.value || []
+      const totalCount = currentData.length
+      
       const typeDistribution = statsData.value.by_type.length > 0
         ? statsData.value.by_type.slice(0, 3).map(t => `${t.weapon_type}(${t.count})`).join(', ')
         : '暂无数据'
@@ -368,38 +440,100 @@ export default {
         : '暂无数据'
 
       return {
-        totalCount: statsData.value.total_count,
+        totalCount: totalCount,
         typeDistribution,
         wearDistribution
       }
     })
 
     const priceStats = computed(() => {
-      const stats = statsData.value.price_stats || {}
+      // 基于当前显示的数据计算购入价格统计
+      const currentData = inventoryData.value || []
+      let total_price = 0
+      let priced_count = 0
+      
+      currentData.forEach(item => {
+        if (item.buy_price) {
+          const price = parseFloat(item.buy_price)
+          if (!isNaN(price)) {
+            total_price += price
+            priced_count++
+          }
+        }
+      })
+      
       return {
-        priced_count: stats.priced_count || 0,
-        total_price: (stats.total_price || 0).toFixed(2),
-        avg_price: (stats.avg_price || 0).toFixed(2),
-        min_price: (stats.min_price || 0).toFixed(2),
-        max_price: (stats.max_price || 0).toFixed(2)
+        priced_count: priced_count,
+        total_price: total_price.toFixed(2),
+        avg_price: priced_count > 0 ? (total_price / priced_count).toFixed(2) : '0.00',
+        min_price: '0.00',
+        max_price: '0.00'
       }
     })
 
     const yyypPriceStats = computed(() => {
-      const stats = statsData.value.yyyp_price_stats || {}
+      // 基于当前显示的数据计算悠悠有品价格统计
+      const currentData = inventoryData.value || []
+      let yyyp_total = 0
+      let buy_total = 0
+      let priced_count = 0
+      
+      currentData.forEach(item => {
+        if (item.yyyp_price) {
+          const price = parseFloat(item.yyyp_price)
+          if (!isNaN(price)) {
+            yyyp_total += price
+            priced_count++
+          }
+        }
+        if (item.buy_price) {
+          const price = parseFloat(item.buy_price)
+          if (!isNaN(price)) {
+            buy_total += price
+          }
+        }
+      })
+      
+      const diff = (yyyp_total - buy_total).toFixed(2)
+      
       return {
-        priced_count: stats.priced_count || 0,
-        total_price: (stats.total_price || 0).toFixed(2),
-        avg_price: (stats.avg_price || 0).toFixed(2)
+        priced_count: priced_count,
+        total_price: yyyp_total.toFixed(2),
+        avg_price: priced_count > 0 ? (yyyp_total / priced_count).toFixed(2) : '0.00',
+        diff: diff
       }
     })
 
     const buffPriceStats = computed(() => {
-      const stats = statsData.value.buff_price_stats || {}
+      // 基于当前显示的数据计算BUFF价格统计
+      const currentData = inventoryData.value || []
+      let buff_total = 0
+      let buy_total = 0
+      let priced_count = 0
+      
+      currentData.forEach(item => {
+        if (item.buff_price) {
+          const price = parseFloat(item.buff_price)
+          if (!isNaN(price)) {
+            buff_total += price
+            priced_count++
+          }
+        }
+        if (item.buy_price) {
+          const price = parseFloat(item.buy_price)
+          if (!isNaN(price)) {
+            buy_total += price
+          }
+        }
+      })
+      
+      const diff = (buff_total - buy_total).toFixed(2)
+      
       return {
-        priced_count: stats.priced_count || 0,
-        total_price: (stats.total_price || 0).toFixed(2),
-        avg_price: (stats.avg_price || 0).toFixed(2)
+        priced_count: priced_count,
+        total_price: buff_total.toFixed(2),
+        avg_price: priced_count > 0 ? (buff_total / priced_count).toFixed(2) : '0.00',
+        diff: diff
       }
     })
 
@@ -740,15 +874,21 @@ export default {
       try {
         fetchingYYYPPrice.value = true
         
-        // TODO: 调用Spider API获取悠悠有品价格
-        // const response = await axios.post(
-        //   `${API_CONFIG.SPIDER_BASE_URL}/youpingSpiderV1/getPrice`,
-        //   {
-        //     steamId: selectedSteamId.value
-        //   }
-        // )
+        // 调用Spider API获取悠悠有品价格
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getYYYPPrice`,
+          {
+            steamId: selectedSteamId.value
+          }
+        )
         
-        ElMessage.info('获取悠悠有品价格功能待实现')
+        if (response.data.success) {
+          ElMessage.success(response.data.message || '悠悠有品价格获取成功')
+          // 重新加载库存数据和统计信息
+          await loadInventoryData()
+        } else {
+          ElMessage.error(response.data.message || '悠悠有品价格获取失败')
+        }
         
       } catch (error) {
         console.error('获取悠悠有品价格失败:', error)
@@ -887,6 +1027,20 @@ export default {
   color: #ccc;
   margin-top: clamp(0.5rem, 1vw, 0.625rem);
   line-height: 1.5;
+}
+
+.stat-price-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: clamp(0.5rem, 1vw, 0.625rem);
+}
+
+.stat-diff-right {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-weight: bold;
+  margin: 0;
 }
 
 .pagination {
