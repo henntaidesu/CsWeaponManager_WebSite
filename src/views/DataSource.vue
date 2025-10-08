@@ -1,33 +1,27 @@
 <template>
   <div>
-    <h1 class="page-title">数据源</h1>
-    
     <div class="data-source-container">
       <div class="data-sources-list">
         <div class="card">
-          <div class="card-header">
-            <h3>数据源</h3>
-            <div class="header-buttons">
-              <el-button type="primary" @click="openAddDialog">
-                <el-icon><Plus /></el-icon>
-                添加新数据源
-              </el-button>
-              <el-button type="primary" @click="refreshAllSources" :loading="refreshing">
-                刷新所有
-              </el-button>
-            </div>
-          </div>
-          
           <!-- 按SteamID分组显示（默认） -->
           <div v-for="(group, steamID) in groupedDataSources" :key="steamID" class="steam-group">
             <div class="steam-group-header">
-              <h4>
-                <el-icon><User /></el-icon>
-                SteamID: {{ steamID || '未设置' }}
-                <el-tag size="small" type="info" style="margin-left: 10px;">{{ group.length }} 个数据源</el-tag>
-              </h4>
+              <div class="steam-group-header-left">
+                <h4>
+                  <el-icon><User /></el-icon>
+                  SteamID: {{ steamID === '未设置' ? '未设置' : steamID }}
+                  <el-tag size="small" type="info" style="margin-left: 10px;">{{ group.length }} 个数据源</el-tag>
+                </h4>
+              </div>
+              <div class="steam-group-header-right">
+                <div class="add-source-button" @click="openAddDialog(steamID)">
+                  <el-icon :size="20"><Plus /></el-icon>
+                  <span>添加数据源</span>
+                </div>
+              </div>
             </div>
             <div class="grid grid-datasource">
+              <!-- 现有数据源卡片 -->
               <div 
                 v-for="source in group" 
                 :key="source.dataID" 
@@ -330,10 +324,38 @@
         </el-form-item>
         <el-form-item label="数据源类型" required>
           <el-select v-model="inputForm.type" placeholder="选择数据源类型" style="width: 100%;">
-            <el-option label="Steam市场" value="steam" />
-            <el-option label="完美世界APP" value="perfectworld" />
-            <el-option label="网易BUFF" value="buff" />
-            <el-option label="悠悠有品" value="youpin" />
+            <el-option 
+              label="Steam市场" 
+              value="steam" 
+              :disabled="isTypeDisabled('steam')"
+            >
+              <span>Steam市场</span>
+              <span v-if="isTypeDisabled('steam')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
+            </el-option>
+            <el-option 
+              label="完美世界APP" 
+              value="perfectworld" 
+              :disabled="isTypeDisabled('perfectworld')"
+            >
+              <span>完美世界APP</span>
+              <span v-if="isTypeDisabled('perfectworld')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
+            </el-option>
+            <el-option 
+              label="网易BUFF" 
+              value="buff" 
+              :disabled="isTypeDisabled('buff')"
+            >
+              <span>网易BUFF</span>
+              <span v-if="isTypeDisabled('buff')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
+            </el-option>
+            <el-option 
+              label="悠悠有品" 
+              value="youpin" 
+              :disabled="isTypeDisabled('youpin')"
+            >
+              <span>悠悠有品</span>
+              <span v-if="isTypeDisabled('youpin')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
+            </el-option>
           </el-select>
         </el-form-item>
         
@@ -665,6 +687,7 @@ export default {
     })
 
     const dataSources = ref([])
+    const currentSteamID = ref(null) // 当前要添加数据源的SteamID
 
     // 按SteamID分组的计算属性
     const groupedDataSources = computed(() => {
@@ -680,6 +703,18 @@ export default {
       
       return groups
     })
+
+    // 获取当前分组已有的数据源类型
+    const existingTypesInCurrentGroup = computed(() => {
+      if (!currentSteamID.value) return []
+      const group = groupedDataSources.value[currentSteamID.value] || []
+      return group.map(source => source.type)
+    })
+
+    // 检查某个类型是否已存在于当前分组
+    const isTypeDisabled = (type) => {
+      return existingTypesInCurrentGroup.value.includes(type)
+    }
 
     const getSourceTypeLabel = (type) => {
       const labels = {
@@ -1492,7 +1527,8 @@ export default {
     }
 
     // 打开添加数据源对话框
-    const openAddDialog = () => {
+    const openAddDialog = (steamID) => {
+      currentSteamID.value = steamID // 记录当前分组的steamID
       resetForm() // 先重置表单
       addDialogVisible.value = true
     }
@@ -2087,20 +2123,12 @@ export default {
         
         if (result.success) {
           console.log('成功获取数据源，数量:', result.data.length)
+          console.log('[DEBUG] 原始返回数据:', JSON.stringify(result.data, null, 2))
+          
           dataSources.value = result.data.map(item => {
-            const config = item.config || {}
-            
-            // 从不同类型的数据源配置中提取steamID
-            let steamID = ''
-            if (item.type === 'steam') {
-              steamID = config.steamID || ''
-            } else if (item.type === 'buff') {
-              steamID = config.steamID || ''
-            } else if (item.type === 'youpin') {
-              steamID = config.yyyp_steamId || ''
-            } else if (item.type === 'perfectworld') {
-              steamID = config.steamID || ''
-            }
+            console.log(`[DEBUG] 数据源 ${item.dataName}:`)
+            console.log(`  - 原始steamID值:`, item.steamID)
+            console.log(`  - steamID类型:`, typeof item.steamID)
             
             return {
               id: item.dataID,
@@ -2114,10 +2142,11 @@ export default {
               status: item.enabled ? 'online' : 'offline',
               lastUpdate: item.lastUpdate ? new Date(item.lastUpdate) : new Date(),
               config: item.config || {},
-              steamID: steamID  // 新增steamID字段
+              steamID: item.steamID || ''  // 直接使用config表的steamID字段
             }
           })
           console.log('处理后的数据源:', dataSources.value)
+          console.log('分组数据:', groupedDataSources.value)
         } else {
           console.error('API返回失败:', result.message)
           ElMessage.error(result.message || '获取数据源失败')
@@ -2169,6 +2198,9 @@ export default {
       inputForm,
       dataSources,
       groupedDataSources,
+      currentSteamID,
+      existingTypesInCurrentGroup,
+      isTypeDisabled,
       getSourceTypeLabel,
       getSourceTypeColor,
       getUpdateFreqLabel,
@@ -2236,6 +2268,46 @@ export default {
 
 .source-card.disabled {
   opacity: 0.6;
+}
+
+/* 添加数据源卡片样式 */
+.add-source-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: 2px dashed #666 !important;
+  background-color: transparent !important;
+  transition: all 0.3s;
+  padding: clamp(1rem, 2.5vw, 1.25rem) !important;
+  min-height: 180px;
+}
+
+.add-source-card:hover {
+  border-color: #4CAF50 !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+.add-icon-container {
+  color: #666;
+  margin-bottom: 12px;
+  transition: color 0.3s;
+}
+
+.add-source-card:hover .add-icon-container {
+  color: #4CAF50;
+}
+
+.add-text {
+  color: #999;
+  font-size: 14px;
+  margin: 0;
+  transition: color 0.3s;
+}
+
+.add-source-card:hover .add-text {
+  color: #4CAF50;
 }
 
 .source-header {
@@ -2413,12 +2485,42 @@ export default {
 }
 
 .steam-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
   padding: 1rem 1.5rem;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
   border-left: 4px solid #4CAF50;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.steam-group-header-left {
+  flex: 1;
+}
+
+.steam-group-header-right {
+  margin-left: auto;
+}
+
+.add-source-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: transparent;
+  border: 2px dashed #666;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.3s;
+}
+
+.add-source-button:hover {
+  border-color: #4CAF50;
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.05);
 }
 
 .steam-group-header h4 {
