@@ -67,14 +67,22 @@
     </div>
 
     <div class="inventory-stats">
-      <div class="grid grid-2">
+      <div class="grid grid-4">
         <div class="card">
           <h3>总库存数量</h3>
           <p class="stat-number">{{ inventoryStats.totalCount }}</p>
         </div>
         <div class="card">
           <h3>购入总价值</h3>
-          <p class="stat-number price-total">¥{{ priceStats.total_price }}</p>
+          <p class="stat-number">¥{{ priceStats.total_price }}</p>
+        </div>
+        <div class="card">
+          <h3>悠悠有品总价值</h3>
+          <p class="stat-number">¥{{ yyypPriceStats.total_price }}</p>
+        </div>
+        <div class="card">
+          <h3>BUFF总价值</h3>
+          <p class="stat-number">¥{{ buffPriceStats.total_price }}</p>
         </div>
       </div>
     </div>
@@ -142,6 +150,45 @@
           </template>
         </el-table-column>
         <el-table-column 
+          prop="yyyp_price" 
+          label="悠悠有品" 
+          width="150" 
+          sortable="custom"
+        >
+          <template #default="scope">
+            <span v-if="scope.row.yyyp_price" style="color: #FF9800; font-weight: bold;">
+              ¥{{ parseFloat(scope.row.yyyp_price).toFixed(2) }}
+            </span>
+            <span v-else style="color: #888;">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column 
+          prop="buff_price" 
+          label="BUFF" 
+          width="150" 
+          sortable="custom"
+        >
+          <template #default="scope">
+            <span v-if="scope.row.buff_price" style="color: #2196F3; font-weight: bold;">
+              ¥{{ parseFloat(scope.row.buff_price).toFixed(2) }}
+            </span>
+            <span v-else style="color: #888;">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column 
+          prop="order_time" 
+          label="入库时间" 
+          width="180" 
+          sortable="custom"
+        >
+          <template #default="scope">
+            <span v-if="scope.row.order_time" style="color: #9E9E9E;">
+              {{ scope.row.order_time }}
+            </span>
+            <span v-else style="color: #888;">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column 
           prop="remark" 
           label="备注" 
           width="120" 
@@ -203,6 +250,30 @@
                       <span style="color: #4CAF50; font-weight: bold;">¥{{ parseFloat(props.row.buy_price).toFixed(2) }}</span>
                       <el-tag v-if="!props.row.weapon_float" type="info" size="small" style="margin-left: 5px;">均</el-tag>
                     </div>
+                    <span v-else style="color: #888;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="yyyp_price" label="悠悠有品" min-width="130">
+                  <template #default="props">
+                    <span v-if="props.row.yyyp_price" style="color: #FF9800; font-weight: bold;">
+                      ¥{{ parseFloat(props.row.yyyp_price).toFixed(2) }}
+                    </span>
+                    <span v-else style="color: #888;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="buff_price" label="BUFF" min-width="120">
+                  <template #default="props">
+                    <span v-if="props.row.buff_price" style="color: #2196F3; font-weight: bold;">
+                      ¥{{ parseFloat(props.row.buff_price).toFixed(2) }}
+                    </span>
+                    <span v-else style="color: #888;">-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="order_time" label="入库时间" min-width="160">
+                  <template #default="props">
+                    <span v-if="props.row.order_time" style="color: #9E9E9E;">
+                      {{ props.row.order_time }}
+                    </span>
                     <span v-else style="color: #888;">-</span>
                   </template>
                 </el-table-column>
@@ -306,6 +377,24 @@ export default {
       }
     })
 
+    const yyypPriceStats = computed(() => {
+      const stats = statsData.value.yyyp_price_stats || {}
+      return {
+        priced_count: stats.priced_count || 0,
+        total_price: (stats.total_price || 0).toFixed(2),
+        avg_price: (stats.avg_price || 0).toFixed(2)
+      }
+    })
+
+    const buffPriceStats = computed(() => {
+      const stats = statsData.value.buff_price_stats || {}
+      return {
+        priced_count: stats.priced_count || 0,
+        total_price: (stats.total_price || 0).toFixed(2),
+        avg_price: (stats.avg_price || 0).toFixed(2)
+      }
+    })
+
     const loadSteamIdList = async () => {
       try {
         const response = await axios.get(`${API_BASE}/steam_ids`)
@@ -348,7 +437,10 @@ export default {
                 assetid,
                 weapon_float: item.weapon_floats[index],
                 remark: item.remarks[index],
-                buy_price: item.buy_prices && item.buy_prices[index] ? item.buy_prices[index] : null
+                buy_price: item.buy_prices && item.buy_prices[index] ? item.buy_prices[index] : null,
+                yyyp_price: item.yyyp_prices && item.yyyp_prices[index] ? item.yyyp_prices[index] : null,
+                buff_price: item.buff_prices && item.buff_prices[index] ? item.buff_prices[index] : null,
+                order_time: item.order_times && item.order_times[index] ? item.order_times[index] : null
               }))
             }))
             console.log('分组数据已加载，总计:', groupedData.value.length)
@@ -434,6 +526,18 @@ export default {
           // 价格排序
           valueA = parseFloat(a.buy_price) || 0
           valueB = parseFloat(b.buy_price) || 0
+        } else if (prop === 'yyyp_price') {
+          // 悠悠有品价格排序
+          valueA = parseFloat(a.yyyp_price) || 0
+          valueB = parseFloat(b.yyyp_price) || 0
+        } else if (prop === 'buff_price') {
+          // BUFF价格排序
+          valueA = parseFloat(a.buff_price) || 0
+          valueB = parseFloat(b.buff_price) || 0
+        } else if (prop === 'order_time') {
+          // 入库时间排序
+          valueA = a.order_time ? new Date(a.order_time).getTime() : 0
+          valueB = b.order_time ? new Date(b.order_time).getTime() : 0
         } else if (prop === 'weapon_float') {
           // 磨损值排序
           valueA = parseFloat(a.weapon_float) || 999999 // 没有磨损值的排在最后
@@ -632,6 +736,8 @@ export default {
       groupedData,
       inventoryStats,
       priceStats,
+      yyypPriceStats,
+      buffPriceStats,
       searchText,
       weaponTypeFilter,
       floatRangeFilter,
@@ -693,7 +799,7 @@ export default {
 .stat-number {
   font-size: clamp(1.25rem, 3vw, 1.5rem);
   font-weight: bold;
-  color: #4CAF50;
+  color: #fff;
   margin-top: clamp(0.5rem, 1vw, 0.625rem);
 }
 
@@ -702,10 +808,6 @@ export default {
   color: #ccc;
   margin-top: clamp(0.5rem, 1vw, 0.625rem);
   line-height: 1.5;
-}
-
-.price-total {
-  color: #fff !important;
 }
 
 .pagination {
