@@ -2101,6 +2101,26 @@ export default {
         }
       }
 
+      // Steam登录类型的字段校验
+      if (editForm.value.type === 'steam_login') {
+        if (!editForm.value.steamUsername) {
+          ElMessage.error('请填写Steam用户名')
+          return
+        }
+        if (!editForm.value.steamPassword) {
+          ElMessage.error('请填写Steam密码')
+          return
+        }
+        if (!editForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+        if (!editForm.value.cookies) {
+          ElMessage.error('请先点击"重新登录获取Cookie"按钮进行登录')
+          return
+        }
+      }
+
       // 悠悠有品类型的字段校验
       if (editForm.value.type === 'youpin') {
         if (!editForm.value.phone) {
@@ -2218,6 +2238,16 @@ export default {
           requestData.configJson = JSON.stringify({
             cookies: editForm.value.cookies,
             steamID: editForm.value.steamID,
+            updateFreq: editForm.value.updateFreq,
+            sleep_time: '6000'
+          })
+        } else if (editForm.value.type === 'steam_login') {
+          // Steam登录特殊配置
+          requestData.configJson = JSON.stringify({
+            cookies: editForm.value.cookies,
+            steamID: editForm.value.steamID,
+            steamUsername: editForm.value.steamUsername,
+            steamPassword: editForm.value.steamPassword,
             updateFreq: editForm.value.updateFreq,
             sleep_time: '6000'
           })
