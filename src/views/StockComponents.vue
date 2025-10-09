@@ -36,13 +36,15 @@
               <el-option
                 v-for="item in inventoryComponents"
                 :key="item.assetid"
-                :label="item.item_name"
+                :label="item.weapon_float ? `${item.item_name} (数量:${item.weapon_float})` : item.item_name"
                 :value="item.assetid"
               >
-                <span style="float: left">{{ item.item_name }}</span>
-                <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px">
-                  ID: {{ item.assetid }}
-                </span>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                  <span style="flex: 0 0 auto; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ item.item_name }}</span>
+                  <span style="flex: 0 0 auto; color: var(--el-text-color-secondary); font-size: 13px; margin-left: 8px; font-family: monospace;">
+                    数量: <span style="display: inline-block; text-align: right; min-width: 2.5em;">{{ item.weapon_float || 0 }}</span> | assetid: {{ item.assetid }}
+                  </span>
+                </div>
               </el-option>
             </el-select>
             <el-input
