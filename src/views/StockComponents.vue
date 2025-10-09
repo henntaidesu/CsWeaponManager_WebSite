@@ -62,6 +62,12 @@
             <el-button @click="handleClearSearch" :disabled="loading">
               重置
             </el-button>
+            <el-button type="success" @click="handleUpdateComponent" :loading="updateLoading" :disabled="!selectedComponent">
+              获取/更新组件物品
+            </el-button>
+            <el-button type="warning" @click="handleUpdateAllComponents" :loading="updateAllLoading" :disabled="!selectedSteamId">
+              获取/更新全部组件
+            </el-button>
           </div>
         </div>
         
@@ -158,69 +164,34 @@
         :flexible="true"
         :scrollbar-always-on="true"
       >
-        <el-table-column prop="component_id" label="组件ID" width="180" show-overflow-tooltip align="left" />
-        <el-table-column prop="component_type" label="组件类型" width="120" />
-        <el-table-column prop="component_name" label="组件名称" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="quality" label="品质等级" min-width="100" />
-        <el-table-column prop="quantity" label="数量" min-width="80" align="center">
+        <el-table-column prop="item_name" label="物品名称" min-width="250" show-overflow-tooltip fixed="left" />
+        <el-table-column prop="weapon_name" label="武器名称" min-width="180" show-overflow-tooltip />
+        <el-table-column prop="weapon_type" label="武器类型" min-width="120" />
+        <el-table-column prop="weapon_level" label="武器等级" min-width="120" />
+        <el-table-column prop="weapon_float" label="磨损值" min-width="120">
           <template #default="scope">
-            <el-tag :type="getQuantityType(scope.row.quantity)" size="small">
-              {{ scope.row.quantity }}
-            </el-tag>
+            {{ formatWeaponFloat(scope.row.weapon_float) }}
           </template>
         </el-table-column>
-        <el-table-column prop="unit_cost" label="单价" min-width="100">
+        <el-table-column prop="float_range" label="磨损范围" min-width="120" />
+        <el-table-column prop="buy_price" label="购入价格" min-width="110" sortable>
           <template #default="scope">
-            ¥{{ scope.row.unit_cost }}
+            ¥{{ formatPrice(scope.row.buy_price) }}
           </template>
         </el-table-column>
-        <el-table-column prop="total_cost" label="总成本" min-width="100">
+        <el-table-column prop="yyyp_price" label="悠悠价格" min-width="110" sortable>
           <template #default="scope">
-            ¥{{ scope.row.total_cost }}
+            ¥{{ formatPrice(scope.row.yyyp_price) }}
           </template>
         </el-table-column>
-        <el-table-column prop="source" label="来源" min-width="100" />
-        <el-table-column prop="purchase_date" label="购入日期" min-width="160">
+        <el-table-column prop="buff_price" label="BUFF价格" min-width="110" sortable>
           <template #default="scope">
-            {{ formatTime(scope.row.purchase_date) }}
+            ¥{{ formatPrice(scope.row.buff_price) }}
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" min-width="100">
+        <el-table-column prop="steam_price" label="Steam价格" min-width="110" sortable>
           <template #default="scope">
-            <el-tooltip 
-              :content="scope.row.status_desc || scope.row.status" 
-              placement="top"
-              :disabled="!scope.row.status_desc"
-            >
-              <span>
-                <el-tag 
-                  :type="getStatusType(scope.row.status)" 
-                  size="small"
-                  :style="{
-                    backgroundColor: getStatusColor(scope.row.status),
-                    borderColor: getStatusColor(scope.row.status),
-                    color: getStatusTextColor(scope.row.status)
-                  }"
-                >
-                  {{ scope.row.status }}
-                </el-tag>
-              </span>
-            </el-tooltip>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" min-width="180" fixed="right">
-          <template #default="scope">
-            <div class="action-buttons">
-              <el-button type="primary" size="small" @click="handleUse(scope.row)">
-                使用
-              </el-button>
-              <el-button type="success" size="small" @click="handleSell(scope.row)">
-                出售
-              </el-button>
-              <el-button type="info" size="small" @click="handleViewDetails(scope.row)">
-                详情
-              </el-button>
-            </div>
+            ¥{{ formatPrice(scope.row.steam_price) }}
           </template>
         </el-table-column>
       </el-table>
@@ -242,7 +213,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { API_CONFIG } from '@/config/api.js'
 
@@ -250,6 +221,8 @@ export default {
   name: 'StockComponents',
   setup() {
     const loading = ref(false)
+    const updateLoading = ref(false)
+    const updateAllLoading = ref(false)
     const componentData = ref([])
     const searchText = ref('')
     const currentPage = ref(1)
@@ -263,6 +236,7 @@ export default {
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
     const API_COMPONENTS = `${API_CONFIG.BASE_URL}/webStockComponentsV1`
+    const API_SPIDER = API_CONFIG.SPIDER_BASE_URL
     
     // classid常量 - 组件的classid
     const COMPONENT_CLASSID = '3604678661'
@@ -302,6 +276,20 @@ export default {
     const formatTime = (time) => {
       if (!time) return '-'
       return new Date(time).toLocaleString('zh-CN')
+    }
+
+    const formatPrice = (price) => {
+      if (!price || price === 0 || price === '0') return '0.00'
+      const num = parseFloat(price)
+      if (isNaN(num)) return '0.00'
+      return num.toFixed(2)
+    }
+
+    const formatWeaponFloat = (value) => {
+      if (!value || value === '0' || value === '0.0') return ''
+      const str = String(value)
+      if (str === '0' || str === '0.0') return ''
+      return str
     }
 
     const getStatusType = (status) => {
@@ -374,6 +362,7 @@ export default {
       try {
         console.log('正在加载库存组件列表，Steam ID:', selectedSteamId.value, 'ClassID:', COMPONENT_CLASSID)
         
+        // 从 steam_inventory 表获取组件列表用于下拉框
         const response = await axios.get(`${API_BASE}/inventory/${selectedSteamId.value}`, {
           params: {
             classid: COMPONENT_CLASSID,
@@ -406,41 +395,62 @@ export default {
         return
       }
       
-      // 选择了具体组件，只显示这一个组件的数据
-      const component = inventoryComponents.value.find(item => item.assetid === selectedComponent.value)
-      if (component) {
-        loading.value = true
-        try {
-          // 调用详情接口获取完整信息
-          const response = await axios.get(`${API_COMPONENTS}/components/detail/${selectedComponent.value}`)
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+      
+      // 使用 assetid 和 steamID 查询组件
+      loading.value = true
+      try {
+        console.log('查询组件 - assetid:', selectedComponent.value, 'steamID:', selectedSteamId.value)
+        
+        const response = await axios.get(`${API_COMPONENTS}/components/${selectedSteamId.value}`, {
+          params: {
+            search: '',
+            page: 1,
+            page_size: 9999
+          }
+        })
+        
+        if (response.data.success) {
+          // 从返回的数据中筛选出匹配的组件
+          const allComponents = response.data.data
+          const filtered = allComponents.filter(item => 
+            item.assetid === selectedComponent.value || 
+            item.component_id === selectedComponent.value
+          )
           
-          if (response.data.success) {
-            // 只显示选中的这一个组件
-            componentData.value = [response.data.data]
-            totalItems.value = 1
+          if (filtered.length > 0) {
+            componentData.value = filtered
+            totalItems.value = filtered.length
             currentPage.value = 1
             
-            // 更新统计数据为当前选中的组件
-            const data = response.data.data
+            // 更新统计数据
+            const cost = parseFloat(filtered[0].buy_price) || 0
             totalStats.value = {
-              totalCount: 1,
-              totalCost: (data.total_cost || 0).toFixed(2),
-              avgCost: (data.unit_cost || 0).toFixed(2),
-              inStockCount: data.status === '库存中' ? 1 : 0,
-              usedCount: data.status === '已使用' ? 1 : 0,
-              soldCount: data.status === '已出售' ? 1 : 0
+              totalCount: filtered.length,
+              totalCost: cost.toFixed(2),
+              avgCost: cost.toFixed(2),
+              inStockCount: filtered.length,
+              usedCount: 0,
+              soldCount: 0
             }
             
-            ElMessage.success(`已选择组件: ${component.item_name}`)
+            ElMessage.success(`已找到组件`)
           } else {
-            ElMessage.error('获取组件详情失败')
+            componentData.value = []
+            totalItems.value = 0
+            ElMessage.warning('未找到该组件')
           }
-        } catch (error) {
-          console.error('获取组件详情失败:', error)
-          ElMessage.error('获取组件详情失败: ' + (error.response?.data?.error || error.message))
-        } finally {
-          loading.value = false
+        } else {
+          ElMessage.error(response.data.error || '查询失败')
         }
+      } catch (error) {
+        console.error('查询组件失败:', error)
+        ElMessage.error('查询组件失败: ' + (error.response?.data?.error || error.message))
+      } finally {
+        loading.value = false
       }
     }
 
@@ -507,18 +517,6 @@ export default {
       }
     }
 
-    const handleUse = (item) => {
-      ElMessage.info(`准备使用: ${item.component_name}`)
-    }
-
-    const handleSell = (item) => {
-      ElMessage.info(`准备出售: ${item.component_name}`)
-    }
-
-    const handleViewDetails = (item) => {
-      ElMessage.info(`查看详情: ${item.component_name}`)
-    }
-
     const handleSizeChange = (val) => {
       pageSize.value = val
       currentPage.value = 1
@@ -547,6 +545,113 @@ export default {
       loadComponentData()
     }
 
+    const handleUpdateComponent = async () => {
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+      
+      if (!selectedComponent.value) {
+        ElMessage.warning('请先选择要更新的组件')
+        return
+      }
+      
+      updateLoading.value = true
+      try {
+        console.log('更新组件 - steamId:', selectedSteamId.value, 'assetid:', [selectedComponent.value])
+        
+        const response = await axios.post(`${API_SPIDER}/prefectWorldSpiderV1/getInventoryComponent`, {
+          steamId: selectedSteamId.value,
+          assetid: [selectedComponent.value]  // 传递数组
+        })
+        
+        console.log('更新组件响应:', response.data)
+        
+        if (response.data.success) {
+          const itemCount = response.data.total_items || 0
+          ElMessage.success(`组件物品更新成功! 共更新 ${itemCount} 个物品`)
+          // 更新成功后重新加载数据
+          await loadComponentData()
+        } else {
+          ElMessage.error(response.data.message || '更新组件物品失败')
+        }
+      } catch (error) {
+        console.error('更新组件失败:', error)
+        ElMessage.error('更新组件失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        updateLoading.value = false
+      }
+    }
+
+    const handleUpdateAllComponents = async () => {
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+      
+      // 筛选出数量非0的组件
+      const validComponents = inventoryComponents.value.filter(item => {
+        const quantity = parseFloat(item.weapon_float) || 0
+        return quantity > 0
+      })
+      
+      if (validComponents.length === 0) {
+        ElMessage.warning('没有找到数量大于0的组件')
+        return
+      }
+      
+      // 提取所有assetid
+      const assetidList = validComponents.map(item => item.assetid)
+      
+      // 确认操作
+      const confirmResult = await ElMessageBox.confirm(
+        `即将更新 ${assetidList.length} 个组件的物品数据，此操作可能需要较长时间，是否继续？`,
+        '确认更新',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }
+      ).catch(() => false)
+      
+      if (!confirmResult) {
+        return
+      }
+      
+      updateAllLoading.value = true
+      try {
+        console.log('批量更新组件 - steamId:', selectedSteamId.value, '组件数量:', assetidList.length)
+        
+        ElMessage.info(`开始更新 ${assetidList.length} 个组件，请稍候...`)
+        
+        const response = await axios.post(`${API_SPIDER}/prefectWorldSpiderV1/getInventoryComponent`, {
+          steamId: selectedSteamId.value,
+          assetid: assetidList
+        })
+        
+        console.log('批量更新组件响应:', response.data)
+        
+        const successCount = response.data.success_count || 0
+        const failedCount = response.data.failed_count || 0
+        const totalItems = response.data.total_items || 0
+        
+        if (response.data.success) {
+          ElMessage.success(`全部组件更新成功! 成功: ${successCount}/${assetidList.length}, 总物品数: ${totalItems}`)
+        } else {
+          ElMessage.warning(`部分组件更新失败! 成功: ${successCount}, 失败: ${failedCount}, 总物品数: ${totalItems}`)
+        }
+        
+        // 更新成功后重新加载数据
+        await loadComponentData()
+        
+      } catch (error) {
+        console.error('批量更新组件失败:', error)
+        ElMessage.error('批量更新组件失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        updateAllLoading.value = false
+      }
+    }
+
     onMounted(async () => {
       await loadSteamIdList()
       if (selectedSteamId.value) {
@@ -557,6 +662,8 @@ export default {
 
     return {
       loading,
+      updateLoading,
+      updateAllLoading,
       componentData,
       filteredData,
       totalStats,
@@ -570,19 +677,17 @@ export default {
       inventoryComponents,
       selectedComponent,
       formatTime,
-      getStatusType,
-      getStatusColor,
-      getStatusTextColor,
+      formatPrice,
+      formatWeaponFloat,
       getQuantityType,
-      handleUse,
-      handleSell,
-      handleViewDetails,
       handleSizeChange,
       handleCurrentChange,
       handleSearch,
       handleClearSearch,
       handleSteamIdChange,
-      handleComponentSelect
+      handleComponentSelect,
+      handleUpdateComponent,
+      handleUpdateAllComponents
     }
   }
 }
