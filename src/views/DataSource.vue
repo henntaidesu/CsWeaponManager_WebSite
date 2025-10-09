@@ -189,44 +189,17 @@
 
         <!-- Steam特有配置 -->
         <template v-else-if="editForm.type === 'steam'">
-          <el-form-item label="Cookies" required>
-            <el-input 
-              v-model="editForm.cookies" 
-              type="textarea"
-              :rows="3"
-              placeholder="请输入Steam市场的Cookies"
-            />
-          </el-form-item>
-          <el-form-item label="SteamID" required>
-            <el-input 
-              v-model="editForm.steamID" 
-              placeholder="请输入SteamID"
-            />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
-        </template>
-
-        <!-- Steam登录特有配置 -->
-        <template v-else-if="editForm.type === 'steam_login'">
-          <!-- 登录方式选择 -->
-          <el-form-item label="登录方式" required>
-            <el-radio-group v-model="editForm.steamLoginMethod">
-              <el-radio label="qrcode">扫码登录（推荐）</el-radio>
+          <!-- Cookie获取方式选择 -->
+          <el-form-item label="Cookie获取方式" required>
+            <el-radio-group v-model="editForm.steamCookieMethod">
+              <el-radio label="qrcode">扫码登录</el-radio>
               <el-radio label="password">账号密码登录</el-radio>
+              <el-radio label="manual">手动输入</el-radio>
             </el-radio-group>
           </el-form-item>
 
           <!-- 扫码登录 -->
-          <template v-if="editForm.steamLoginMethod === 'qrcode'">
+          <template v-if="editForm.steamCookieMethod === 'qrcode'">
             <el-form-item label="登录二维码">
               <div 
                 @click="steamQRStatus !== 'success' ? handleEditGenerateQRCode() : null"
@@ -268,7 +241,7 @@
           </template>
 
           <!-- 账号密码登录 -->
-          <template v-else-if="editForm.steamLoginMethod === 'password'">
+          <template v-else-if="editForm.steamCookieMethod === 'password'">
             <el-form-item label="Steam用户名" required>
               <el-input 
                 v-model="editForm.steamUsername" 
@@ -302,6 +275,140 @@
               >
                 {{ steamLoginLoading ? '登录中...' : '重新登录获取Cookie' }}
               </el-button>
+            </el-form-item>
+          </template>
+
+          <!-- 手动输入Cookie -->
+          <template v-else-if="editForm.steamCookieMethod === 'manual'">
+            <el-form-item label="Cookies" required>
+              <el-input 
+                v-model="editForm.cookies" 
+                type="textarea"
+                :rows="3"
+                placeholder="请输入Steam市场的Cookies"
+              />
+            </el-form-item>
+          </template>
+
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="editForm.steamID" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
+          
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+        </template>
+
+        <!-- Steam登录特有配置（兼容旧数据，使用与steam相同的表单） -->
+        <template v-else-if="editForm.type === 'steam_login'">
+          <!-- Cookie获取方式选择 -->
+          <el-form-item label="Cookie获取方式" required>
+            <el-radio-group v-model="editForm.steamCookieMethod">
+              <el-radio label="qrcode">扫码登录</el-radio>
+              <el-radio label="password">账号密码登录</el-radio>
+              <el-radio label="manual">手动输入</el-radio>
+            </el-radio-group>
+          </el-form-item>
+
+          <!-- 扫码登录 -->
+          <template v-if="editForm.steamCookieMethod === 'qrcode'">
+            <el-form-item label="登录二维码">
+              <div 
+                @click="steamQRStatus !== 'success' ? handleEditGenerateQRCode() : null"
+                :style="{
+                  textAlign: 'center', 
+                  padding: '20px', 
+                  background: '#f5f5f5', 
+                  borderRadius: '8px',
+                  cursor: steamQRStatus === 'success' ? 'default' : 'pointer',
+                  transition: 'all 0.3s'
+                }"
+                @mouseenter="$event.currentTarget.style.background = steamQRStatus === 'success' ? '#f5f5f5' : '#e8e8e8'"
+                @mouseleave="$event.currentTarget.style.background = '#f5f5f5'"
+              >
+                <div v-if="!steamQRCode && !steamQRLoading">
+                  <el-icon :size="80" color="#409EFF"><Grid /></el-icon>
+                  <p style="color: #409EFF; margin-top: 10px; font-weight: 500;">点击获取Steam登录二维码</p>
+                </div>
+                <div v-else-if="steamQRLoading">
+                  <el-icon :size="80" class="is-loading" color="#409EFF"><Loading /></el-icon>
+                  <p style="color: #409EFF; margin-top: 10px;">正在获取二维码...</p>
+                </div>
+                <div v-else>
+                  <img :src="steamQRCode" alt="Steam登录二维码" style="width: 200px; height: 200px;" />
+                  <p style="color: #666; margin-top: 10px; font-size: 14px;">
+                    请使用Steam手机APP扫描二维码
+                  </p>
+                  <el-tag :type="steamQRStatus === 'waiting' ? 'info' : steamQRStatus === 'success' ? 'success' : 'warning'" style="margin-top: 10px;">
+                    {{ getSteamQRStatusText() }}
+                  </el-tag>
+                  <div v-if="steamQRStatus === 'expired'" style="margin-top: 10px;">
+                    <el-link type="primary" :underline="false" @click.stop="handleEditGenerateQRCode">
+                      点击刷新二维码
+                    </el-link>
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+          </template>
+
+          <!-- 账号密码登录 -->
+          <template v-else-if="editForm.steamCookieMethod === 'password'">
+            <el-form-item label="Steam用户名" required>
+              <el-input 
+                v-model="editForm.steamUsername" 
+                placeholder="请输入Steam用户名"
+              />
+            </el-form-item>
+            <el-form-item label="Steam密码" required>
+              <el-input 
+                v-model="editForm.steamPassword" 
+                type="password"
+                show-password
+                placeholder="请输入Steam密码"
+              />
+            </el-form-item>
+            <el-form-item label="Steam Guard验证码">
+              <el-input 
+                v-model="editForm.steamTwofactorCode" 
+                placeholder="请输入5位Steam Guard验证码（如需要）"
+                maxlength="5"
+              />
+              <div style="color: #999; font-size: 12px; margin-top: 5px;">
+                如果您的账号启用了Steam Guard手机令牌，请在此输入验证码
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <el-button 
+                type="success" 
+                @click="handleEditSteamLogin" 
+                :loading="steamLoginLoading"
+                style="width: 100%;"
+              >
+                {{ steamLoginLoading ? '登录中...' : '重新登录获取Cookie' }}
+              </el-button>
+            </el-form-item>
+          </template>
+
+          <!-- 手动输入Cookie -->
+          <template v-else-if="editForm.steamCookieMethod === 'manual'">
+            <el-form-item label="Cookies" required>
+              <el-input 
+                v-model="editForm.cookies" 
+                type="textarea"
+                :rows="3"
+                placeholder="请输入Steam市场的Cookies"
+              />
             </el-form-item>
           </template>
 
@@ -467,14 +574,6 @@
               <span v-if="isTypeDisabled('steam')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
             </el-option>
             <el-option 
-              label="Steam市场(登录)" 
-              value="steam_login" 
-              :disabled="isTypeDisabled('steam_login')"
-            >
-              <span>Steam市场(登录)</span>
-              <span v-if="isTypeDisabled('steam_login')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
-            </el-option>
-            <el-option 
               label="完美世界APP" 
               value="perfectworld" 
               :disabled="isTypeDisabled('perfectworld')"
@@ -543,20 +642,114 @@
         
         <!-- Steam特有配置 -->
         <template v-else-if="inputForm.type === 'steam'">
-          <el-form-item label="Cookies" required>
-            <el-input 
-              v-model="inputForm.cookies" 
-              type="textarea"
-              :rows="3"
-              placeholder="请输入Steam市场的Cookies"
-            />
+          <!-- Cookie获取方式选择 -->
+          <el-form-item label="Cookie获取方式" required>
+            <el-radio-group v-model="inputForm.steamCookieMethod">
+              <el-radio label="qrcode">扫码登录</el-radio>
+              <el-radio label="password">账号密码登录</el-radio>
+              <el-radio label="manual">手动输入</el-radio>
+            </el-radio-group>
           </el-form-item>
+
+          <!-- 扫码登录 -->
+          <template v-if="inputForm.steamCookieMethod === 'qrcode'">
+            <el-form-item label="登录二维码">
+              <div 
+                @click="steamQRStatus !== 'success' ? handleGenerateQRCode() : null"
+                :style="{
+                  textAlign: 'center', 
+                  padding: '20px', 
+                  background: '#f5f5f5', 
+                  borderRadius: '8px',
+                  cursor: steamQRStatus === 'success' ? 'default' : 'pointer',
+                  transition: 'all 0.3s'
+                }"
+                @mouseenter="$event.currentTarget.style.background = steamQRStatus === 'success' ? '#f5f5f5' : '#e8e8e8'"
+                @mouseleave="$event.currentTarget.style.background = '#f5f5f5'"
+              >
+                <div v-if="!steamQRCode && !steamQRLoading">
+                  <el-icon :size="80" color="#409EFF"><Grid /></el-icon>
+                  <p style="color: #409EFF; margin-top: 10px; font-weight: 500;">点击获取Steam登录二维码</p>
+                </div>
+                <div v-else-if="steamQRLoading">
+                  <el-icon :size="80" class="is-loading" color="#409EFF"><Loading /></el-icon>
+                  <p style="color: #409EFF; margin-top: 10px;">正在获取二维码...</p>
+                </div>
+                <div v-else>
+                  <img :src="steamQRCode" alt="Steam登录二维码" style="width: 200px; height: 200px;" />
+                  <p style="color: #666; margin-top: 10px; font-size: 14px;">
+                    请使用Steam手机APP扫描二维码
+                  </p>
+                  <el-tag :type="steamQRStatus === 'waiting' ? 'info' : steamQRStatus === 'success' ? 'success' : 'warning'" style="margin-top: 10px;">
+                    {{ getSteamQRStatusText() }}
+                  </el-tag>
+                  <div v-if="steamQRStatus === 'expired'" style="margin-top: 10px;">
+                    <el-link type="primary" :underline="false" @click.stop="handleGenerateQRCode">
+                      点击刷新二维码
+                    </el-link>
+                  </div>
+                </div>
+              </div>
+            </el-form-item>
+          </template>
+
+          <!-- 账号密码登录 -->
+          <template v-else-if="inputForm.steamCookieMethod === 'password'">
+            <el-form-item label="Steam用户名" required>
+              <el-input 
+                v-model="inputForm.steamUsername" 
+                placeholder="请输入Steam用户名"
+              />
+            </el-form-item>
+            <el-form-item label="Steam密码" required>
+              <el-input 
+                v-model="inputForm.steamPassword" 
+                type="password"
+                show-password
+                placeholder="请输入Steam密码"
+              />
+            </el-form-item>
+            <el-form-item label="Steam Guard验证码">
+              <el-input 
+                v-model="inputForm.steamTwofactorCode" 
+                placeholder="请输入5位Steam Guard验证码（如需要）"
+                maxlength="5"
+              />
+              <div style="color: #999; font-size: 12px; margin-top: 5px;">
+                如果您的账号启用了Steam Guard手机令牌，请在此输入验证码
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <el-button 
+                type="success" 
+                @click="handleSteamLogin" 
+                :loading="steamLoginLoading"
+                style="width: 100%;"
+              >
+                {{ steamLoginLoading ? '登录中...' : '立即登录获取Cookie' }}
+              </el-button>
+            </el-form-item>
+          </template>
+
+          <!-- 手动输入Cookie -->
+          <template v-else-if="inputForm.steamCookieMethod === 'manual'">
+            <el-form-item label="Cookies" required>
+              <el-input 
+                v-model="inputForm.cookies" 
+                type="textarea"
+                :rows="3"
+                placeholder="请输入Steam市场的Cookies"
+              />
+            </el-form-item>
+          </template>
+
           <el-form-item label="SteamID" required>
             <el-input 
               v-model="inputForm.steamID" 
               placeholder="请输入SteamID"
             />
           </el-form-item>
+          
           <el-form-item label="更新频率">
             <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
               <el-option label="每15分钟" value="15min" />
@@ -567,9 +760,19 @@
               <el-option label="每天" value="daily" />
             </el-select>
           </el-form-item>
+          
+          <!-- 登录状态提示 -->
+          <el-alert
+            v-if="inputForm.steamLoginMessage"
+            :title="inputForm.steamLoginMessage"
+            :type="inputForm.steamLoginSuccess ? 'success' : 'warning'"
+            :closable="false"
+            show-icon
+            style="margin-top: 10px;"
+          />
         </template>
 
-        <!-- Steam登录特有配置 -->
+        <!-- Steam登录特有配置（已废弃，保留兼容） -->
         <template v-else-if="inputForm.type === 'steam_login'">
           <!-- 登录方式选择 -->
           <el-form-item label="登录方式" required>
@@ -911,6 +1114,7 @@ export default {
       steamID: '',
       // Steam特有字段
       cookies: '',
+      steamCookieMethod: 'manual', // Cookie获取方式：qrcode/password/manual
       // Steam登录特有字段
       steamUsername: '',
       steamPassword: '',
@@ -951,6 +1155,7 @@ export default {
       steamID: '',
       // Steam特有字段
       cookies: '',
+      steamCookieMethod: 'manual', // Cookie获取方式：qrcode/password/manual
       // Steam登录特有字段
       steamUsername: '',
       steamPassword: '',
@@ -1058,8 +1263,9 @@ export default {
 
       // Steam类型的字段校验
       if (inputForm.value.type === 'steam') {
+        // 检查Cookie（无论哪种方式都需要Cookie）
         if (!inputForm.value.cookies) {
-          ElMessage.error('请填写Cookies')
+          ElMessage.error('请先获取Cookie（扫码/账号密码登录）或手动输入Cookie')
           return
         }
         if (!inputForm.value.steamID) {
@@ -1195,10 +1401,13 @@ export default {
             sleep_time: '6000'
           })
         } else if (inputForm.value.type === 'steam') {
-          // Steam特殊配置
+          // Steam特殊配置（支持三种Cookie获取方式）
           requestData.configJson = JSON.stringify({
             cookies: inputForm.value.cookies,
             steamID: inputForm.value.steamID,
+            steamCookieMethod: inputForm.value.steamCookieMethod, // 记录获取方式
+            steamUsername: inputForm.value.steamUsername || '',
+            steamPassword: inputForm.value.steamPassword || '',
             updateFreq: inputForm.value.updateFreq,
             sleep_time: '6000'
           })
@@ -1764,21 +1973,34 @@ export default {
         console.log('Steam配置解析:', {
           cookies: config.cookies,
           steamID: config.steamID,
+          steamCookieMethod: config.steamCookieMethod,
           updateFreq: config.updateFreq
         })
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
+        editForm.value.steamCookieMethod = config.steamCookieMethod || 'manual'
+        editForm.value.steamUsername = config.steamUsername || ''
+        editForm.value.steamPassword = config.steamPassword || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
       } else if (source.type === 'steam_login') {
-        // Steam登录配置
+        // Steam登录配置（兼容旧数据，使用与steam相同的逻辑）
         console.log('Steam登录配置解析:', {
           cookies: config.cookies,
           steamID: config.steamID,
+          steamCookieMethod: config.steamCookieMethod,
           steamUsername: config.steamUsername,
           updateFreq: config.updateFreq
         })
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
+        // 如果有steamCookieMethod则使用，否则根据是否有用户名密码来判断
+        if (config.steamCookieMethod) {
+          editForm.value.steamCookieMethod = config.steamCookieMethod
+        } else if (config.steamUsername) {
+          editForm.value.steamCookieMethod = 'password'
+        } else {
+          editForm.value.steamCookieMethod = 'manual'
+        }
         editForm.value.steamUsername = config.steamUsername || ''
         editForm.value.steamPassword = config.steamPassword || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
@@ -2209,8 +2431,9 @@ export default {
 
       // Steam类型的字段校验
       if (editForm.value.type === 'steam') {
+        // 检查Cookie（无论哪种方式都需要Cookie）
         if (!editForm.value.cookies) {
-          ElMessage.error('请填写Cookies')
+          ElMessage.error('请先获取Cookie（扫码/账号密码登录）或手动输入Cookie')
           return
         }
         if (!editForm.value.steamID) {
@@ -2219,22 +2442,15 @@ export default {
         }
       }
 
-      // Steam登录类型的字段校验
+      // Steam登录类型的字段校验（兼容旧数据，使用与steam相同的逻辑）
       if (editForm.value.type === 'steam_login') {
-        if (!editForm.value.steamUsername) {
-          ElMessage.error('请填写Steam用户名')
-          return
-        }
-        if (!editForm.value.steamPassword) {
-          ElMessage.error('请填写Steam密码')
+        // 检查Cookie（无论哪种方式都需要Cookie）
+        if (!editForm.value.cookies) {
+          ElMessage.error('请先获取Cookie（扫码/账号密码登录）或手动输入Cookie')
           return
         }
         if (!editForm.value.steamID) {
           ElMessage.error('请填写SteamID')
-          return
-        }
-        if (!editForm.value.cookies) {
-          ElMessage.error('请先点击"重新登录获取Cookie"按钮进行登录')
           return
         }
       }
@@ -2352,20 +2568,24 @@ export default {
             sleep_time: '6000'
           })
         } else if (editForm.value.type === 'steam') {
-          // Steam特殊配置
+          // Steam特殊配置（支持三种Cookie获取方式）
           requestData.configJson = JSON.stringify({
             cookies: editForm.value.cookies,
             steamID: editForm.value.steamID,
+            steamCookieMethod: editForm.value.steamCookieMethod, // 记录获取方式
+            steamUsername: editForm.value.steamUsername || '',
+            steamPassword: editForm.value.steamPassword || '',
             updateFreq: editForm.value.updateFreq,
             sleep_time: '6000'
           })
         } else if (editForm.value.type === 'steam_login') {
-          // Steam登录特殊配置
+          // Steam登录特殊配置（兼容旧数据，使用与steam相同的配置）
           requestData.configJson = JSON.stringify({
             cookies: editForm.value.cookies,
             steamID: editForm.value.steamID,
-            steamUsername: editForm.value.steamUsername,
-            steamPassword: editForm.value.steamPassword,
+            steamCookieMethod: editForm.value.steamCookieMethod, // 记录获取方式
+            steamUsername: editForm.value.steamUsername || '',
+            steamPassword: editForm.value.steamPassword || '',
             updateFreq: editForm.value.updateFreq,
             sleep_time: '6000'
           })
