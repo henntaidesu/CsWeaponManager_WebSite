@@ -193,7 +193,7 @@
           <el-form-item label="Cookie获取方式" required>
             <el-radio-group v-model="editForm.steamCookieMethod">
               <el-radio label="qrcode">扫码登录</el-radio>
-              <el-radio label="password">账号密码登录</el-radio>
+              <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
               <el-radio label="manual">手动输入</el-radio>
             </el-radio-group>
           </el-form-item>
@@ -315,7 +315,7 @@
           <el-form-item label="Cookie获取方式" required>
             <el-radio-group v-model="editForm.steamCookieMethod">
               <el-radio label="qrcode">扫码登录</el-radio>
-              <el-radio label="password">账号密码登录</el-radio>
+              <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
               <el-radio label="manual">手动输入</el-radio>
             </el-radio-group>
           </el-form-item>
@@ -646,7 +646,7 @@
           <el-form-item label="Cookie获取方式" required>
             <el-radio-group v-model="inputForm.steamCookieMethod">
               <el-radio label="qrcode">扫码登录</el-radio>
-              <el-radio label="password">账号密码登录</el-radio>
+              <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
               <el-radio label="manual">手动输入</el-radio>
             </el-radio-group>
           </el-form-item>
@@ -1061,7 +1061,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, User, Grid, Loading, CircleCheck } from '@element-plus/icons-vue'
 import axios from 'axios'
@@ -1090,6 +1090,7 @@ export default {
     const steamQRLoading = ref(false) // 二维码生成loading
     const steamQRStatus = ref('') // 二维码状态: waiting, success, expired
     const steamQRCheckTimer = ref(null) // 二维码状态检查定时器
+    const autoRefreshTimer = ref(null) // 数据源列表自动刷新定时器
     const editForm = ref({
       name: '',
       type: '',
@@ -1978,7 +1979,9 @@ export default {
         })
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
-        editForm.value.steamCookieMethod = config.steamCookieMethod || 'manual'
+        // 如果是password方式，自动转为manual（因为password已禁用）
+        const cookieMethod = config.steamCookieMethod || 'manual'
+        editForm.value.steamCookieMethod = cookieMethod === 'password' ? 'manual' : cookieMethod
         editForm.value.steamUsername = config.steamUsername || ''
         editForm.value.steamPassword = config.steamPassword || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
@@ -1994,13 +1997,16 @@ export default {
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
         // 如果有steamCookieMethod则使用，否则根据是否有用户名密码来判断
+        let cookieMethod
         if (config.steamCookieMethod) {
-          editForm.value.steamCookieMethod = config.steamCookieMethod
+          cookieMethod = config.steamCookieMethod
         } else if (config.steamUsername) {
-          editForm.value.steamCookieMethod = 'password'
+          cookieMethod = 'password'
         } else {
-          editForm.value.steamCookieMethod = 'manual'
+          cookieMethod = 'manual'
         }
+        // 如果是password方式，自动转为manual（因为password已禁用）
+        editForm.value.steamCookieMethod = cookieMethod === 'password' ? 'manual' : cookieMethod
         editForm.value.steamUsername = config.steamUsername || ''
         editForm.value.steamPassword = config.steamPassword || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
@@ -2883,7 +2889,7 @@ export default {
         clearInterval(steamQRCheckTimer.value)
       }
 
-      // 每2秒检查一次
+      // 每3秒检查一次
       steamQRCheckTimer.value = setInterval(async () => {
         try {
           const response = await axios.post(apiUrls.steamQRPoll(), {
@@ -2921,7 +2927,7 @@ export default {
           steamQRStatus.value = 'expired'
           ElMessage.error('检查二维码状态失败')
         }
-      }, 2000)
+      }, 3000) // 每3秒检查一次
     }
 
     // 编辑表单 - 生成Steam二维码
@@ -2963,7 +2969,7 @@ export default {
         clearInterval(steamQRCheckTimer.value)
       }
 
-      // 每2秒检查一次
+      // 每3秒检查一次
       steamQRCheckTimer.value = setInterval(async () => {
         try {
           const response = await axios.post(apiUrls.steamQRPoll(), {
@@ -2996,7 +3002,7 @@ export default {
           steamQRStatus.value = 'expired'
           ElMessage.error('检查二维码状态失败')
         }
-      }, 2000)
+      }, 3000) // 每3秒检查一次
     }
 
     // Steam登录处理函数（编辑数据源时）
@@ -3040,8 +3046,39 @@ export default {
       }
     }
 
+    // 启动数据源列表自动刷新
+    const startAutoRefresh = () => {
+      // 清除已有定时器
+      if (autoRefreshTimer.value) {
+        clearInterval(autoRefreshTimer.value)
+      }
+      
+      // 每30分钟自动刷新数据源列表
+      autoRefreshTimer.value = setInterval(() => {
+        console.log('自动刷新数据源列表（每30分钟）')
+        loadDataSources()
+      }, 1800000) // 30分钟 = 1800秒 = 1800000毫秒
+    }
+
+    // 停止自动刷新
+    const stopAutoRefresh = () => {
+      if (autoRefreshTimer.value) {
+        clearInterval(autoRefreshTimer.value)
+        autoRefreshTimer.value = null
+      }
+    }
+
     onMounted(() => {
       loadDataSources()
+      startAutoRefresh() // 启动自动刷新
+    })
+    
+    // 页面卸载时清理定时器
+    onBeforeUnmount(() => {
+      stopAutoRefresh()
+      if (steamQRCheckTimer.value) {
+        clearInterval(steamQRCheckTimer.value)
+      }
     })
 
     return {
