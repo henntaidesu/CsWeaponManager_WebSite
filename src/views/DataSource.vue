@@ -106,6 +106,7 @@
         <el-form-item label="数据源类型">
           <el-select v-model="editForm.type" placeholder="选择数据源类型" style="width: 100%;" disabled>
             <el-option label="Steam市场" value="steam" />
+            <el-option label="Steam市场(登录)" value="steam_login" />
             <el-option label="完美世界APP" value="perfectworld" />
             <el-option label="网易BUFF" value="buff" />
             <el-option label="悠悠有品" value="youpin" />
@@ -211,6 +212,69 @@
               <el-option label="每12小时" value="12hour" />
               <el-option label="每天" value="daily" />
             </el-select>
+          </el-form-item>
+        </template>
+
+        <!-- Steam登录特有配置 -->
+        <template v-else-if="editForm.type === 'steam_login'">
+          <el-form-item label="Cookies" required>
+            <el-input 
+              v-model="editForm.cookies" 
+              type="textarea"
+              :rows="3"
+              placeholder="Steam Cookies（登录后自动获取）"
+              :disabled="true"
+            />
+          </el-form-item>
+          <el-form-item label="Steam用户名" required>
+            <el-input 
+              v-model="editForm.steamUsername" 
+              placeholder="请输入Steam用户名"
+            />
+          </el-form-item>
+          <el-form-item label="Steam密码" required>
+            <el-input 
+              v-model="editForm.steamPassword" 
+              type="password"
+              show-password
+              placeholder="请输入Steam密码"
+            />
+          </el-form-item>
+          <el-form-item label="Steam Guard验证码">
+            <el-input 
+              v-model="editForm.steamTwofactorCode" 
+              placeholder="请输入5位Steam Guard验证码（如需要）"
+              maxlength="5"
+            />
+            <div style="color: #999; font-size: 12px; margin-top: 5px;">
+              如果您的账号启用了Steam Guard手机令牌，请在此输入验证码
+            </div>
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="editForm.steamID" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="handleEditSteamLogin" 
+              :loading="steamLoginLoading"
+              style="width: 100%;"
+            >
+              {{ steamLoginLoading ? '登录中...' : '重新登录获取Cookie' }}
+            </el-button>
           </el-form-item>
         </template>
 
@@ -357,6 +421,14 @@
               <span v-if="isTypeDisabled('steam')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
             </el-option>
             <el-option 
+              label="Steam市场(登录)" 
+              value="steam_login" 
+              :disabled="isTypeDisabled('steam_login')"
+            >
+              <span>Steam市场(登录)</span>
+              <span v-if="isTypeDisabled('steam_login')" style="color: #909399; font-size: 12px; margin-left: 10px;">(已存在)</span>
+            </el-option>
+            <el-option 
               label="完美世界APP" 
               value="perfectworld" 
               :disabled="isTypeDisabled('perfectworld')"
@@ -449,6 +521,68 @@
               <el-option label="每天" value="daily" />
             </el-select>
           </el-form-item>
+        </template>
+
+        <!-- Steam登录特有配置 -->
+        <template v-else-if="inputForm.type === 'steam_login'">
+          <el-form-item label="Steam用户名" required>
+            <el-input 
+              v-model="inputForm.steamUsername" 
+              placeholder="请输入Steam用户名"
+            />
+          </el-form-item>
+          <el-form-item label="Steam密码" required>
+            <el-input 
+              v-model="inputForm.steamPassword" 
+              type="password"
+              show-password
+              placeholder="请输入Steam密码"
+            />
+          </el-form-item>
+          <el-form-item label="Steam Guard验证码">
+            <el-input 
+              v-model="inputForm.steamTwofactorCode" 
+              placeholder="请输入5位Steam Guard验证码（如需要）"
+              maxlength="5"
+            />
+            <div style="color: #999; font-size: 12px; margin-top: 5px;">
+              如果您的账号启用了Steam Guard手机令牌，请在此输入验证码
+            </div>
+          </el-form-item>
+          <el-form-item label="SteamID" required>
+            <el-input 
+              v-model="inputForm.steamID" 
+              placeholder="请输入SteamID"
+            />
+          </el-form-item>
+          <el-form-item label="更新频率">
+            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="handleSteamLogin" 
+              :loading="steamLoginLoading"
+              style="width: 100%;"
+            >
+              {{ steamLoginLoading ? '登录中...' : '立即登录获取Cookie' }}
+            </el-button>
+          </el-form-item>
+          <el-alert
+            v-if="inputForm.steamLoginMessage"
+            :title="inputForm.steamLoginMessage"
+            :type="inputForm.steamLoginSuccess ? 'success' : 'warning'"
+            :closable="false"
+            show-icon
+            style="margin-top: 10px;"
+          />
         </template>
 
         <!-- 完美世界APP特有配置 -->
@@ -642,6 +776,7 @@ export default {
     const editDialogVisible = ref(false)
     const editSubmitting = ref(false)
     const addDialogVisible = ref(false)
+    const steamLoginLoading = ref(false)
     const editForm = ref({
       name: '',
       type: '',
@@ -666,6 +801,10 @@ export default {
       steamID: '',
       // Steam特有字段
       cookies: '',
+      // Steam登录特有字段
+      steamUsername: '',
+      steamPassword: '',
+      steamTwofactorCode: '',
       // 完美世界APP特有字段
       appversion: '',
       device: '',
@@ -700,6 +839,12 @@ export default {
       steamID: '',
       // Steam特有字段
       cookies: '',
+      // Steam登录特有字段
+      steamUsername: '',
+      steamPassword: '',
+      steamTwofactorCode: '',
+      steamLoginMessage: '',
+      steamLoginSuccess: false,
       // 完美世界APP特有字段
       appversion: '',
       device: '',
@@ -743,6 +888,7 @@ export default {
     const getSourceTypeLabel = (type) => {
       const labels = {
         steam: 'Steam市场',
+        steam_login: 'Steam市场(登录)',
         perfectworld: '完美世界APP',
         buff: '网易BUFF',
         youpin: '悠悠有品'
@@ -804,6 +950,26 @@ export default {
         }
         if (!inputForm.value.steamID) {
           ElMessage.error('请填写SteamID')
+          return
+        }
+      }
+
+      // Steam登录类型的字段校验
+      if (inputForm.value.type === 'steam_login') {
+        if (!inputForm.value.steamUsername) {
+          ElMessage.error('请填写Steam用户名')
+          return
+        }
+        if (!inputForm.value.steamPassword) {
+          ElMessage.error('请填写Steam密码')
+          return
+        }
+        if (!inputForm.value.steamID) {
+          ElMessage.error('请填写SteamID')
+          return
+        }
+        if (!inputForm.value.cookies) {
+          ElMessage.error('请先点击"立即登录获取Cookie"按钮进行登录')
           return
         }
       }
@@ -929,6 +1095,16 @@ export default {
             updateFreq: inputForm.value.updateFreq,
             sleep_time: '6000'
           })
+        } else if (inputForm.value.type === 'steam_login') {
+          // Steam登录特殊配置
+          requestData.configJson = JSON.stringify({
+            cookies: inputForm.value.cookies,
+            steamID: inputForm.value.steamID,
+            steamUsername: inputForm.value.steamUsername,
+            steamPassword: inputForm.value.steamPassword,
+            updateFreq: inputForm.value.updateFreq,
+            sleep_time: '6000'
+          })
         } else {
           requestData.configJson = JSON.stringify({
             apiUrl: inputForm.value.apiUrl,
@@ -1009,6 +1185,12 @@ export default {
         steamID: '',
         // Steam特有字段
         cookies: '',
+        // Steam登录特有字段
+        steamUsername: '',
+        steamPassword: '',
+        steamTwofactorCode: '',
+        steamLoginMessage: '',
+        steamLoginSuccess: false,
         // 完美世界APP特有字段
         appversion: '',
         device: '',
@@ -1479,6 +1661,19 @@ export default {
         })
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
+        editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
+      } else if (source.type === 'steam_login') {
+        // Steam登录配置
+        console.log('Steam登录配置解析:', {
+          cookies: config.cookies,
+          steamID: config.steamID,
+          steamUsername: config.steamUsername,
+          updateFreq: config.updateFreq
+        })
+        editForm.value.cookies = config.cookies || ''
+        editForm.value.steamID = config.steamID || ''
+        editForm.value.steamUsername = config.steamUsername || ''
+        editForm.value.steamPassword = config.steamPassword || ''
         editForm.value.updateFreq = config.updateFreq || source.updateFreq || '15min'
       } else if (source.type === 'perfectworld') {
         // 完美世界APP配置
@@ -2212,6 +2407,108 @@ export default {
     }
 
 
+    // Steam登录处理函数（添加数据源时）
+    const handleSteamLogin = async () => {
+      if (!inputForm.value.steamUsername || !inputForm.value.steamPassword) {
+        ElMessage.error('请输入Steam用户名和密码')
+        return
+      }
+
+      steamLoginLoading.value = true
+      inputForm.value.steamLoginMessage = ''
+      inputForm.value.steamLoginSuccess = false
+
+      try {
+        const loginData = {
+          username: inputForm.value.steamUsername,
+          password: inputForm.value.steamPassword,
+          twofactor_code: inputForm.value.steamTwofactorCode || '',
+          save_to_db: false  // 不直接保存，等用户保存数据源时再保存
+        }
+
+        const response = await axios.post(apiUrls.steamLogin(), loginData)
+        const result = response.data
+
+        if (result.success) {
+          // 登录成功
+          inputForm.value.cookies = result.cookies
+          inputForm.value.steamID = result.steam_id || inputForm.value.steamID
+          inputForm.value.steamLoginMessage = '✅ Steam登录成功！Cookie已自动填充'
+          inputForm.value.steamLoginSuccess = true
+          ElMessage.success('Steam登录成功！')
+        } else if (result.requires_twofactor) {
+          // 需要Steam Guard验证码
+          inputForm.value.steamLoginMessage = '⚠️ 需要Steam Guard手机令牌验证码，请输入后重试'
+          inputForm.value.steamLoginSuccess = false
+          ElMessage.warning('需要Steam Guard验证码')
+        } else if (result.requires_emailauth) {
+          // 需要邮箱验证码
+          inputForm.value.steamLoginMessage = '⚠️ 需要邮箱验证码，请查收邮件后输入'
+          inputForm.value.steamLoginSuccess = false
+          ElMessage.warning('需要邮箱验证码')
+        } else if (result.requires_captcha) {
+          // 需要图形验证码
+          inputForm.value.steamLoginMessage = '⚠️ 需要图形验证码，请稍后重试或手动输入Cookie'
+          inputForm.value.steamLoginSuccess = false
+          ElMessage.warning('需要图形验证码')
+        } else {
+          // 其他错误
+          inputForm.value.steamLoginMessage = `❌ 登录失败: ${result.message}`
+          inputForm.value.steamLoginSuccess = false
+          ElMessage.error(result.message || '登录失败')
+        }
+      } catch (error) {
+        console.error('Steam登录失败:', error)
+        inputForm.value.steamLoginMessage = `❌ 登录失败: ${error.message || '网络错误'}`
+        inputForm.value.steamLoginSuccess = false
+        ElMessage.error('Steam登录失败，请检查网络连接')
+      } finally {
+        steamLoginLoading.value = false
+      }
+    }
+
+    // Steam登录处理函数（编辑数据源时）
+    const handleEditSteamLogin = async () => {
+      if (!editForm.value.steamUsername || !editForm.value.steamPassword) {
+        ElMessage.error('请输入Steam用户名和密码')
+        return
+      }
+
+      steamLoginLoading.value = true
+
+      try {
+        const loginData = {
+          username: editForm.value.steamUsername,
+          password: editForm.value.steamPassword,
+          twofactor_code: editForm.value.steamTwofactorCode || '',
+          save_to_db: false
+        }
+
+        const response = await axios.post(apiUrls.steamLogin(), loginData)
+        const result = response.data
+
+        if (result.success) {
+          // 登录成功
+          editForm.value.cookies = result.cookies
+          editForm.value.steamID = result.steam_id || editForm.value.steamID
+          ElMessage.success('Steam重新登录成功！Cookie已更新')
+        } else if (result.requires_twofactor) {
+          ElMessage.warning('需要Steam Guard验证码，请输入后重试')
+        } else if (result.requires_emailauth) {
+          ElMessage.warning('需要邮箱验证码，请查收邮件后输入')
+        } else if (result.requires_captcha) {
+          ElMessage.warning('需要图形验证码，请稍后重试')
+        } else {
+          ElMessage.error(result.message || '登录失败')
+        }
+      } catch (error) {
+        console.error('Steam登录失败:', error)
+        ElMessage.error('Steam登录失败，请检查网络连接')
+      } finally {
+        steamLoginLoading.value = false
+      }
+    }
+
     onMounted(() => {
       loadDataSources()
     })
@@ -2252,7 +2549,10 @@ export default {
       openAddDialogForNewSteam,
       handleAddDialogClose,
       removeSource,
-      refreshAllSources
+      refreshAllSources,
+      steamLoginLoading,
+      handleSteamLogin,
+      handleEditSteamLogin
     }
   }
 }
