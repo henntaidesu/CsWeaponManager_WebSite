@@ -49,7 +49,7 @@
             </el-select>
             <el-input
               v-model="searchText"
-              placeholder="搜索组件名称..."
+              placeholder="搜索武器名称..."
               prefix-icon="Search"
               class="search-input"
               @keyup.enter="handleSearch"
@@ -75,65 +75,41 @@
         <div class="search-stats-divider"></div>
         
         <!-- 统计数据 -->
-        <div class="stats-container">
-          <div class="stats-section">
-            <h3>统计数据</h3>
-            <div class="stats-grid-3x2">
-              <div class="stat-item">
-                <span class="stat-label">总组件数量:</span>
-                <span class="stat-value">{{ totalStats.totalCount }} 件</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">总成本金额:</span>
-                <span class="stat-value">¥{{ totalStats.totalCost }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">平均成本:</span>
-                <span class="stat-value">¥{{ totalStats.avgCost }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">库存中:</span>
-                <span class="stat-value">{{ totalStats.inStockCount }} 件</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">已使用:</span>
-                <span class="stat-value">{{ totalStats.usedCount }} 件</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">已出售:</span>
-                <span class="stat-value">{{ totalStats.soldCount }} 件</span>
+        <div class="inventory-stats">
+          <div class="grid grid-5">
+            <div class="card">
+              <h3>总组件数量</h3>
+              <p class="stat-number">{{ totalStats.totalCount }}</p>
+            </div>
+            <div class="card">
+              <h3>购入总价值</h3>
+              <p class="stat-number">¥{{ totalStats.totalCost }}</p>
+            </div>
+            <div class="card">
+              <h3>悠悠有品最低价</h3>
+              <div class="stat-price-container">
+                <p class="stat-number">¥{{ totalStats.totalYYYPPrice }}</p>
+                <p class="stat-diff-right" :style="{ color: totalStats.yyypDiff >= 0 ? '#f56c6c' : '#4CAF50' }">
+                  {{ totalStats.yyypDiff >= 0 ? '+' : '' }}¥{{ totalStats.yyypDiff }}
+                </p>
               </div>
             </div>
-          </div>
-          
-          <div class="stats-divider"></div>
-          
-          <div class="stats-section">
-            <h3>当前页面统计</h3>
-            <div class="stats-grid-3x2">
-              <div class="stat-item">
-                <span class="stat-label">页面数量:</span>
-                <span class="stat-value">{{ currentPageStats.totalCount }} 件</span>
+            <div class="card">
+              <h3>BUFF最低价</h3>
+              <div class="stat-price-container">
+                <p class="stat-number">¥{{ totalStats.totalBuffPrice }}</p>
+                <p class="stat-diff-right" :style="{ color: totalStats.buffDiff >= 0 ? '#f56c6c' : '#4CAF50' }">
+                  {{ totalStats.buffDiff >= 0 ? '+' : '' }}¥{{ totalStats.buffDiff }}
+                </p>
               </div>
-              <div class="stat-item">
-                <span class="stat-label">页面成本:</span>
-                <span class="stat-value">¥{{ currentPageStats.totalCost }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">平均成本:</span>
-                <span class="stat-value">¥{{ currentPageStats.avgCost }}</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">库存中:</span>
-                <span class="stat-value">{{ currentPageStats.inStockCount }} 件</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">已使用:</span>
-                <span class="stat-value">{{ currentPageStats.usedCount }} 件</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-label">已出售:</span>
-                <span class="stat-value">{{ currentPageStats.soldCount }} 件</span>
+            </div>
+            <div class="card">
+              <h3>Steam参考价</h3>
+              <div class="stat-price-container">
+                <p class="stat-number">¥{{ totalStats.totalSteamPrice }}</p>
+                <p class="stat-diff-right" :style="{ color: totalStats.steamDiff >= 0 ? '#f56c6c' : '#4CAF50' }">
+                  {{ totalStats.steamDiff >= 0 ? '+' : '' }}¥{{ totalStats.steamDiff }}
+                </p>
               </div>
             </div>
           </div>
@@ -174,9 +150,26 @@
           </template>
         </el-table-column>
         <el-table-column prop="float_range" label="磨损范围" min-width="120" />
-        <el-table-column prop="buy_price" label="购入价格" min-width="110" sortable>
+        <el-table-column prop="buy_price" label="购入价格" min-width="150" sortable>
           <template #default="scope">
-            ¥{{ formatPrice(scope.row.buy_price) }}
+            <div v-if="editingAssetId !== scope.row.assetid" 
+                 @click="startEdit(scope.row)" 
+                 style="cursor: pointer; padding: 5px;">
+              <div v-if="scope.row.buy_price" style="display: flex; align-items: center; gap: 5px;">
+                <span style="color: #fff; font-weight: bold;">¥{{ formatPrice(scope.row.buy_price) }}</span>
+              </div>
+              <span v-else style="color: #888;">点击输入</span>
+            </div>
+            <el-input 
+              v-else
+              v-model="editingPrice" 
+              placeholder="输入价格" 
+              size="small"
+              :id="'price-input-' + scope.row.assetid"
+              @blur="finishEdit(scope.row)"
+              @keyup.enter="finishEdit(scope.row)"
+              @keyup.esc="cancelEdit"
+            />
           </template>
         </el-table-column>
         <el-table-column prop="yyyp_price" label="悠悠价格" min-width="110" sortable>
@@ -212,7 +205,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { API_CONFIG } from '@/config/api.js'
@@ -233,6 +226,11 @@ export default {
     const inventoryComponents = ref([])
     const selectedComponent = ref('')
     
+    // 编辑价格相关
+    const editingAssetId = ref(null)
+    const editingPrice = ref('')
+    const originalPrice = ref('')
+    
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
     const API_COMPONENTS = `${API_CONFIG.BASE_URL}/webStockComponentsV1`
@@ -244,29 +242,12 @@ export default {
     const totalStats = ref({
       totalCount: 0,
       totalCost: '0.00',
-      avgCost: '0.00',
-      inStockCount: 0,
-      usedCount: 0,
-      soldCount: 0
-    })
-
-    const currentPageStats = computed(() => {
-      const currentData = filteredData.value
-      const totalCount = currentData.length
-      const totalCost = currentData.reduce((sum, item) => sum + (parseFloat(item.total_cost) || 0), 0).toFixed(2)
-      const avgCost = totalCount > 0 ? (totalCost / totalCount).toFixed(2) : '0.00'
-      const inStockCount = currentData.filter(item => item.status === '库存中').length
-      const usedCount = currentData.filter(item => item.status === '已使用').length
-      const soldCount = currentData.filter(item => item.status === '已出售').length
-
-      return {
-        totalCount,
-        totalCost,
-        avgCost,
-        inStockCount,
-        usedCount,
-        soldCount
-      }
+      totalYYYPPrice: '0.00',
+      totalBuffPrice: '0.00',
+      totalSteamPrice: '0.00',
+      yyypDiff: '0.00',
+      buffDiff: '0.00',
+      steamDiff: '0.00'
     })
 
     const filteredData = computed(() => {
@@ -382,6 +363,8 @@ export default {
         }
       } catch (error) {
         console.error('加载库存组件失败:', error)
+        console.error('错误详情:', error.response?.status, error.response?.data)
+        // 如果获取失败,不显示错误提示,只是清空列表
         inventoryComponents.value = []
       }
     }
@@ -427,14 +410,20 @@ export default {
             currentPage.value = 1
             
             // 更新统计数据
-            const cost = parseFloat(filtered[0].buy_price) || 0
+            const buyPrice = parseFloat(filtered[0].buy_price) || 0
+            const yyypPrice = parseFloat(filtered[0].yyyp_price) || 0
+            const buffPrice = parseFloat(filtered[0].buff_price) || 0
+            const steamPrice = parseFloat(filtered[0].steam_price) || 0
+            
             totalStats.value = {
               totalCount: filtered.length,
-              totalCost: cost.toFixed(2),
-              avgCost: cost.toFixed(2),
-              inStockCount: filtered.length,
-              usedCount: 0,
-              soldCount: 0
+              totalCost: buyPrice.toFixed(2),
+              totalYYYPPrice: yyypPrice.toFixed(2),
+              totalBuffPrice: buffPrice.toFixed(2),
+              totalSteamPrice: steamPrice.toFixed(2),
+              yyypDiff: (yyypPrice - buyPrice).toFixed(2),
+              buffDiff: (buffPrice - buyPrice).toFixed(2),
+              steamDiff: (steamPrice - buyPrice).toFixed(2)
             }
             
             ElMessage.success(`已找到组件`)
@@ -503,13 +492,21 @@ export default {
         
         if (response.data.success) {
           const stats = response.data.data
+          
+          const totalCost = parseFloat(stats.totalCost || 0)
+          const totalYYYPPrice = parseFloat(stats.totalYYYPPrice || 0)
+          const totalBuffPrice = parseFloat(stats.totalBuffPrice || 0)
+          const totalSteamPrice = parseFloat(stats.totalSteamPrice || 0)
+          
           totalStats.value = {
             totalCount: stats.totalCount || 0,
-            totalCost: (stats.totalCost || 0).toFixed(2),
-            avgCost: (stats.avgCost || 0).toFixed(2),
-            inStockCount: stats.inStockCount || 0,
-            usedCount: stats.usedCount || 0,
-            soldCount: stats.soldCount || 0
+            totalCost: totalCost.toFixed(2),
+            totalYYYPPrice: totalYYYPPrice.toFixed(2),
+            totalBuffPrice: totalBuffPrice.toFixed(2),
+            totalSteamPrice: totalSteamPrice.toFixed(2),
+            yyypDiff: (totalYYYPPrice - totalCost).toFixed(2),
+            buffDiff: (totalBuffPrice - totalCost).toFixed(2),
+            steamDiff: (totalSteamPrice - totalCost).toFixed(2)
           }
         }
       } catch (error) {
@@ -580,6 +577,75 @@ export default {
         ElMessage.error('更新组件失败: ' + (error.response?.data?.message || error.message))
       } finally {
         updateLoading.value = false
+      }
+    }
+
+    // 开始编辑价格
+    const startEdit = (row) => {
+      editingAssetId.value = row.assetid || row.component_id
+      originalPrice.value = row.buy_price || ''
+      editingPrice.value = row.buy_price || ''
+      
+      // 使用nextTick确保input已渲染后聚焦
+      nextTick(() => {
+        const input = document.getElementById(`price-input-${row.assetid || row.component_id}`)
+        if (input) {
+          input.focus()
+          input.select() // 选中所有文本，方便修改
+        }
+      })
+    }
+
+    // 取消编辑
+    const cancelEdit = () => {
+      editingAssetId.value = null
+      editingPrice.value = ''
+      originalPrice.value = ''
+    }
+
+    // 完成编辑价格
+    const finishEdit = async (row) => {
+      const newPrice = editingPrice.value
+      const oldPrice = originalPrice.value
+      
+      // 如果价格没有改变，直接取消编辑
+      if (newPrice === oldPrice) {
+        cancelEdit()
+        return
+      }
+      
+      // 如果价格为空，提示用户
+      if (!newPrice || newPrice.trim() === '') {
+        ElMessage.warning('请输入有效的价格')
+        return
+      }
+      
+      // 先更新UI（乐观更新）
+      row.buy_price = newPrice
+      const currentAssetId = editingAssetId.value
+      cancelEdit()
+      
+      // 异步发送请求到后端
+      try {
+        const response = await axios.put(
+          `${API_COMPONENTS}/update/buy_price/${selectedSteamId.value}/${currentAssetId}`,
+          { buy_price: newPrice }
+        )
+        
+        if (response.data.success) {
+          ElMessage.success('价格更新成功')
+          // 重新加载统计数据
+          await loadComponentStats()
+        } else {
+          // 如果失败，恢复原价格
+          row.buy_price = oldPrice
+          ElMessage.error(response.data.message || '价格更新失败')
+        }
+      } catch (error) {
+        // 如果失败，恢复原价格
+        row.buy_price = oldPrice
+        console.error('更新价格失败:', error)
+        ElMessage.error('更新价格失败: ' + (error.response?.data?.message || error.message))
       }
     }
 
@@ -667,7 +733,6 @@ export default {
       componentData,
       filteredData,
       totalStats,
-      currentPageStats,
       searchText,
       currentPage,
       pageSize,
@@ -676,6 +741,8 @@ export default {
       selectedSteamId,
       inventoryComponents,
       selectedComponent,
+      editingAssetId,
+      editingPrice,
       formatTime,
       formatPrice,
       formatWeaponFloat,
@@ -687,13 +754,60 @@ export default {
       handleSteamIdChange,
       handleComponentSelect,
       handleUpdateComponent,
-      handleUpdateAllComponents
+      handleUpdateAllComponents,
+      startEdit,
+      finishEdit,
+      cancelEdit
     }
   }
 }
 </script>
 
 <style scoped>
+.inventory-stats {
+  margin-bottom: 1.5rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-5 {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 1400px) {
+  .grid-5 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid-5 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+  margin: 0.5rem 0 0 0;
+}
+
+.stat-price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat-diff-right {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
 .steam-id-select {
   min-width: 250px;
   max-width: 350px;
@@ -824,91 +938,6 @@ export default {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
   margin: 1.5rem 0;
-}
-
-.stats-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.stats-section {
-  flex: 1;
-}
-
-.stats-section h3 {
-  margin: 0 0 1rem 0;
-  color: var(--text-primary);
-  font-size: clamp(1rem, 1.8vw, 1.125rem);
-  font-weight: 600;
-}
-
-.stats-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
-  margin: 0.5rem 0;
-}
-
-.stats-grid-3x2 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(2, 1fr);
-  gap: clamp(0.75rem, 2vw, 1rem);
-  align-items: stretch;
-}
-
-@media (min-width: 1024px) {
-  .stats-container {
-    flex-direction: row;
-    gap: 2rem;
-    align-items: flex-start;
-  }
-  
-  .stats-divider {
-    width: 1px;
-    height: auto;
-    min-height: 120px;
-    background: linear-gradient(180deg, transparent, var(--border-default) 20%, var(--border-default) 80%, transparent);
-    margin: 0;
-  }
-  
-  .stats-section {
-    flex: 1;
-    min-width: 0;
-  }
-}
-
-.stat-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  background-color: #2a2a2a;
-  border-radius: 0.375rem;
-}
-
-.stat-label {
-  color: #ccc;
-  font-size: clamp(0.75rem, 1.2vw, 0.875rem);
-}
-
-.stat-value {
-  font-weight: bold;
-  color: #fff;
-  font-size: clamp(0.875rem, 1.4vw, 1rem);
-}
-
-@media (max-width: 768px) {
-  .stats-grid-3x2 {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(6, 1fr);
-  }
-  
-  .stat-item {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-  }
 }
 </style>
 
