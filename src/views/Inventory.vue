@@ -71,7 +71,7 @@
     </div>
 
     <div class="inventory-stats">
-      <div class="grid grid-4">
+      <div class="grid grid-5">
         <div class="card">
           <h3>总库存数量</h3>
           <p class="stat-number">{{ inventoryStats.totalCount }}</p>
@@ -81,7 +81,7 @@
           <p class="stat-number">¥{{ priceStats.total_price }}</p>
         </div>
         <div class="card">
-          <h3>悠悠有品总价值</h3>
+          <h3>悠悠有品最低价</h3>
           <div class="stat-price-container">
             <p class="stat-number">¥{{ yyypPriceStats.total_price }}</p>
             <p class="stat-diff-right" :style="{ color: yyypPriceStats.diff >= 0 ? '#f56c6c' : '#4CAF50' }">
@@ -90,11 +90,20 @@
           </div>
         </div>
         <div class="card">
-          <h3>BUFF总价值</h3>
+          <h3>BUFF最低价</h3>
           <div class="stat-price-container">
             <p class="stat-number">¥{{ buffPriceStats.total_price }}</p>
             <p class="stat-diff-right" :style="{ color: buffPriceStats.diff >= 0 ? '#f56c6c' : '#4CAF50' }">
               {{ buffPriceStats.diff >= 0 ? '+' : '' }}¥{{ buffPriceStats.diff }}
+            </p>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Steam参考价</h3>
+          <div class="stat-price-container">
+            <p class="stat-number">¥{{ steamPriceStats.total_price }}</p>
+            <p class="stat-diff-right" :style="{ color: steamPriceStats.diff >= 0 ? '#f56c6c' : '#4CAF50' }">
+              {{ steamPriceStats.diff >= 0 ? '+' : '' }}¥{{ steamPriceStats.diff }}
             </p>
           </div>
         </div>
@@ -114,6 +123,19 @@
         :default-sort="{ prop: 'buy_price', order: 'descending' }"
         @sort-change="handleSortChange"
       >
+        <el-table-column 
+          prop="order_time" 
+          label="入库时间" 
+          width="180" 
+          sortable="custom"
+        >
+          <template #default="scope">
+            <span v-if="scope.row.order_time" style="color: #9E9E9E;">
+              {{ scope.row.order_time }}
+            </span>
+            <span v-else style="color: #888;">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="weapon_name" label="武器" min-width="120" />
         <el-table-column prop="weapon_type" label="类型" min-width="100" />
         <el-table-column prop="item_name" label="饰品名称" min-width="250" show-overflow-tooltip />
@@ -220,14 +242,14 @@
           </template>
         </el-table-column>
         <el-table-column 
-          prop="order_time" 
-          label="入库时间" 
-          width="180" 
+          prop="steam_price" 
+          label="Steam" 
+          width="120" 
           sortable="custom"
         >
           <template #default="scope">
-            <span v-if="scope.row.order_time" style="color: #9E9E9E;">
-              {{ scope.row.order_time }}
+            <span v-if="scope.row.steam_price" style="color: #fff; font-weight: bold;">
+              ¥{{ parseFloat(scope.row.steam_price).toFixed(2) }}
             </span>
             <span v-else style="color: #888;">-</span>
           </template>
@@ -279,6 +301,14 @@
                 :row-style="{ backgroundColor: 'transparent' }"
                 :header-row-style="{ backgroundColor: 'var(--bg-tertiary)' }"
               >
+                <el-table-column prop="order_time" label="入库时间" min-width="160">
+                  <template #default="props">
+                    <span v-if="props.row.order_time" style="color: #9E9E9E;">
+                      {{ props.row.order_time }}
+                    </span>
+                    <span v-else style="color: #888;">-</span>
+                  </template>
+                </el-table-column>
                 <el-table-column prop="assetid" label="Asset ID" min-width="150" />
                 <el-table-column prop="weapon_float" label="磨损值" min-width="150">
                   <template #default="props">
@@ -343,10 +373,10 @@
                     <span v-else style="color: #888;">-</span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="order_time" label="入库时间" min-width="160">
+                <el-table-column prop="steam_price" label="Steam" min-width="120">
                   <template #default="props">
-                    <span v-if="props.row.order_time" style="color: #9E9E9E;">
-                      {{ props.row.order_time }}
+                    <span v-if="props.row.steam_price" style="color: #fff; font-weight: bold;">
+                      ¥{{ parseFloat(props.row.steam_price).toFixed(2) }}
                     </span>
                     <span v-else style="color: #888;">-</span>
                   </template>
@@ -505,9 +535,10 @@ export default {
     })
 
     const buffPriceStats = computed(() => {
-      // 基于当前显示的数据计算BUFF价格统计
+      // 基于当前显示的数据计算BUFF价格统计（扣除2.5%手续费）
       const currentData = inventoryData.value || []
       let buff_total = 0
+      let buff_total_after_fee = 0
       let buy_total = 0
       let priced_count = 0
       
@@ -516,6 +547,8 @@ export default {
           const price = parseFloat(item.buff_price)
           if (!isNaN(price)) {
             buff_total += price
+            // 扣除2.5%手续费
+            buff_total_after_fee += price * 0.975
             priced_count++
           }
         }
@@ -527,12 +560,46 @@ export default {
         }
       })
       
-      const diff = (buff_total - buy_total).toFixed(2)
+      // 差价基于扣除手续费后的价格计算
+      const diff = (buff_total_after_fee - buy_total).toFixed(2)
       
       return {
         priced_count: priced_count,
-        total_price: buff_total.toFixed(2),
-        avg_price: priced_count > 0 ? (buff_total / priced_count).toFixed(2) : '0.00',
+        total_price: buff_total_after_fee.toFixed(2),
+        avg_price: priced_count > 0 ? (buff_total_after_fee / priced_count).toFixed(2) : '0.00',
+        diff: diff
+      }
+    })
+
+    const steamPriceStats = computed(() => {
+      // 基于当前显示的数据计算Steam价格统计
+      const currentData = inventoryData.value || []
+      let steam_total = 0
+      let buy_total = 0
+      let priced_count = 0
+      
+      currentData.forEach(item => {
+        if (item.steam_price) {
+          const price = parseFloat(item.steam_price)
+          if (!isNaN(price)) {
+            steam_total += price
+            priced_count++
+          }
+        }
+        if (item.buy_price) {
+          const price = parseFloat(item.buy_price)
+          if (!isNaN(price)) {
+            buy_total += price
+          }
+        }
+      })
+      
+      const diff = (steam_total - buy_total).toFixed(2)
+      
+      return {
+        priced_count: priced_count,
+        total_price: steam_total.toFixed(2),
+        avg_price: priced_count > 0 ? (steam_total / priced_count).toFixed(2) : '0.00',
         diff: diff
       }
     })
@@ -582,6 +649,7 @@ export default {
                 buy_price: item.buy_prices && item.buy_prices[index] ? item.buy_prices[index] : null,
                 yyyp_price: item.yyyp_prices && item.yyyp_prices[index] ? item.yyyp_prices[index] : null,
                 buff_price: item.buff_prices && item.buff_prices[index] ? item.buff_prices[index] : null,
+                steam_price: item.steam_prices && item.steam_prices[index] ? item.steam_prices[index] : null,
                 order_time: item.order_times && item.order_times[index] ? item.order_times[index] : null
               }))
             }))
@@ -908,15 +976,21 @@ export default {
       try {
         fetchingBuffPrice.value = true
         
-        // TODO: 调用Spider API获取BUFF价格
-        // const response = await axios.post(
-        //   `${API_CONFIG.SPIDER_BASE_URL}/buffSpiderV1/getPrice`,
-        //   {
-        //     steamId: selectedSteamId.value
-        //   }
-        // )
+        // 调用Spider API获取BUFF价格
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/buffSpiderV1/getBUFFPrice`,
+          {
+            steamId: selectedSteamId.value
+          }
+        )
         
-        ElMessage.info('获取BUFF价格功能待实现')
+        if (response.data.success) {
+          ElMessage.success(response.data.message || 'BUFF价格获取成功')
+          // 重新加载库存数据和统计信息
+          await loadInventoryData()
+        } else {
+          ElMessage.error(response.data.message || 'BUFF价格获取失败')
+        }
         
       } catch (error) {
         console.error('获取BUFF价格失败:', error)
@@ -944,6 +1018,7 @@ export default {
       priceStats,
       yyypPriceStats,
       buffPriceStats,
+      steamPriceStats,
       searchText,
       weaponTypeFilter,
       floatRangeFilter,

@@ -253,6 +253,10 @@ div, section, article, aside, main, header, footer, nav {
     grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
 }
 
+.grid-5 {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+
 /* Flex布局辅助类 */
 .flex {
     display: flex;
@@ -396,7 +400,8 @@ div, section, article, aside, main, header, footer, nav {
     .grid-auto,
     .grid-2,
     .grid-3,
-    .grid-4 {
+    .grid-4,
+    .grid-5 {
         grid-template-columns: 1fr;
     }
 }
