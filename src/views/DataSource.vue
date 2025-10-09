@@ -538,7 +538,7 @@
             <el-form-item label="登录二维码">
               <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">
                 <div v-if="!steamQRCode && !steamQRLoading">
-                  <el-icon :size="80" color="#999"><QrCode /></el-icon>
+                  <el-icon :size="80" color="#999"><Grid /></el-icon>
                   <p style="color: #999; margin-top: 10px;">点击下方按钮生成登录二维码</p>
                 </div>
                 <div v-else-if="steamQRLoading">
@@ -809,7 +809,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, User, QrCode, Loading } from '@element-plus/icons-vue'
+import { Plus, User, Grid, Loading } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { apiUrls } from '@/config/api.js'
 
@@ -818,7 +818,7 @@ export default {
   components: {
     Plus,
     User,
-    QrCode,
+    Grid,
     Loading
   },
   setup() {
@@ -904,6 +904,7 @@ export default {
       steamLoginMessage: '',
       steamLoginSuccess: false,
       steamLoginMethod: 'qrcode', // 默认使用二维码登录
+      steamQRSessionId: '', // 二维码会话ID
       // 完美世界APP特有字段
       appversion: '',
       device: '',
@@ -1820,6 +1821,17 @@ export default {
 
     // 关闭添加数据源对话框
     const handleAddDialogClose = () => {
+      // 清除二维码轮询定时器
+      if (steamQRCheckTimer.value) {
+        clearInterval(steamQRCheckTimer.value)
+        steamQRCheckTimer.value = null
+      }
+      
+      // 重置二维码相关状态
+      steamQRCode.value = ''
+      steamQRStatus.value = ''
+      steamQRLoading.value = false
+      
       resetForm() // 关闭时重置表单
     }
 
@@ -2521,10 +2533,17 @@ export default {
         if (result.success) {
           // 登录成功
           inputForm.value.cookies = result.cookies
-          inputForm.value.steamID = result.steam_id || inputForm.value.steamID
-          inputForm.value.steamLoginMessage = '✅ Steam登录成功！Cookie已自动填充'
+          
+          // 自动填充SteamID（确保转换为字符串）
+          const steamId = result.steam_id || result.steamid
+          if (steamId) {
+            inputForm.value.steamID = String(steamId)
+            console.log('已自动填充SteamID:', inputForm.value.steamID)
+          }
+          
+          inputForm.value.steamLoginMessage = `✅ Steam登录成功！SteamID已自动填充: ${inputForm.value.steamID}`
           inputForm.value.steamLoginSuccess = true
-          ElMessage.success('Steam登录成功！')
+          ElMessage.success(`Steam登录成功！SteamID: ${inputForm.value.steamID}`)
         } else if (result.requires_twofactor) {
           // 需要Steam Guard验证码
           inputForm.value.steamLoginMessage = '⚠️ 需要Steam Guard手机令牌验证码，请输入后重试'
@@ -2563,24 +2582,26 @@ export default {
       steamQRStatus.value = ''
 
       try {
-        // TODO: 调用后端API生成二维码
-        // 这里先用模拟数据
         ElMessage.info('正在生成Steam登录二维码...')
         
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // 调用后端API生成二维码
+        const response = await axios.post(apiUrls.steamQRGenerate())
         
-        // 模拟二维码数据 (实际应该从后端获取)
-        steamQRCode.value = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
-        steamQRStatus.value = 'waiting'
-        
-        ElMessage.warning('二维码功能开发中，请暂时使用账号密码登录')
-        
-        // 开始轮询检查二维码状态
-        // startQRCodePolling()
+        if (response.data.success) {
+          steamQRCode.value = response.data.data.qr_code
+          steamQRStatus.value = 'waiting'
+          inputForm.value.steamQRSessionId = response.data.data.session_id
+          
+          ElMessage.success('二维码生成成功，请使用Steam APP扫码')
+          
+          // 开始轮询检查二维码状态
+          startQRCodePolling()
+        } else {
+          ElMessage.error(response.data.message || '生成二维码失败')
+        }
       } catch (error) {
         console.error('生成二维码失败:', error)
-        ElMessage.error('生成二维码失败，请稍后重试')
+        ElMessage.error('生成二维码失败，请检查网络连接')
       } finally {
         steamQRLoading.value = false
       }
@@ -2606,25 +2627,48 @@ export default {
       // 每2秒检查一次
       steamQRCheckTimer.value = setInterval(async () => {
         try {
-          // TODO: 调用后端API检查二维码状态
-          // const response = await axios.get(apiUrls.steamQRCodeStatus())
-          // if (response.data.success) {
-          //   steamQRStatus.value = response.data.status
-          //   if (response.data.status === 'success') {
-          //     // 登录成功
-          //     inputForm.value.cookies = response.data.cookies
-          //     inputForm.value.steamID = response.data.steam_id
-          //     inputForm.value.steamLoginSuccess = true
-          //     inputForm.value.steamLoginMessage = '✅ 扫码登录成功！'
-          //     clearInterval(steamQRCheckTimer.value)
-          //     ElMessage.success('Steam扫码登录成功！')
-          //   } else if (response.data.status === 'expired') {
-          //     clearInterval(steamQRCheckTimer.value)
-          //     ElMessage.warning('二维码已过期，请重新生成')
-          //   }
-          // }
+          const response = await axios.post(apiUrls.steamQRPoll(), {
+            session_id: inputForm.value.steamQRSessionId
+          })
+          
+          if (response.data.success) {
+            if (response.data.status === 'success') {
+              // 登录成功
+              steamQRStatus.value = 'success'
+              
+              // 填充Cookie
+              inputForm.value.cookies = response.data.data.cookies
+              
+              // 自动填充SteamID（确保转换为字符串）
+              const steamId = response.data.data.steam_id || response.data.data.steamid
+              if (steamId) {
+                inputForm.value.steamID = String(steamId)
+                console.log('已自动填充SteamID:', inputForm.value.steamID)
+              }
+              
+              inputForm.value.steamLoginSuccess = true
+              
+              // 显示成功消息
+              const accountName = response.data.data.account_name || steamId
+              inputForm.value.steamLoginMessage = `✅ 扫码登录成功！账号: ${accountName}`
+              
+              clearInterval(steamQRCheckTimer.value)
+              ElMessage.success(`Steam扫码登录成功！SteamID: ${inputForm.value.steamID}`)
+            } else if (response.data.status === 'waiting') {
+              // 继续等待
+              steamQRStatus.value = 'waiting'
+            }
+          } else {
+            // 出错或过期
+            steamQRStatus.value = 'expired'
+            clearInterval(steamQRCheckTimer.value)
+            ElMessage.warning(response.data.message || '二维码已过期，请重新生成')
+          }
         } catch (error) {
           console.error('检查二维码状态失败:', error)
+          clearInterval(steamQRCheckTimer.value)
+          steamQRStatus.value = 'expired'
+          ElMessage.error('检查二维码状态失败')
         }
       }, 2000)
     }

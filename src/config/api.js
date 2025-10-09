@@ -69,12 +69,14 @@ export const API_CONFIG = {
     STEAM_SPIDER: '/steamSpiderV1/getNewData',  // Steam增量采集（获取新数据）
     STEAM_FULL_SPIDER: '/steamSpiderV1/NoneData',  // Steam全量采集
     
-    // Steam登录相关
-    STEAM_LOGIN: '/steamLoginV1/login',
-    STEAM_LOGIN_VERIFY: '/steamLoginV1/verify',
-    STEAM_LOGIN_REFRESH: '/steamLoginV1/refresh',
-    STEAM_LOGIN_CAPTCHA: (captchaGid) => `/steamLoginV1/captcha/${captchaGid}`,
-    STEAM_LOGIN_GENERATE_CODE: '/steamLoginV1/generate_code'
+  // Steam登录相关
+  STEAM_LOGIN: '/steamLoginV1/login',
+  STEAM_LOGIN_VERIFY: '/steamLoginV1/verify',
+  STEAM_LOGIN_REFRESH: '/steamLoginV1/refresh',
+  STEAM_LOGIN_CAPTCHA: (captchaGid) => `/steamLoginV1/captcha/${captchaGid}`,
+  STEAM_LOGIN_GENERATE_CODE: '/steamLoginV1/generate_code',
+  STEAM_QR_GENERATE: '/steamLoginV1/qrcode/generate',
+  STEAM_QR_POLL: '/steamLoginV1/qrcode/poll'
     
   }
 }
@@ -158,5 +160,7 @@ export const apiUrls = {
   steamLoginVerify: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_VERIFY),
   steamLoginRefresh: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_REFRESH),
   steamLoginCaptcha: (captchaGid) => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_CAPTCHA(captchaGid)),
-  steamLoginGenerateCode: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_GENERATE_CODE)
+  steamLoginGenerateCode: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_GENERATE_CODE),
+  steamQRGenerate: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_QR_GENERATE),
+  steamQRPoll: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_QR_POLL)
 }
