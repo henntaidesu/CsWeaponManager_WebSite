@@ -525,34 +525,94 @@
 
         <!-- Steam登录特有配置 -->
         <template v-else-if="inputForm.type === 'steam_login'">
-          <el-form-item label="Steam用户名" required>
-            <el-input 
-              v-model="inputForm.steamUsername" 
-              placeholder="请输入Steam用户名"
-            />
+          <!-- 登录方式选择 -->
+          <el-form-item label="登录方式" required>
+            <el-radio-group v-model="inputForm.steamLoginMethod">
+              <el-radio label="qrcode">扫码登录（推荐）</el-radio>
+              <el-radio label="password">账号密码登录</el-radio>
+            </el-radio-group>
           </el-form-item>
-          <el-form-item label="Steam密码" required>
-            <el-input 
-              v-model="inputForm.steamPassword" 
-              type="password"
-              show-password
-              placeholder="请输入Steam密码"
-            />
-          </el-form-item>
-          <el-form-item label="Steam Guard验证码">
-            <el-input 
-              v-model="inputForm.steamTwofactorCode" 
-              placeholder="请输入5位Steam Guard验证码（如需要）"
-              maxlength="5"
-            />
-            <div style="color: #999; font-size: 12px; margin-top: 5px;">
-              如果您的账号启用了Steam Guard手机令牌，请在此输入验证码
-            </div>
-          </el-form-item>
+
+          <!-- 扫码登录 -->
+          <template v-if="inputForm.steamLoginMethod === 'qrcode'">
+            <el-form-item label="登录二维码">
+              <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 8px;">
+                <div v-if="!steamQRCode && !steamQRLoading">
+                  <el-icon :size="80" color="#999"><QrCode /></el-icon>
+                  <p style="color: #999; margin-top: 10px;">点击下方按钮生成登录二维码</p>
+                </div>
+                <div v-else-if="steamQRLoading">
+                  <el-icon :size="80" class="is-loading"><Loading /></el-icon>
+                  <p style="color: #999; margin-top: 10px;">正在生成二维码...</p>
+                </div>
+                <div v-else>
+                  <img :src="steamQRCode" alt="Steam登录二维码" style="width: 200px; height: 200px;" />
+                  <p style="color: #666; margin-top: 10px; font-size: 14px;">
+                    请使用Steam手机APP扫描二维码
+                  </p>
+                  <el-tag :type="steamQRStatus === 'waiting' ? 'info' : steamQRStatus === 'success' ? 'success' : 'warning'" style="margin-top: 10px;">
+                    {{ getSteamQRStatusText() }}
+                  </el-tag>
+                </div>
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <el-button 
+                type="primary" 
+                @click="handleGenerateQRCode" 
+                :loading="steamQRLoading"
+                :disabled="steamQRStatus === 'success'"
+                style="width: 100%;"
+              >
+                {{ steamQRCode ? '刷新二维码' : '生成二维码' }}
+              </el-button>
+            </el-form-item>
+          </template>
+
+          <!-- 账号密码登录 -->
+          <template v-else-if="inputForm.steamLoginMethod === 'password'">
+            <el-form-item label="Steam用户名" required>
+              <el-input 
+                v-model="inputForm.steamUsername" 
+                placeholder="请输入Steam用户名"
+              />
+            </el-form-item>
+            <el-form-item label="Steam密码" required>
+              <el-input 
+                v-model="inputForm.steamPassword" 
+                type="password"
+                show-password
+                placeholder="请输入Steam密码"
+              />
+            </el-form-item>
+            <el-form-item label="Steam Guard验证码">
+              <el-input 
+                v-model="inputForm.steamTwofactorCode" 
+                placeholder="请输入5位Steam Guard验证码（如需要）"
+                maxlength="5"
+              />
+              <div style="color: #999; font-size: 12px; margin-top: 5px;">
+                如果您的账号启用了Steam Guard手机令牌，请在此输入验证码
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <el-button 
+                type="success" 
+                @click="handleSteamLogin" 
+                :loading="steamLoginLoading"
+                style="width: 100%;"
+              >
+                {{ steamLoginLoading ? '登录中...' : '立即登录获取Cookie' }}
+              </el-button>
+            </el-form-item>
+          </template>
+
+          <!-- 通用字段 -->
           <el-form-item label="SteamID" required>
             <el-input 
               v-model="inputForm.steamID" 
-              placeholder="请输入SteamID"
+              placeholder="请输入SteamID（登录成功后会自动填充）"
+              :disabled="steamQRStatus === 'success' || inputForm.steamLoginSuccess"
             />
           </el-form-item>
           <el-form-item label="更新频率">
@@ -565,16 +625,8 @@
               <el-option label="每天" value="daily" />
             </el-select>
           </el-form-item>
-          <el-form-item>
-            <el-button 
-              type="success" 
-              @click="handleSteamLogin" 
-              :loading="steamLoginLoading"
-              style="width: 100%;"
-            >
-              {{ steamLoginLoading ? '登录中...' : '立即登录获取Cookie' }}
-            </el-button>
-          </el-form-item>
+          
+          <!-- 登录状态提示 -->
           <el-alert
             v-if="inputForm.steamLoginMessage"
             :title="inputForm.steamLoginMessage"
@@ -757,7 +809,7 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, User } from '@element-plus/icons-vue'
+import { Plus, User, QrCode, Loading } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { apiUrls } from '@/config/api.js'
 
@@ -765,7 +817,9 @@ export default {
   name: 'DataSource',
   components: {
     Plus,
-    User
+    User,
+    QrCode,
+    Loading
   },
   setup() {
     const submitting = ref(false)
@@ -777,6 +831,10 @@ export default {
     const editSubmitting = ref(false)
     const addDialogVisible = ref(false)
     const steamLoginLoading = ref(false)
+    const steamQRCode = ref('') // 二维码图片base64
+    const steamQRLoading = ref(false) // 二维码生成loading
+    const steamQRStatus = ref('') // 二维码状态: waiting, success, expired
+    const steamQRCheckTimer = ref(null) // 二维码状态检查定时器
     const editForm = ref({
       name: '',
       type: '',
@@ -845,6 +903,7 @@ export default {
       steamTwofactorCode: '',
       steamLoginMessage: '',
       steamLoginSuccess: false,
+      steamLoginMethod: 'qrcode', // 默认使用二维码登录
       // 完美世界APP特有字段
       appversion: '',
       device: '',
@@ -2497,6 +2556,79 @@ export default {
       }
     }
 
+    // 生成Steam二维码
+    const handleGenerateQRCode = async () => {
+      steamQRLoading.value = true
+      steamQRCode.value = ''
+      steamQRStatus.value = ''
+
+      try {
+        // TODO: 调用后端API生成二维码
+        // 这里先用模拟数据
+        ElMessage.info('正在生成Steam登录二维码...')
+        
+        // 模拟API调用
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // 模拟二维码数据 (实际应该从后端获取)
+        steamQRCode.value = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+        steamQRStatus.value = 'waiting'
+        
+        ElMessage.warning('二维码功能开发中，请暂时使用账号密码登录')
+        
+        // 开始轮询检查二维码状态
+        // startQRCodePolling()
+      } catch (error) {
+        console.error('生成二维码失败:', error)
+        ElMessage.error('生成二维码失败，请稍后重试')
+      } finally {
+        steamQRLoading.value = false
+      }
+    }
+
+    // 获取二维码状态文本
+    const getSteamQRStatusText = () => {
+      const statusMap = {
+        'waiting': '等待扫码中...',
+        'success': '✅ 登录成功',
+        'expired': '❌ 二维码已过期'
+      }
+      return statusMap[steamQRStatus.value] || '未知状态'
+    }
+
+    // 开始轮询检查二维码状态
+    const startQRCodePolling = () => {
+      // 清除已有定时器
+      if (steamQRCheckTimer.value) {
+        clearInterval(steamQRCheckTimer.value)
+      }
+
+      // 每2秒检查一次
+      steamQRCheckTimer.value = setInterval(async () => {
+        try {
+          // TODO: 调用后端API检查二维码状态
+          // const response = await axios.get(apiUrls.steamQRCodeStatus())
+          // if (response.data.success) {
+          //   steamQRStatus.value = response.data.status
+          //   if (response.data.status === 'success') {
+          //     // 登录成功
+          //     inputForm.value.cookies = response.data.cookies
+          //     inputForm.value.steamID = response.data.steam_id
+          //     inputForm.value.steamLoginSuccess = true
+          //     inputForm.value.steamLoginMessage = '✅ 扫码登录成功！'
+          //     clearInterval(steamQRCheckTimer.value)
+          //     ElMessage.success('Steam扫码登录成功！')
+          //   } else if (response.data.status === 'expired') {
+          //     clearInterval(steamQRCheckTimer.value)
+          //     ElMessage.warning('二维码已过期，请重新生成')
+          //   }
+          // }
+        } catch (error) {
+          console.error('检查二维码状态失败:', error)
+        }
+      }, 2000)
+    }
+
     // Steam登录处理函数（编辑数据源时）
     const handleEditSteamLogin = async () => {
       if (!editForm.value.steamUsername || !editForm.value.steamPassword) {
@@ -2582,7 +2714,12 @@ export default {
       refreshAllSources,
       steamLoginLoading,
       handleSteamLogin,
-      handleEditSteamLogin
+      handleEditSteamLogin,
+      steamQRCode,
+      steamQRLoading,
+      steamQRStatus,
+      handleGenerateQRCode,
+      getSteamQRStatusText
     }
   }
 }
