@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h1 class="page-title">我的出租</h1>
-    
     <!-- 二级导航 -->
     <div class="sub-nav card">
       <el-tabs v-model="activeTab" @tab-click="handleTabClick">
