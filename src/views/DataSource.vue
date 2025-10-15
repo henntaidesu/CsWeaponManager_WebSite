@@ -2520,16 +2520,18 @@ export default {
 
         // 根据数据源类型构建配置JSON字符串
         if (editForm.value.type === 'youpin') {
+          // 修复：编辑时也使用不带前缀的字段名，与添加时保持一致
+          // 后端会统一添加 yyyp_ 前缀
           requestData.configJson = JSON.stringify({
-            yyyp_phone: editForm.value.phone,
-            yyyp_Sessionid: editForm.value.sessionid,
-            yyyp_token: editForm.value.token,
-            yyyp_DeviceName: editForm.value.deviceName,
-            yyyp_app_version: editForm.value.appVersion,
-            yyyp_sleep_time: editForm.value.sleepTime.toString(),
-            yyyp_app_type: editForm.value.appType,
-            yyyp_userId: editForm.value.userId,
-            yyyp_steamId: editForm.value.steamId
+            phone: editForm.value.phone,
+            Sessionid: editForm.value.sessionid,
+            token: editForm.value.token,
+            DeviceName: editForm.value.deviceName,
+            app_version: editForm.value.appVersion,
+            sleep_time: editForm.value.sleepTime.toString(),
+            app_type: editForm.value.appType,
+            userId: editForm.value.userId,
+            steamId: editForm.value.steamId
           })
         } else if (editForm.value.type === 'perfectworld') {
           // 完美世界APP特殊配置
