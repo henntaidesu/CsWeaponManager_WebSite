@@ -68,6 +68,9 @@
             <el-button type="warning" @click="handleUpdateAllComponents" :loading="updateAllLoading" :disabled="!selectedSteamId">
               获取/更新全部组件
             </el-button>
+            <el-button type="info" @click="handleAutoFillPrices" :loading="autoFillLoading" :disabled="!selectedSteamId" icon="Money">
+              自动获取购入价格
+            </el-button>
           </div>
         </div>
         
@@ -216,6 +219,7 @@ export default {
     const loading = ref(false)
     const updateLoading = ref(false)
     const updateAllLoading = ref(false)
+    const autoFillLoading = ref(false)
     const componentData = ref([])
     const searchText = ref('')
     const currentPage = ref(1)
@@ -718,6 +722,46 @@ export default {
       }
     }
 
+    const handleAutoFillPrices = async () => {
+      if (!selectedSteamId.value) {
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+      
+      autoFillLoading.value = true
+      try {
+        console.log('开始自动填充价格 - steamId:', selectedSteamId.value)
+        
+        ElMessage.info('正在自动获取购入价格，请稍候...')
+        
+        const response = await axios.post(`${API_COMPONENTS}/auto_fill_prices/${selectedSteamId.value}`)
+        
+        console.log('自动填充价格响应:', response.data)
+        
+        if (response.data.success) {
+          const data = response.data.data
+          const message = `价格自动填充完成！\n总计: ${data.total_count}\n成功填充: ${data.filled_count}\n已有价格: ${data.already_filled_count}\n未找到: ${data.not_found_count}`
+          
+          ElMessage({
+            type: 'success',
+            message: message,
+            duration: 5000,
+            showClose: true
+          })
+          
+          // 重新加载数据和统计
+          await loadComponentData()
+        } else {
+          ElMessage.error(response.data.message || '自动填充价格失败')
+        }
+      } catch (error) {
+        console.error('自动填充价格失败:', error)
+        ElMessage.error('自动填充价格失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        autoFillLoading.value = false
+      }
+    }
+
     onMounted(async () => {
       await loadSteamIdList()
       if (selectedSteamId.value) {
@@ -730,6 +774,7 @@ export default {
       loading,
       updateLoading,
       updateAllLoading,
+      autoFillLoading,
       componentData,
       filteredData,
       totalStats,
@@ -755,6 +800,7 @@ export default {
       handleComponentSelect,
       handleUpdateComponent,
       handleUpdateAllComponents,
+      handleAutoFillPrices,
       startEdit,
       finishEdit,
       cancelEdit
