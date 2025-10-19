@@ -1066,6 +1066,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, User, Grid, Loading, CircleCheck } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { apiUrls } from '@/config/api.js'
+import { useCollectionState } from '@/composables/useCollectionState.js'
 
 export default {
   name: 'DataSource',
@@ -1077,11 +1078,13 @@ export default {
     CircleCheck
   },
   setup() {
+    // 使用采集状态管理 composable（持久化到 localStorage）
+    const { collectingSourceIds, startCollecting, stopCollecting, isCollecting } = useCollectionState()
+    
     const submitting = ref(false)
     const testing = ref(false)
     const refreshing = ref(false)
     const editingSourceId = ref(null)
-    const collectingSourceIds = ref(new Set())
     const editDialogVisible = ref(false)
     const editSubmitting = ref(false)
     const addDialogVisible = ref(false)
@@ -1606,7 +1609,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(source.dataID)
+        startCollecting(source.dataID)
         
         ElMessage.info(`开始使用爬虫采集悠悠有品数据: ${source.dataName}`)
         
@@ -1660,7 +1663,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(source.dataID)
+        stopCollecting(source.dataID)
       }
     }
 
@@ -1678,7 +1681,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(source.dataID)
+        startCollecting(source.dataID)
         
         ElMessage.info(`开始使用爬虫采集BUFF数据: ${source.dataName}`)
 
@@ -1727,7 +1730,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(source.dataID)
+        stopCollecting(source.dataID)
       }
     }
 
@@ -1745,7 +1748,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(source.dataID)
+        startCollecting(source.dataID)
         
         ElMessage.info(`开始增量采集Steam新数据: ${source.dataName}`)
 
@@ -1762,7 +1765,7 @@ export default {
         // 验证必要参数
         if (!spiderData.steamId) {
           ElMessage.error('Steam ID 未配置，请先在数据源配置中添加 Steam ID')
-          collectingSourceIds.value.delete(source.dataID)
+          stopCollecting(source.dataID)
           return
         }
         
@@ -1795,7 +1798,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(source.dataID)
+        stopCollecting(source.dataID)
       }
     }
 
@@ -1828,7 +1831,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(source.dataID)
+        startCollecting(source.dataID)
         
         ElMessage.info(`开始采集数据源: ${source.dataName}`)
         
@@ -1864,7 +1867,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(source.dataID)
+        stopCollecting(source.dataID)
       }
     }
 
@@ -2123,7 +2126,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(editingSourceId.value)
+        startCollecting(editingSourceId.value)
         
         ElMessage.info(`开始执行悠悠有品全部采集: ${editForm.value.name}`)
         
@@ -2174,7 +2177,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(editingSourceId.value)
+        stopCollecting(editingSourceId.value)
       }
     }
 
@@ -2203,7 +2206,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(editingSourceId.value)
+        startCollecting(editingSourceId.value)
         
         ElMessage.info(`开始执行BUFF全部获取: ${editForm.value.name}`)
         
@@ -2249,7 +2252,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(editingSourceId.value)
+        stopCollecting(editingSourceId.value)
       }
     }
 
@@ -2278,7 +2281,7 @@ export default {
 
       try {
         // 添加到采集中的列表
-        collectingSourceIds.value.add(editingSourceId.value)
+        startCollecting(editingSourceId.value)
         
         ElMessage.info(`开始执行Steam全量采集（从数据库已有数据继续获取）: ${editForm.value.name}`)
         
@@ -2315,7 +2318,7 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         // 从采集中的列表移除
-        collectingSourceIds.value.delete(editingSourceId.value)
+        stopCollecting(editingSourceId.value)
       }
     }
 
