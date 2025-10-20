@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Layout from '@/views/Layout.vue'
 import Home from '@/views/Home.vue'
+import ItemSearch from '@/views/ItemSearch.vue'
 import Buy from '@/views/Buy.vue'
 import Sell from '@/views/Sell.vue'
 import Lent from '@/views/Lent.vue'
@@ -22,6 +23,12 @@ const routes = [
         name: 'Home',
         component: Home,
         meta: { title: '主页' }
+      },
+      {
+        path: '/item-search',
+        name: 'ItemSearch',
+        component: ItemSearch,
+        meta: { title: '饰品搜索' }
       },
       {
         path: '/buy',

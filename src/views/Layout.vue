@@ -46,6 +46,11 @@ export default {
           icon: '/icons/indexPage.png'
         },
         {
+          path: '/item-search',
+          title: '饰品搜索',
+          icon: '/icons/Stock_components.png'
+        },
+        {
           path: '/buy',
           title: '购入列表',
           icon: '/icons/buy.png'
