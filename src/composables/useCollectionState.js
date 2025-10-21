@@ -27,8 +27,21 @@ function saveCollectingState(collectingIds) {
   }
 }
 
+// 🔧 页面加载时清除所有采集状态
+function clearCollectingStateOnLoad() {
+  try {
+    console.log('🧹 页面刷新，清除所有采集状态')
+    localStorage.removeItem(STORAGE_KEY)
+  } catch (error) {
+    console.error('清除采集状态失败:', error)
+  }
+}
+
 // 全局共享的采集状态
 let globalCollectingSourceIds = null
+
+// 🔧 页面加载时立即清除采集状态
+clearCollectingStateOnLoad()
 
 /**
  * 采集状态管理 Composable

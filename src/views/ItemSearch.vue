@@ -24,37 +24,6 @@
               重置
             </el-button>
             
-            <el-select 
-              v-model="selectedSteamId" 
-              placeholder="选择 Steam ID" 
-              class="steam-id-select"
-              :disabled="isSyncing || isSyncingBuff"
-            >
-              <el-option 
-                v-for="steamId in steamIdList" 
-                :key="steamId.steam_id" 
-                :label="steamId.steam_id" 
-                :value="steamId.steam_id"
-              />
-            </el-select>
-            
-            <el-button 
-              type="success" 
-              @click="syncWeaponTemplates"
-              :disabled="!selectedSteamId || isSyncing || isSyncingBuff"
-              :loading="isSyncing"
-            >
-              {{ isSyncing ? '同步中...' : '获取悠悠有品饰品映射' }}
-            </el-button>
-            
-            <el-button 
-              type="success" 
-              @click="syncBuffTemplates"
-              :disabled="!selectedSteamId || isSyncing || isSyncingBuff"
-              :loading="isSyncingBuff"
-            >
-              {{ isSyncingBuff ? '同步中...' : '获取BUFF饰品映射' }}
-            </el-button>
           </div>
         </div>
         
@@ -173,150 +142,15 @@ export default {
     const searchResults = ref([])
     const isSearching = ref(false)
     const hasSearched = ref(false)
-    const selectedSteamId = ref('')
-    const steamIdList = ref([])
-    const isSyncing = ref(false)
-    const isSyncingBuff = ref(false)
-    const lastSyncTime = ref('')
     const currentPage = ref(1)
     const pageSize = ref(20)
 
     // 计算属性
-    const hasFilters = computed(() => {
-      return (searchKeyword.value && searchKeyword.value.trim()) || selectedSteamId.value
-    })
-
     const paginatedResults = computed(() => {
       const start = (currentPage.value - 1) * pageSize.value
       const end = start + pageSize.value
       return searchResults.value.slice(start, end)
     })
-
-    // 加载Steam ID列表
-    const loadSteamIdList = async () => {
-      try {
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/webInventoryV1/steam_ids`)
-        if (response.data.success && response.data.data.length > 0) {
-          steamIdList.value = response.data.data
-          // 默认选择第一个
-          if (!selectedSteamId.value && steamIdList.value.length > 0) {
-            selectedSteamId.value = steamIdList.value[0].steam_id
-          }
-        }
-      } catch (error) {
-        console.error('加载Steam ID列表失败:', error)
-        ElMessage.error('加载Steam ID列表失败')
-      }
-    }
-
-    // 同步悠悠有品饰品映射
-    const syncWeaponTemplates = async () => {
-      if (!selectedSteamId.value) {
-        ElMessage.warning('请先选择 Steam ID')
-        return
-      }
-
-      if (isSyncing.value) {
-        return
-      }
-
-      try {
-        await ElMessageBox.confirm(
-          `确定要同步 Steam ID: ${selectedSteamId.value} 的悠悠有品饰品映射吗？此操作可能需要一些时间。`,
-          '确认同步',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-      } catch {
-        return
-      }
-
-      isSyncing.value = true
-      ElMessage.info('开始同步饰品映射...')
-      
-      try {
-        console.log('开始同步悠悠有品饰品映射, Steam ID:', selectedSteamId.value)
-        
-        const response = await axios.post(apiUrls.youpinSyncTemplates(), {
-          steamId: selectedSteamId.value
-        })
-
-        if (response.data.success) {
-          ElMessage.success(`同步成功！${response.data.message}`)
-          console.log('同步结果:', response.data)
-          lastSyncTime.value = new Date().toLocaleString('zh-CN')
-        } else {
-          ElMessage.error(`同步失败: ${response.data.message}`)
-        }
-      } catch (error) {
-        console.error('同步饰品映射失败:', error)
-        let errorMessage = '同步失败'
-        
-        if (error.response) {
-          errorMessage = error.response.data?.message || `同步失败 (${error.response.status})`
-        } else if (error.request) {
-          errorMessage = '无法连接到爬虫服务器，请检查服务是否运行'
-        } else {
-          errorMessage = error.message || '同步失败'
-        }
-        
-        ElMessage.error(errorMessage)
-      } finally {
-        isSyncing.value = false
-      }
-    }
-
-    // 同步BUFF饰品映射（暂未实现）
-    const syncBuffTemplates = async () => {
-      if (!selectedSteamId.value) {
-        ElMessage.warning('请先选择 Steam ID')
-        return
-      }
-
-      if (isSyncingBuff.value) {
-        return
-      }
-
-      try {
-        await ElMessageBox.confirm(
-          `确定要同步 Steam ID: ${selectedSteamId.value} 的BUFF饰品映射吗？此操作可能需要一些时间。`,
-          '确认同步',
-          {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning'
-          }
-        )
-      } catch {
-        return
-      }
-
-      isSyncingBuff.value = true
-      ElMessage.info('开始同步BUFF饰品映射...')
-      
-      try {
-        console.log('开始同步BUFF饰品映射, Steam ID:', selectedSteamId.value)
-        
-        // TODO: 对接BUFF同步API
-        // const response = await axios.post(apiUrls.buffSyncTemplates(), {
-        //   steamId: selectedSteamId.value
-        // })
-        
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        ElMessage.info('BUFF饰品映射同步功能暂未实现')
-        
-      } catch (error) {
-        console.error('同步BUFF饰品映射失败:', error)
-        ElMessage.error('同步失败')
-      } finally {
-        isSyncingBuff.value = false
-      }
-    }
 
     const handleImageError = (event) => {
       event.target.src = '/icons/default-weapon.png'
@@ -384,30 +218,17 @@ export default {
       currentPage.value = val
     }
 
-    // 组件挂载时加载Steam ID列表
-    onMounted(() => {
-      loadSteamIdList()
-    })
-
     return {
       searchKeyword,
       searchResults,
       isSearching,
       hasSearched,
-      selectedSteamId,
-      steamIdList,
-      isSyncing,
-      isSyncingBuff,
-      lastSyncTime,
       currentPage,
       pageSize,
-      hasFilters,
       paginatedResults,
       handleSearch,
       handleClearSearch,
       handleImageError,
-      syncWeaponTemplates,
-      syncBuffTemplates,
       handleViewDetails,
       handleSizeChange,
       handleCurrentChange

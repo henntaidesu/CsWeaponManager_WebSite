@@ -11,6 +11,7 @@ import DataSource from '@/views/DataSource.vue'
 import SteamMarket from '@/views/SteamMarket.vue'
 import SteamInventoryHistory from '@/views/SteamInventoryHistory.vue'
 import StockComponents from '@/views/StockComponents.vue'
+import DevTool from '@/views/DevTool.vue'
 
 const routes = [
   {
@@ -83,6 +84,12 @@ const routes = [
         name: 'StockComponents',
         component: StockComponents,
         meta: { title: '库存组件' }
+      },
+      {
+        path: '/devTool',
+        name: 'DevTool',
+        component: DevTool,
+        meta: { title: '开发工具' }
       }
     ]
   }
