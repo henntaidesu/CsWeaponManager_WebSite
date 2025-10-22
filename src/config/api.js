@@ -71,7 +71,6 @@ export const API_CONFIG = {
     STEAM_SPIDER: '/steamSpiderV1/getNewData',  // Steam增量采集（获取新数据）
     STEAM_FULL_SPIDER: '/steamSpiderV1/NoneData',  // Steam全量采集
     STEAM_COLLECT_HASH_NAMES: '/steamSpiderV1/collectMarketHashNames',  // 采集Steam市场Hash Names
-    STEAM_HASH_NAMES_STATUS: '/steamSpiderV1/getCollectionStatus',  // 获取Hash Names采集状态
     
   // Steam登录相关
   STEAM_LOGIN: '/steamLoginV1/login',
@@ -161,7 +160,6 @@ export const apiUrls = {
   steamSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_SPIDER),
   steamFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_FULL_SPIDER),
   steamCollectHashNames: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_COLLECT_HASH_NAMES),
-  steamHashNamesStatus: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_HASH_NAMES_STATUS),
   
   // Steam登录API
   steamLogin: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN),
