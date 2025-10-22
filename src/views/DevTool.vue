@@ -46,6 +46,41 @@
           <span class="sync-time">最后同步时间: {{ lastSyncTime }}</span>
         </div>
       </div>
+
+      <!-- Steam市场Hash Names采集区域 -->
+      <div class="sync-section">
+        <h2 class="section-title">Steam市场饰品哈希采集</h2>
+
+        <div class="sync-controls">
+          <el-button 
+            type="primary" 
+            @click="collectHashNamesFull"
+            :disabled="isCollectingHashNames"
+            :loading="isCollectingHashNames"
+          >
+            {{ isCollectingHashNames ? '采集中...' : '获取Steam饰品哈希' }}
+          </el-button>
+        </div>
+
+        <div v-if="lastCollectTime" class="sync-info">
+          <span class="sync-time">最后采集时间: {{ lastCollectTime }}</span>
+        </div>
+
+        <div v-if="collectProgress" class="progress-info">
+          <div class="progress-item">
+            <span class="progress-label">采集进度:</span>
+            <span class="progress-value">
+              {{ collectProgress.total_success || 0 }} / {{ collectProgress.total_collected || 0 }}
+            </span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-label">成功率:</span>
+            <span class="progress-value success-rate">
+              {{ collectProgress.success_rate || 0 }}%
+            </span>
+          </div>
+        </div>
+      </div>
       
     </div>
   </div>
@@ -65,6 +100,11 @@ export default {
     const isSyncing = ref(false)
     const isSyncingBuff = ref(false)
     const lastSyncTime = ref('')
+    
+    // Steam Hash Names 相关状态
+    const isCollectingHashNames = ref(false)
+    const lastCollectTime = ref('')
+    const collectProgress = ref(null)
 
     // 加载Steam ID列表
     const loadSteamIdList = async () => {
@@ -170,25 +210,137 @@ export default {
 
       isSyncingBuff.value = true
       ElMessage.info('开始同步BUFF饰品映射...')
-      
+
       try {
         console.log('开始同步BUFF饰品映射, Steam ID:', selectedSteamId.value)
-        
-        // TODO: 对接BUFF同步API
-        // const response = await axios.post(apiUrls.buffSyncTemplates(), {
-        //   steamId: selectedSteamId.value
-        // })
-        
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        ElMessage.info('BUFF饰品映射同步功能暂未实现')
-        
+
+        const response = await axios.post(apiUrls.buffSyncTemplates(), {
+          steamId: selectedSteamId.value
+        })
+
+        if (response.data.success) {
+          ElMessage.success(`同步成功！${response.data.message}`)
+          console.log('同步结果:', response.data)
+          lastSyncTime.value = new Date().toLocaleString('zh-CN')
+        } else {
+          ElMessage.error(`同步失败: ${response.data.message}`)
+        }
       } catch (error) {
         console.error('同步BUFF饰品映射失败:', error)
-        ElMessage.error('同步失败')
+        let errorMessage = '同步失败'
+
+        if (error.response) {
+          errorMessage = error.response.data?.message || `同步失败 (${error.response.status})`
+        } else if (error.request) {
+          errorMessage = '无法连接到爬虫服务器，请检查服务是否运行'
+        } else {
+          errorMessage = error.message || '同步失败'
+        }
+
+        ElMessage.error(errorMessage)
       } finally {
         isSyncingBuff.value = false
+      }
+    }
+
+    // 完整采集Hash Names (全部)
+    const collectHashNamesTest = async () => {
+      try {
+        await ElMessageBox.confirm(
+          '确定要采集Steam市场物品数据吗？测试模式将采集100条数据，预计需要2-3分钟。',
+          '确认采集',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'info'
+          }
+        )
+      } catch {
+        return
+      }
+
+      isCollectingHashNames.value = true
+      collectProgress.value = null
+      ElMessage.info('开始采集Steam市场Hash Names (测试模式: 100条)...')
+
+      try {
+        const response = await axios.post(apiUrls.steamCollectHashNames(), {
+          max_count: 100,
+          batch_size: 50
+        })
+
+        if (response.data.success) {
+          collectProgress.value = response.data.data
+          lastCollectTime.value = new Date().toLocaleString('zh-CN')
+          ElMessage.success(`采集完成！${response.data.message}`)
+        } else {
+          ElMessage.error(`采集失败: ${response.data.message}`)
+        }
+      } catch (error) {
+        console.error('采集Hash Names失败:', error)
+        let errorMessage = '采集失败'
+        
+        if (error.response) {
+          errorMessage = error.response.data?.message || `采集失败 (${error.response.status})`
+        } else if (error.request) {
+          errorMessage = '无法连接到爬虫服务器，请检查服务是否运行'
+        } else {
+          errorMessage = error.message || '采集失败'
+        }
+        
+        ElMessage.error(errorMessage)
+      } finally {
+        isCollectingHashNames.value = false
+      }
+    }
+
+    // 完整采集Hash Names (全部)
+    const collectHashNamesFull = async () => {
+      try {
+        await ElMessageBox.confirm(
+          '确定要完整采集Steam市场物品数据吗？这将采集约24000条数据，预计需要8-10分钟。期间请不要关闭页面。',
+          '确认完整采集',
+          {
+            confirmButtonText: '确定采集',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+      } catch {
+        return
+      }
+
+      isCollectingHashNames.value = true
+      collectProgress.value = null
+      ElMessage.info('开始完整采集Steam市场Hash Names，这可能需要较长时间，请耐心等待...')
+
+      try {
+        const response = await axios.post(apiUrls.steamCollectHashNames(), {
+          batch_size: 100
+        })
+
+        if (response.data.success) {
+          collectProgress.value = response.data.data
+          lastCollectTime.value = new Date().toLocaleString('zh-CN')
+          ElMessage.success(`采集完成！${response.data.message}`)
+        } else {
+          ElMessage.error(`采集失败: ${response.data.message}`)
+        }
+      } catch (error) {
+        console.error('采集Hash Names失败:', error)
+        let errorMessage = '采集失败'
+        
+        if (error.response) {
+          errorMessage = error.response.data?.message || `采集失败 (${error.response.status})`
+        } else if (error.request) {
+          errorMessage = '无法连接到爬虫服务器，请检查服务是否运行'
+        } else {
+          errorMessage = error.message || '采集失败'
+        }
+        
+        ElMessage.error(errorMessage)
+      } finally {
+        isCollectingHashNames.value = false
       }
     }
 
@@ -204,7 +356,12 @@ export default {
       isSyncingBuff,
       lastSyncTime,
       syncWeaponTemplates,
-      syncBuffTemplates
+      syncBuffTemplates,
+      // Steam Hash Names 相关
+      isCollectingHashNames,
+      lastCollectTime,
+      collectProgress,
+      collectHashNamesFull
     }
   }
 }
