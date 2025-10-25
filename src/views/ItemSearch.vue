@@ -171,7 +171,8 @@
         <div class="yyyp-weapon-info">
           <span class="weapon-name">{{ yyypCurrentWeapon?.market_listing_item_name }}</span>
           <span class="weapon-id">模板ID: {{ yyypCurrentWeapon?.yyyp_id }}</span>
-          <span class="commodity-count">共 {{ yyypCommodities.length }} 件商品</span>
+          <span class="commodity-count">当前页: {{ yyypCommodities.length }} 件</span>
+          <span class="total-count">在售总数: {{ yyypTotalCount }} 件</span>
         </div>
       </div>
       
@@ -211,9 +212,10 @@
           <template #default="{ row }">
             <el-button 
               v-if="row.stickers && row.stickers.length > 0"
-              type="warning" 
+              type="info" 
               size="small"
               @click="showStickersDialog(row)"
+              style="background-color: #303133; border-color: #303133; color: white;"
             >
               查看({{ row.stickers.length }})
             </el-button>
@@ -221,9 +223,26 @@
           </template>
         </el-table-column>
         
-        <el-table-column label="改名" width="150" align="center">
+        <el-table-column label="改名" width="200" align="center">
           <template #default="{ row }">
-            <span v-if="row.haveNameTag === 1" style="color: #e6a23c; font-size: 18px; font-weight: bold;">❗</span>
+            <div v-if="row.haveNameTag === 1">
+              <!-- 已获取到改名信息，直接显示文本 -->
+              <div v-if="row.nameTagText">
+                <span style="color: #e6a23c; font-weight: 600; font-size: 13px;" :title="row.nameTagText">
+                  {{ row.nameTagText }}
+                </span>
+              </div>
+              <!-- 未获取改名信息，显示图标 -->
+              <span 
+                v-else
+                @click="fetchSingleNameTag(row)"
+                style="cursor: pointer; font-size: 13px; user-select: none; color: #e6a23c; font-weight: 600;"
+                :style="{ opacity: row.nameTagLoading ? 0.5 : 1 }"
+                :title="row.nameTagLoading ? '加载中...' : '点击解析改名'"
+              >
+                🏷️ 解析名称
+              </span>
+            </div>
             <span v-else style="color: #909399;">-</span>
           </template>
         </el-table-column>
@@ -234,24 +253,15 @@
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="200" align="center" fixed="right">
+        <el-table-column label="操作" width="100" align="center" fixed="right">
           <template #default="{ row }">
-            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: nowrap;">
-              <el-button 
-                type="primary" 
-                size="small" 
-                @click="handleViewDetail(row)"
-              >
-                查看详情
-              </el-button>
-              <el-button 
-                type="success" 
-                size="small" 
-                @click="handleBuyCommodity(row)"
-              >
-                购买
-              </el-button>
-            </div>
+            <el-button 
+              type="success" 
+              size="small" 
+              @click="handleBuyCommodity(row)"
+            >
+              购买
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -292,8 +302,12 @@ export default {
     // 悠悠有品商品列表
     const yyypCommodities = ref([])
     const yyypCurrentWeapon = ref(null)
+    const yyypTotalCount = ref(0)  // 在售总数量
     const showYYYPList = ref(false)
     const showSearchResults = ref(true)  // 控制搜索结果的展开/折叠
+    
+    // 图片缓存 - 存储已加载的图片URL
+    const imageCache = new Set()
     
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
@@ -338,6 +352,33 @@ export default {
 
     const handleImageError = (event) => {
       event.target.src = '/icons/default-weapon.png'
+    }
+
+    // 预加载图片（相同URL只加载一次）
+    const preloadImages = (commodityList) => {
+      const uniqueUrls = new Set()
+      
+      // 收集所有唯一的图片URL
+      commodityList.forEach(item => {
+        if (item.iconUrl && !imageCache.has(item.iconUrl)) {
+          uniqueUrls.add(item.iconUrl)
+        }
+      })
+      
+      // 预加载未缓存的图片
+      uniqueUrls.forEach(url => {
+        const img = new Image()
+        img.onload = () => {
+          imageCache.add(url)
+          console.log(`图片已缓存: ${url}`)
+        }
+        img.onerror = () => {
+          console.error(`图片加载失败: ${url}`)
+        }
+        img.src = url
+      })
+      
+      console.log(`开始预加载 ${uniqueUrls.size} 张唯一图片，已缓存 ${imageCache.size} 张`)
     }
 
     // 实时搜索武器名称
@@ -541,17 +582,23 @@ export default {
           const rawData = response.data.data
           console.log('获取到悠悠有品原始数据:', rawData)
           
-          // 解析商品列表
+          // 解析商品列表和在售总数
           const commodityList = rawData.data?.commodityList || []
+          const totalCount = rawData.totalCount || 0
           console.log('商品列表:', commodityList)
+          console.log('在售总数:', totalCount)
           
           // 更新状态，显示商品列表
           yyypCurrentWeapon.value = row
           yyypCommodities.value = commodityList
+          yyypTotalCount.value = totalCount
           showYYYPList.value = true
           showSearchResults.value = false  // 默认折叠搜索结果
           
-          ElMessage.success(`成功获取 ${commodityList.length} 条商品数据`)
+          ElMessage.success(`成功获取 ${commodityList.length} 条商品数据，在售总数: ${totalCount}`)
+          
+          // 预加载图片（相同URL只加载一次）
+          preloadImages(commodityList)
           
           // 滚动到商品列表区域
           setTimeout(() => {
@@ -560,6 +607,9 @@ export default {
               listElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }
           }, 100)
+          
+          // 自动批量获取改名信息
+          fetchAllNameTags(commodityList)
         } else {
           console.error('API返回失败:', response.data)
           ElMessage.error(response.data.message || '获取商品列表失败')
@@ -591,6 +641,102 @@ export default {
       console.log('购买商品:', commodity)
       ElMessage.info(`购买功能开发中... 商品ID: ${commodity.id}`)
       // TODO: 对接购买接口
+    }
+
+    // 批量获取改名信息（自动调用，只获取前3条）
+    const fetchAllNameTags = async (commodityList) => {
+      // 筛选出有改名标签的商品
+      const commoditiesWithNameTag = commodityList.filter(item => item.haveNameTag === 1)
+      
+      if (commoditiesWithNameTag.length === 0) {
+        console.log('没有需要获取改名信息的商品')
+        return
+      }
+
+      // 只自动获取前3条
+      const autoFetchCount = Math.min(3, commoditiesWithNameTag.length)
+      console.log(`开始自动获取改名信息，共 ${commoditiesWithNameTag.length} 个商品，自动获取前 ${autoFetchCount} 个`)
+      
+      // 使用 for 循环依次获取前3条，每次间隔1秒
+      for (let i = 0; i < autoFetchCount; i++) {
+        const commodity = commoditiesWithNameTag[i]
+        
+        try {
+          console.log(`[${i + 1}/${autoFetchCount}] 正在获取商品 ${commodity.id} 的改名信息`)
+          
+          // 调用接口获取详细信息
+          const response = await axios.post(
+            `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getWeaponDetail`,
+            {
+              steamId: selectedSteamId.value,
+              id: commodity.id
+            }
+          )
+
+          if (response.data.success && response.data.data) {
+            const detailData = response.data.data.Data
+            const nameTags = detailData.NameTags || []
+            
+            // 缓存改名信息到商品对象中
+            commodity.nameTags = nameTags
+            commodity.nameTagText = nameTags.length > 0 ? nameTags[0].replace(/^名称标签：[""]?|[""]$/g, '') : ''
+            
+            console.log(`商品 ${commodity.id} 改名信息:`, nameTags)
+          } else {
+            console.error(`获取商品 ${commodity.id} 改名信息失败:`, response.data.message)
+          }
+        } catch (error) {
+          console.error(`获取商品 ${commodity.id} 改名信息异常:`, error)
+        }
+        
+        // 如果不是最后一个，等待1秒
+        if (i < autoFetchCount - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
+      
+      console.log(`自动获取改名信息完成，已获取 ${autoFetchCount} 个`)
+    }
+
+    // 获取单个商品的改名信息（点击按钮时调用）
+    const fetchSingleNameTag = async (commodity) => {
+      try {
+        // 设置加载状态
+        commodity.nameTagLoading = true
+
+        console.log('正在获取改名信息，商品ID:', commodity.id)
+
+        // 调用接口获取详细信息
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getWeaponDetail`,
+          {
+            steamId: selectedSteamId.value,
+            id: commodity.id
+          }
+        )
+
+        console.log('改名信息响应:', response.data)
+
+        if (response.data.success && response.data.data) {
+          const detailData = response.data.data.Data
+          const nameTags = detailData.NameTags || []
+          
+          // 缓存改名信息到商品对象中
+          commodity.nameTags = nameTags
+          commodity.nameTagText = nameTags.length > 0 ? nameTags[0].replace(/^名称标签：[""]?|[""]$/g, '') : ''
+
+          if (nameTags.length === 0) {
+            ElMessage.info('该商品没有改名信息')
+          }
+        } else {
+          ElMessage.error('获取改名信息失败: ' + (response.data.message || '未知错误'))
+        }
+      } catch (error) {
+        console.error('获取改名信息失败:', error)
+        ElMessage.error('获取改名信息失败: ' + (error.response?.data?.message || error.message))
+      } finally {
+        commodity.nameTagLoading = false
+      }
     }
 
     // 显示印花信息对话框
@@ -824,11 +970,12 @@ export default {
       // 悠悠有品商品列表
       yyypCommodities,
       yyypCurrentWeapon,
+      yyypTotalCount,
       showYYYPList,
       showSearchResults,
       toggleSearchResults,
-      handleViewDetail,
       handleBuyCommodity,
+      fetchSingleNameTag,
       showStickersDialog,
       closeYYYPList,
       handleSearchWeapon,
@@ -1450,6 +1597,12 @@ export default {
   font-weight: 600;
 }
 
+.yyyp-weapon-info .total-count {
+  color: var(--el-color-primary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
 .commodity-icon {
   width: 80px;
   height: 60px;
@@ -1510,6 +1663,41 @@ export default {
 }
 
 :deep(.stickers-dialog .el-message-box__btns) {
+  padding: 15px 20px;
+  border-top: 1px solid #dcdfe6;
+}
+
+/* 改名对话框样式 */
+:deep(.nametag-dialog) {
+  border-radius: 8px;
+}
+
+:deep(.nametag-dialog .el-message-box__header) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 20px;
+  border-bottom: none;
+}
+
+:deep(.nametag-dialog .el-message-box__title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+:deep(.nametag-dialog .el-message-box__headerbtn .el-message-box__close) {
+  color: white;
+  font-size: 20px;
+}
+
+:deep(.nametag-dialog .el-message-box__headerbtn .el-message-box__close:hover) {
+  color: #f5f5f5;
+}
+
+:deep(.nametag-dialog .el-message-box__content) {
+  padding: 0;
+}
+
+:deep(.nametag-dialog .el-message-box__btns) {
   padding: 15px 20px;
   border-top: 1px solid #dcdfe6;
 }
