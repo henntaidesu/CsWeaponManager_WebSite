@@ -173,7 +173,6 @@
           <span class="weapon-id">模板ID: {{ yyypCurrentWeapon?.yyyp_id }}</span>
           <span class="commodity-count">共 {{ yyypCommodities.length }} 件商品</span>
         </div>
-        <el-button type="danger" size="small" @click="closeYYYPList">返回搜索结果</el-button>
       </div>
       
       <el-table 
@@ -182,48 +181,74 @@
         :default-sort="{ prop: 'price', order: 'ascending' }"
         max-height="600"
       >
-        <el-table-column type="index" label="#" width="60" align="center" />
-        
-        <el-table-column label="商品图片" width="120" align="center">
+        <el-table-column label="商品图片" width="100" align="center">
           <template #default="{ row }">
             <img :src="row.iconUrl" class="commodity-icon" @error="handleImageError" />
           </template>
         </el-table-column>
         
-        <el-table-column prop="commodityName" label="商品名称" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="commodityName" label="商品名称" min-width="200" show-overflow-tooltip />
         
-        <el-table-column label="价格" width="120" align="center" sortable>
+        <el-table-column label="磨损值" width="180" align="center" sortable prop="abrade">
           <template #default="{ row }">
-            <span class="price-text">¥{{ (row.price / 100).toFixed(2) }}</span>
+            <span>{{ row.abrade || '-' }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column label="磨损值" width="120" align="center" sortable>
+        <el-table-column label="价格" width="100" align="center" sortable prop="price">
           <template #default="{ row }">
-            <span>{{ row.abrade ? row.abrade.toFixed(4) : '-' }}</span>
+            <span class="price-text">{{ row.price }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column label="图案" width="100" align="center">
+        <el-table-column label="模板编号" width="100" align="center">
           <template #default="{ row }">
             <span>{{ row.paintSeed || '-' }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column label="卖家" width="150" align="center">
+        <el-table-column label="印花" width="120" align="center">
+          <template #default="{ row }">
+            <el-button 
+              v-if="row.stickers && row.stickers.length > 0"
+              type="warning" 
+              size="small"
+              @click="showStickersDialog(row)"
+            >
+              查看({{ row.stickers.length }})
+            </el-button>
+            <span v-else style="color: #909399;">无</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="改名" width="150" align="center">
+          <template #default="{ row }">
+            <span v-if="row.haveNameTag === 1" style="color: #f56c6c; font-size: 18px; font-weight: bold;">❗</span>
+            <span v-else style="color: #909399;">-</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="卖家" min-width="120" align="center">
           <template #default="{ row }">
             <span>{{ row.userNickName || '-' }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column label="操作" width="180" align="center" fixed="right">
           <template #default="{ row }">
             <el-button 
               type="primary" 
               size="small" 
-              @click="openYYYPDetail(row.id)"
+              @click="handleViewDetail(row)"
             >
               查看详情
+            </el-button>
+            <el-button 
+              type="success" 
+              size="small" 
+              @click="handleBuyCommodity(row)"
+            >
+              购买
             </el-button>
           </template>
         </el-table-column>
@@ -552,10 +577,84 @@ export default {
       }
     }
 
-    // 打开悠悠有品商品详情页
-    const openYYYPDetail = (commodityId) => {
-      const url = `https://www.youpin898.com/goodInfo?id=${commodityId}`
-      window.open(url, '_blank')
+    // 查看商品详情（暂未对接）
+    const handleViewDetail = (commodity) => {
+      console.log('查看商品详情:', commodity)
+      ElMessage.info(`查看详情功能开发中... 商品ID: ${commodity.id}`)
+      // TODO: 对接查看详情接口
+    }
+
+    // 购买商品（暂未对接）
+    const handleBuyCommodity = (commodity) => {
+      console.log('购买商品:', commodity)
+      ElMessage.info(`购买功能开发中... 商品ID: ${commodity.id}`)
+      // TODO: 对接购买接口
+    }
+
+    // 显示印花信息对话框
+    const showStickersDialog = (commodity) => {
+      const stickers = commodity.stickers || []
+      
+      if (stickers.length === 0) {
+        ElMessage.info('该商品没有印花')
+        return
+      }
+
+      // 最多显示5个印花
+      const displayStickers = stickers.slice(0, 5)
+
+      // 构建印花信息HTML - 横向平铺展示
+      let stickersHtml = `
+        <div style="padding: 20px;">
+          <div style="text-align: center; margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #303133; font-size: 16px;">${commodity.commodityName}</h4>
+            <p style="margin: 0; color: #909399; font-size: 14px;">印花数量：${stickers.length} 个${stickers.length > 5 ? '（显示前5个）' : ''}</p>
+          </div>
+          
+          <div style="display: flex; justify-content: center; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+      `
+      
+      displayStickers.forEach((sticker, index) => {
+        stickersHtml += `
+          <div style="text-align: center; min-width: 110px; flex-shrink: 0;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+              <div style="background: white; border-radius: 8px; padding: 8px; margin-bottom: 8px;">
+                <img src="${sticker.ImgUrl}" style="width: 70px; height: 52px; object-fit: contain; display: block; margin: 0 auto;" />
+              </div>
+              <div style="color: white; font-size: 11px; margin-bottom: 4px;">
+                <strong>位置 ${sticker.RawIndex !== null ? sticker.RawIndex + 1 : '-'}</strong>
+              </div>
+              <div style="background: rgba(255,255,255,0.2); border-radius: 4px; padding: 3px 6px; font-size: 11px; color: white;">
+                磨损: ${sticker.Abrade || '-'}
+              </div>
+              ${sticker.priceV1 ? `
+                <div style="margin-top: 6px; background: rgba(255,255,255,0.9); border-radius: 4px; padding: 3px 6px; font-size: 12px; color: #f56c6c; font-weight: 600;">
+                  ${sticker.priceV1}
+                </div>
+              ` : ''}
+            </div>
+            <div style="margin-top: 6px; font-size: 11px; color: #606266; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${sticker.Name || '-'}">
+              ${sticker.Name || '-'}
+            </div>
+          </div>
+        `
+      })
+      
+      stickersHtml += `
+          </div>
+        </div>
+      `
+      
+      ElMessageBox({
+        title: '印花信息',
+        message: stickersHtml,
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '关闭',
+        customClass: 'stickers-dialog',
+        width: '700px'
+      }).catch(() => {
+        // 用户点击关闭或取消时，忽略错误
+      })
     }
 
     // 关闭悠悠有品商品列表，返回搜索结果
@@ -721,7 +820,9 @@ export default {
       showYYYPList,
       showSearchResults,
       toggleSearchResults,
-      openYYYPDetail,
+      handleViewDetail,
+      handleBuyCommodity,
+      showStickersDialog,
       closeYYYPList,
       handleSearchWeapon,
       handleSearchYYYPByRow,
@@ -1367,5 +1468,42 @@ export default {
 
 :deep(.yyyp-commodity-list .el-table__row:hover) {
   background-color: var(--el-fill-color-light);
+}
+
+/* 印花对话框样式 */
+:deep(.stickers-dialog) {
+  border-radius: 8px;
+}
+
+:deep(.stickers-dialog .el-message-box__header) {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 20px;
+  border-bottom: none;
+}
+
+:deep(.stickers-dialog .el-message-box__title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+:deep(.stickers-dialog .el-message-box__headerbtn .el-message-box__close) {
+  color: white;
+  font-size: 20px;
+}
+
+:deep(.stickers-dialog .el-message-box__headerbtn .el-message-box__close:hover) {
+  color: #f5f5f5;
+}
+
+:deep(.stickers-dialog .el-message-box__content) {
+  padding: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+:deep(.stickers-dialog .el-message-box__btns) {
+  padding: 15px 20px;
+  border-top: 1px solid #dcdfe6;
 }
 </style>
