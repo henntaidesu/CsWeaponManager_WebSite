@@ -1,14 +1,14 @@
 <template>
   <div class="item-search-container">
-    <!-- 搜索区域 - 根据状态切换样式 -->
-    <div :class="['search-wrapper', { 'centered': !hasSearched, 'top-left': hasSearched }]">
+    <!-- 搜索区域 - 固定在顶部 -->
+    <div class="search-wrapper top-left">
       <div class="card search-card">
         <div class="search-section">
-          <div :class="['search-controls', { 'compact': hasSearched }]">
+          <div class="search-controls compact">
             <el-select 
               v-model="selectedSteamId" 
               placeholder="选择Steam账号" 
-              :class="['steam-id-select', { 'large': !hasSearched }]"
+              class="steam-id-select"
               @change="handleSteamIdChange"
               filterable
             >
@@ -25,11 +25,36 @@
               </el-option>
             </el-select>
             
+            <el-select 
+              v-model="selectedExterior" 
+              placeholder="筛选外观" 
+              class="exterior-select"
+              clearable
+              @change="handleExteriorChange"
+            >
+              <el-option label="全部外观" value="" />
+              <el-option label="崭新出厂" value="崭新出厂">
+                <span :style="{ color: '#4caf50' }">崭新出厂</span>
+              </el-option>
+              <el-option label="略有磨损" value="略有磨损">
+                <span :style="{ color: '#8bc34a' }">略有磨损</span>
+              </el-option>
+              <el-option label="久经沙场" value="久经沙场">
+                <span :style="{ color: '#ffc107' }">久经沙场</span>
+              </el-option>
+              <el-option label="破损不堪" value="破损不堪">
+                <span :style="{ color: '#ff9800' }">破损不堪</span>
+              </el-option>
+              <el-option label="战痕累累" value="战痕累累">
+                <span :style="{ color: '#f44336' }">战痕累累</span>
+              </el-option>
+            </el-select>
+            
             <el-autocomplete
               v-model="searchKeyword"
-              :placeholder="hasSearched ? '搜索饰品名称...' : '请输入饰品名称...'"
+              placeholder="搜索饰品名称..."
               prefix-icon="Search"
-              :class="['search-input', { 'large': !hasSearched }]"
+              class="search-input"
               :fetch-suggestions="querySearchAsync"
               @select="handleSelect"
               @keyup.enter="handleSearchWeapon"
@@ -51,7 +76,7 @@
                 搜索武器
               </el-button>
               
-              <el-button v-if="hasSearched" @click="handleClearSearch" :disabled="isSearching">
+              <el-button @click="handleClearSearch" :disabled="isSearching">
                 重置
               </el-button>
             </div>
@@ -61,7 +86,7 @@
     </div>
 
     <!-- 搜索结果表格 -->
-    <div class="card table-card" v-if="hasSearched">
+    <div class="card table-card" v-if="searchResults.length > 0">
       <el-table 
         :data="paginatedResults" 
         style="width: 100%"
@@ -72,7 +97,13 @@
       >
         <el-table-column type="index" label="#" width="60" align="center" />
         
-        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="300" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="weapon-name-text" :style="{ color: getExteriorColor(row.market_listing_item_name) }">
+              {{ row.market_listing_item_name }}
+            </span>
+          </template>
+        </el-table-column>
         
         <el-table-column prop="weapon_type" label="武器类型" width="120" align="center">
           <template #default="{ row }">
@@ -129,7 +160,7 @@
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
-          :total="searchResults.length"
+          :total="filteredResults.length"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
@@ -138,7 +169,7 @@
     </div>
 
     <!-- 无结果提示 -->
-    <div v-if="hasSearched && searchResults.length === 0 && !isSearching" class="card no-results-card">
+    <div v-if="searchResults.length === 0 && !isSearching && searchKeyword" class="card no-results-card">
       <el-empty description="未找到相关饰品" />
     </div>
   </div>
@@ -156,21 +187,34 @@ export default {
     const searchKeyword = ref('')
     const searchResults = ref([])
     const isSearching = ref(false)
-    const hasSearched = ref(false)
     const currentPage = ref(1)
     const pageSize = ref(20)
     const searchSource = ref('') // 'yyyp' 或 'buff'
     const steamIdList = ref([])
     const selectedSteamId = ref('')
+    const selectedExterior = ref('') // 选择的外观筛选
     
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
 
-    // 计算属性
+    // 计算属性 - 筛选后的结果
+    const filteredResults = computed(() => {
+      if (!selectedExterior.value) {
+        return searchResults.value
+      }
+      
+      // 根据选择的外观筛选（使用 float_range 字段）
+      return searchResults.value.filter(item => {
+        const floatRange = item.float_range || ''
+        return floatRange === selectedExterior.value
+      })
+    })
+
+    // 计算属性 - 分页结果
     const paginatedResults = computed(() => {
       const start = (currentPage.value - 1) * pageSize.value
       const end = start + pageSize.value
-      return searchResults.value.slice(start, end)
+      return filteredResults.value.slice(start, end)
     })
 
     const handleImageError = (event) => {
@@ -214,7 +258,6 @@ export default {
       }
 
       isSearching.value = true
-      hasSearched.value = true
       searchSource.value = 'weapon'
       currentPage.value = 1
       
@@ -268,6 +311,28 @@ export default {
       return rarityColorMap[rarity] || '#fff'
     }
 
+    // 获取外观（磨损）颜色样式
+    const getExteriorColor = (itemName) => {
+      if (!itemName) return '#fff'
+      
+      const exteriorColorMap = {
+        '崭新出厂': '#4caf50',      // 绿色 - Factory New
+        '略有磨损': '#8bc34a',      // 浅绿色 - Minimal Wear
+        '久经沙场': '#ffc107',      // 黄色 - Field-Tested
+        '破损不堪': '#ff9800',      // 橙色 - Well-Worn
+        '战痕累累': '#f44336'       // 红色 - Battle-Scarred
+      }
+      
+      // 检查饰品名称中是否包含外观关键词
+      for (const [exterior, color] of Object.entries(exteriorColorMap)) {
+        if (itemName.includes(exterior) || itemName.includes(`(${exterior})`)) {
+          return color
+        }
+      }
+      
+      return '#fff' // 默认白色
+    }
+
     // 加载Steam ID列表
     const loadSteamIdList = async () => {
       try {
@@ -293,6 +358,13 @@ export default {
     const handleSteamIdChange = (value) => {
       console.log('Steam ID已改变:', value)
       selectedSteamId.value = value
+    }
+
+    // 外观筛选改变处理
+    const handleExteriorChange = (value) => {
+      console.log('外观筛选已改变:', value)
+      selectedExterior.value = value
+      currentPage.value = 1 // 重置到第一页
     }
 
     // 通过行数据搜索悠悠有品
@@ -362,8 +434,8 @@ export default {
     const handleClearSearch = () => {
       searchKeyword.value = ''
       searchResults.value = []
-      hasSearched.value = false
       searchSource.value = ''
+      selectedExterior.value = ''
       currentPage.value = 1
       ElMessage.info('已重置搜索')
     }
@@ -391,13 +463,14 @@ export default {
       searchKeyword,
       searchResults,
       isSearching,
-      hasSearched,
       searchSource,
       currentPage,
       pageSize,
       paginatedResults,
+      filteredResults,
       steamIdList,
       selectedSteamId,
+      selectedExterior,
       handleSearchWeapon,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
@@ -407,10 +480,12 @@ export default {
       handleSizeChange,
       handleCurrentChange,
       handleSteamIdChange,
+      handleExteriorChange,
       querySearchAsync,
       handleSelect,
       getRarityType,
-      getRarityColor
+      getRarityColor,
+      getExteriorColor
     }
   }
 }
@@ -501,16 +576,8 @@ export default {
   align-items: stretch;
   gap: 1rem;
   transition: all 0.5s ease;
-}
-
-.search-wrapper.centered .search-controls {
-  flex-direction: column;
-  align-items: center;
-}
-
-.search-wrapper.top-left .search-controls {
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
 }
 
@@ -537,30 +604,23 @@ export default {
 /* Steam ID 选择框 */
 .steam-id-select {
   transition: all 0.5s ease;
-  min-width: 200px;
-  width: 200px;
+  min-width: 180px;
+  width: 180px;
 }
 
-.steam-id-select.large {
-  width: 100%;
-  max-width: 600px;
-  min-width: 300px;
+/* 外观选择框 */
+.exterior-select {
+  transition: all 0.5s ease;
+  min-width: 150px;
+  width: 150px;
 }
 
 /* 搜索输入框 */
 .search-input {
   transition: all 0.5s ease;
-  min-width: 200px;
+  min-width: 250px;
   flex: 1;
-}
-
-.search-wrapper.top-left .search-input {
-  max-width: 300px;
-}
-
-.search-input.large {
-  width: 100%;
-  max-width: 600px;
+  max-width: 400px;
 }
 
 /* el-autocomplete 样式适配 */
@@ -731,6 +791,11 @@ export default {
 
 .rarity-text {
   font-weight: 600;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.weapon-name-text {
+  font-weight: 500;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
