@@ -90,10 +90,6 @@
               <el-button type="primary" @click="handleSearchWeapon" :loading="isSearching && searchSource === 'weapon'">
                 搜索武器
               </el-button>
-              
-              <el-button @click="handleClearSearch" :disabled="isSearching">
-                重置
-              </el-button>
             </div>
           </div>
         </div>
@@ -140,12 +136,6 @@
         <el-table-column prop="buff_id" label="BUFF ID" width="100" align="center">
           <template #default="{ row }">
             <span class="id-text">{{ row.buff_id || '-' }}</span>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="steam_id" label="Steam ID" width="100" align="center">
-          <template #default="{ row }">
-            <span class="id-text">{{ row.steam_id || '-' }}</span>
           </template>
         </el-table-column>
         
