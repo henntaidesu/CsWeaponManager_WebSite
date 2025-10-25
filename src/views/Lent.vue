@@ -185,7 +185,8 @@
               {{ scope.row.weapon_float || '' }}
             </template>
           </el-table-column>
-          <el-table-column prop="weapon_name" label="武器类型" width="120" />
+          <el-table-column prop="weapon_type" label="武器类型" width="120" />
+          <el-table-column prop="weapon_name" label="武器名称" width="150" />
           <el-table-column prop="item_name" label="饰品名称" min-width="200" show-overflow-tooltip />
           <el-table-column prop="float_range" label="磨损" min-width="80" />
           <el-table-column prop="price" label="租金" min-width="100">
@@ -193,7 +194,7 @@
               ¥{{ scope.row.price }}
             </template>
           </el-table-column>
-          <el-table-column prop="lenter_name" label="承租人" min-width="100" />
+          <el-table-column prop="lenter_name" label="承租人" width="100" show-overflow-tooltip />
           <el-table-column prop="lean_start_time" label="开始时间" min-width="140">
             <template #default="scope">
               {{ formatTime(scope.row.lean_start_time) }}
@@ -406,18 +407,19 @@ export default {
           id: index + 1,
           ID: item[0] || '',
           weapon_name: item[1] || '',
-          item_name: item[2] || '', 
-          weapon_float: item[3] || 0,
-          float_range: item[4] || '',
-          price: item[5] || 0,
-          lenter_name: item[6] || '',
-          status: item[7] || '',
-          last_status: item[8] || '',
-          from: item[9] || '',
-          lean_start_time: item[10] || '',
-          lean_end_time: item[11] || '',
-          total_Lease_Days: item[12] || 0,
-          max_Lease_Days: item[13] || 0
+          weapon_type: item[2] || '',
+          item_name: item[3] || '', 
+          weapon_float: item[4] || 0,
+          float_range: item[5] || '',
+          price: item[6] || 0,
+          lenter_name: item[7] || '',
+          status: item[8] || '',
+          last_status: item[9] || '',
+          from: item[10] || '',
+          lean_start_time: item[11] || '',
+          lean_end_time: item[12] || '',
+          total_Lease_Days: item[13] || 0,
+          max_Lease_Days: item[14] || 0
         }))
         
         // 进入搜索模式
@@ -585,18 +587,19 @@ export default {
             id: index + 1,
             ID: item[0] || '',
             weapon_name: item[1] || '',
-            item_name: item[2] || '', 
-            weapon_float: item[3] || 0,
-            float_range: item[4] || '',
-            price: item[5] || 0,
-            lenter_name: item[6] || '',
-            status: item[7] || '',
-            last_status: item[8] || '',
-            from: item[9] || '',
-            lean_start_time: item[10] || '',
-            lean_end_time: item[11] || '',
-            total_Lease_Days: item[12] || 0,
-            max_Lease_Days: item[13] || 0
+            weapon_type: item[2] || '',
+            item_name: item[3] || '', 
+            weapon_float: item[4] || 0,
+            float_range: item[5] || '',
+            price: item[6] || 0,
+            lenter_name: item[7] || '',
+            status: item[8] || '',
+            last_status: item[9] || '',
+            from: item[10] || '',
+            lean_start_time: item[11] || '',
+            lean_end_time: item[12] || '',
+            total_Lease_Days: item[13] || 0,
+            max_Lease_Days: item[14] || 0
           }
         }).filter(item => item !== null)
         
@@ -759,18 +762,19 @@ export default {
           id: index + 1,
           ID: item[0] || '',
           weapon_name: item[1] || '',
-          item_name: item[2] || '', 
-          weapon_float: item[3] || 0,
-          float_range: item[4] || '',
-          price: item[5] || 0,
-          lenter_name: item[6] || '',
-          status: item[7] || '',
-          last_status: item[8] || '',
-          from: item[9] || '',
-          lean_start_time: item[10] || '',
-          lean_end_time: item[11] || '',
-          total_Lease_Days: item[12] || 0,
-          max_Lease_Days: item[13] || 0
+          weapon_type: item[2] || '',
+          item_name: item[3] || '', 
+          weapon_float: item[4] || 0,
+          float_range: item[5] || '',
+          price: item[6] || 0,
+          lenter_name: item[7] || '',
+          status: item[8] || '',
+          last_status: item[9] || '',
+          from: item[10] || '',
+          lean_start_time: item[11] || '',
+          lean_end_time: item[12] || '',
+          total_Lease_Days: item[13] || 0,
+          max_Lease_Days: item[14] || 0
         }))
         
         // 进入时间搜索模式
