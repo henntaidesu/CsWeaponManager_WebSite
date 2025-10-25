@@ -32,7 +32,7 @@
               :class="['search-input', { 'large': !hasSearched }]"
               :fetch-suggestions="querySearchAsync"
               @select="handleSelect"
-              @keyup.enter="handleSearchYYYP"
+              @keyup.enter="handleSearchWeapon"
               @clear="handleClearSearch"
               clearable
               :debounce="300"
@@ -47,12 +47,8 @@
             </el-autocomplete>
             
             <div class="button-group">
-              <el-button type="primary" @click="handleSearchYYYP" :loading="isSearching && searchSource === 'yyyp'">
-                搜索悠悠有品
-              </el-button>
-              
-              <el-button type="success" @click="handleSearchBuff" :loading="isSearching && searchSource === 'buff'">
-                搜索BUFF
+              <el-button type="primary" @click="handleSearchWeapon" :loading="isSearching && searchSource === 'weapon'">
+                搜索武器
               </el-button>
               
               <el-button v-if="hasSearched" @click="handleClearSearch" :disabled="isSearching">
@@ -76,66 +72,51 @@
       >
         <el-table-column type="index" label="#" width="60" align="center" />
         
-        <el-table-column prop="image" label="图片" width="100" align="center">
+        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="300" show-overflow-tooltip />
+        
+        <el-table-column prop="weapon_type" label="武器类型" width="120" align="center">
           <template #default="{ row }">
-            <el-image 
-              :src="row.image || '/icons/default-weapon.png'" 
-              :alt="row.name"
-              style="width: 60px; height: 60px; object-fit: contain;"
-              fit="contain"
-              :preview-src-list="[row.image || '/icons/default-weapon.png']"
-              @error="handleImageError"
-            />
+            <el-tag size="small" type="info">{{ row.weapon_type || '-' }}</el-tag>
           </template>
         </el-table-column>
         
-        <el-table-column prop="name" label="饰品名称" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="item_name" label="皮肤名称" width="180" align="center" show-overflow-tooltip />
         
-        <el-table-column prop="exterior" label="外观" width="120" align="center">
+        <el-table-column prop="Rarity" label="稀有度" width="120" align="center">
           <template #default="{ row }">
-            <el-tag size="small" type="info">{{ row.exterior || '无' }}</el-tag>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="quality" label="品质" width="120" align="center">
-          <template #default="{ row }">
-            <el-tag size="small" type="warning">{{ row.quality || '无' }}</el-tag>
-          </template>
-        </el-table-column>
-        
-        <el-table-column prop="buy_price" label="购入价" width="100" align="center">
-          <template #default="{ row }">
-            <span v-if="row.buy_price" class="price-text">¥{{ row.buy_price }}</span>
+            <span v-if="row.Rarity" class="rarity-text" :style="{ color: getRarityColor(row.Rarity) }">
+              {{ row.Rarity }}
+            </span>
             <span v-else class="no-data">-</span>
           </template>
         </el-table-column>
         
-        <el-table-column prop="yyyp_price" label="悠悠有品" width="110" align="center">
+        <el-table-column prop="yyyp_id" label="悠悠有品ID" width="120" align="center">
           <template #default="{ row }">
-            <span v-if="row.yyyp_price" class="price-text">¥{{ row.yyyp_price }}</span>
-            <span v-else class="no-data">-</span>
+            <span class="id-text">{{ row.yyyp_id || '-' }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column prop="buff_price" label="BUFF" width="100" align="center">
+        <el-table-column prop="buff_id" label="BUFF ID" width="100" align="center">
           <template #default="{ row }">
-            <span v-if="row.buff_price" class="price-text">¥{{ row.buff_price }}</span>
-            <span v-else class="no-data">-</span>
+            <span class="id-text">{{ row.buff_id || '-' }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column prop="steam_price" label="Steam" width="100" align="center">
+        <el-table-column prop="steam_id" label="Steam ID" width="100" align="center">
           <template #default="{ row }">
-            <span v-if="row.steam_price" class="price-text">¥{{ row.steam_price }}</span>
-            <span v-else class="no-data">-</span>
+            <span class="id-text">{{ row.steam_id || '-' }}</span>
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="120" align="center" fixed="right">
+        <el-table-column label="搜索" width="200" align="center" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-button type="primary" size="small" @click="handleViewDetails(row)">
-                详情
+              <el-button type="warning" size="small" @click="handleSearchYYYPByRow(row)" :loading="isSearching && searchSource === 'yyyp'">
+                悠悠有品
+              </el-button>
+              <el-button type="default" size="small" @click="handleSearchBuffByRow(row)" :loading="isSearching && searchSource === 'buff'">
+                BUFF
               </el-button>
             </div>
           </template>
@@ -225,6 +206,68 @@ export default {
       console.log('已选择:', item.value)
     }
 
+    // 搜索武器详情
+    const handleSearchWeapon = async () => {
+      if (!searchKeyword.value.trim()) {
+        ElMessage.warning('请输入搜索关键词')
+        return
+      }
+
+      isSearching.value = true
+      hasSearched.value = true
+      searchSource.value = 'weapon'
+      currentPage.value = 1
+      
+      try {
+        console.log('搜索武器:', searchKeyword.value)
+        
+        const response = await axios.get(apiUrls.searchWeaponDetail(searchKeyword.value.trim()))
+        
+        if (response.data.success) {
+          searchResults.value = response.data.data || []
+          
+          if (searchResults.value.length === 0) {
+            ElMessage.info('未找到匹配的武器')
+          } else {
+            ElMessage.success(`找到 ${searchResults.value.length} 件武器`)
+          }
+        } else {
+          ElMessage.error('搜索失败: ' + (response.data.error || '未知错误'))
+          searchResults.value = []
+        }
+        
+      } catch (error) {
+        console.error('搜索武器失败:', error)
+        ElMessage.error('搜索失败: ' + (error.response?.data?.error || error.message))
+        searchResults.value = []
+      } finally {
+        isSearching.value = false
+      }
+    }
+
+    // 获取稀有度类型（根据CS:GO品质颜色）
+    const getRarityType = (rarity) => {
+      if (!rarity) return ''
+      // 不使用Element Plus的type，使用自定义颜色
+      return ''
+    }
+    
+    // 获取稀有度颜色样式
+    const getRarityColor = (rarity) => {
+      if (!rarity) return ''
+      const rarityColorMap = {
+        '违禁': '#e4ae39',      // 金色
+        '隐秘': '#eb4b4b',      // 红色
+        '保密': '#d32ce6',      // 紫色/粉色
+        '受限': '#8847ff',      // 紫色
+        '军规级': '#4b69ff',    // 蓝色
+        '工业级': '#5e98d9',    // 浅蓝色
+        '消费级': '#b0c3d9',    // 灰蓝色
+        '普通级': '#b0c3d9'     // 灰蓝色
+      }
+      return rarityColorMap[rarity] || '#fff'
+    }
+
     // 加载Steam ID列表
     const loadSteamIdList = async () => {
       try {
@@ -252,85 +295,65 @@ export default {
       selectedSteamId.value = value
     }
 
-    // 搜索悠悠有品
-    const handleSearchYYYP = async () => {
-      if (!searchKeyword.value.trim()) {
-        ElMessage.warning('请输入搜索关键词')
+    // 通过行数据搜索悠悠有品
+    const handleSearchYYYPByRow = async (row) => {
+      if (!row.yyyp_id) {
+        ElMessage.warning('该武器没有悠悠有品ID')
         return
       }
 
       isSearching.value = true
-      hasSearched.value = true
       searchSource.value = 'yyyp'
-      currentPage.value = 1
       
       try {
-        console.log('搜索悠悠有品:', searchKeyword.value)
+        console.log('搜索悠悠有品:', row.market_listing_item_name, 'ID:', row.yyyp_id)
         
         // TODO: 这里需要根据实际API接口调整
-        // 示例：从悠悠有品API搜索
-        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/yyyp`, {
-        //   params: { keyword: searchKeyword.value }
-        // })
+        // 示例：根据yyyp_id搜索悠悠有品
+        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/yyyp/${row.yyyp_id}`)
         
         // 模拟搜索延迟
         await new Promise(resolve => setTimeout(resolve, 500))
         
-        // 这里应该对接实际的搜索API
-        searchResults.value = []
-        
-        if (searchResults.value.length === 0) {
-          ElMessage.info('在悠悠有品未找到相关饰品')
-        } else {
-          ElMessage.success(`在悠悠有品找到 ${searchResults.value.length} 件饰品`)
-        }
+        ElMessage.success(`正在跳转到悠悠有品: ${row.market_listing_item_name}`)
+        // 可以在这里打开新窗口跳转到悠悠有品页面
+        // window.open(`https://www.youpin898.com/goodInfo?id=${row.yyyp_id}`, '_blank')
         
       } catch (error) {
         console.error('搜索悠悠有品失败:', error)
         ElMessage.error('搜索失败')
-        searchResults.value = []
       } finally {
         isSearching.value = false
       }
     }
 
-    // 搜索BUFF
-    const handleSearchBuff = async () => {
-      if (!searchKeyword.value.trim()) {
-        ElMessage.warning('请输入搜索关键词')
+    // 通过行数据搜索BUFF
+    const handleSearchBuffByRow = async (row) => {
+      if (!row.buff_id) {
+        ElMessage.warning('该武器没有BUFF ID')
         return
       }
 
       isSearching.value = true
-      hasSearched.value = true
       searchSource.value = 'buff'
-      currentPage.value = 1
       
       try {
-        console.log('搜索BUFF:', searchKeyword.value)
+        console.log('搜索BUFF:', row.market_listing_item_name, 'ID:', row.buff_id)
         
         // TODO: 这里需要根据实际API接口调整
-        // 示例：从BUFF API搜索
-        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/buff`, {
-        //   params: { keyword: searchKeyword.value }
-        // })
+        // 示例：根据buff_id搜索BUFF
+        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/buff/${row.buff_id}`)
         
         // 模拟搜索延迟
         await new Promise(resolve => setTimeout(resolve, 500))
         
-        // 这里应该对接实际的搜索API
-        searchResults.value = []
-        
-        if (searchResults.value.length === 0) {
-          ElMessage.info('在BUFF未找到相关饰品')
-        } else {
-          ElMessage.success(`在BUFF找到 ${searchResults.value.length} 件饰品`)
-        }
+        ElMessage.success(`正在跳转到BUFF: ${row.market_listing_item_name}`)
+        // 可以在这里打开新窗口跳转到BUFF页面
+        // window.open(`https://buff.163.com/goods/${row.buff_id}`, '_blank')
         
       } catch (error) {
         console.error('搜索BUFF失败:', error)
         ElMessage.error('搜索失败')
-        searchResults.value = []
       } finally {
         isSearching.value = false
       }
@@ -375,8 +398,9 @@ export default {
       paginatedResults,
       steamIdList,
       selectedSteamId,
-      handleSearchYYYP,
-      handleSearchBuff,
+      handleSearchWeapon,
+      handleSearchYYYPByRow,
+      handleSearchBuffByRow,
       handleClearSearch,
       handleImageError,
       handleViewDetails,
@@ -384,7 +408,9 @@ export default {
       handleCurrentChange,
       handleSteamIdChange,
       querySearchAsync,
-      handleSelect
+      handleSelect,
+      getRarityType,
+      getRarityColor
     }
   }
 }
@@ -537,6 +563,24 @@ export default {
   max-width: 600px;
 }
 
+/* el-autocomplete 样式适配 */
+.search-input :deep(.el-input__wrapper) {
+  background-color: #2a2a2a;
+  box-shadow: 0 0 0 1px #444 inset;
+}
+
+.search-input :deep(.el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #4CAF50 inset;
+}
+
+.search-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px #4CAF50 inset !important;
+}
+
+.search-input :deep(.el-input__inner) {
+  color: #fff;
+}
+
 .search-wrapper.centered .steam-id-select.large :deep(.el-input__wrapper) {
   padding: 1rem 1.5rem;
   font-size: 1.125rem;
@@ -547,12 +591,25 @@ export default {
 }
 
 .search-wrapper.centered .search-input.large :deep(.el-input__wrapper) {
-  padding: 1rem 1.5rem;
-  font-size: 1.125rem;
+  padding: 2rem 2.5rem;
+  font-size: 2rem;
+  height: 80px;
+  min-height: 80px;
 }
 
 .search-wrapper.centered .search-input.large :deep(.el-input__inner) {
-  font-size: 1.125rem;
+  font-size: 2rem;
+  height: 80px;
+  min-height: 80px;
+}
+
+/* 居中状态下的 autocomplete 样式 */
+.search-wrapper.centered .search-input.large :deep(.el-autocomplete) {
+  width: 100%;
+}
+
+.search-wrapper.centered .search-input.large :deep(.el-input) {
+  width: 100%;
 }
 
 /* 居中状态下的按钮样式 */
@@ -666,11 +723,23 @@ export default {
   color: #888;
 }
 
+.id-text {
+  color: #4CAF50;
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.rarity-text {
+  font-weight: 600;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
 .action-buttons {
   display: flex;
-  gap: 0.25rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
   justify-content: center;
+  align-items: center;
 }
 
 .pagination-container {

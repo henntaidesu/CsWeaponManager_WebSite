@@ -44,6 +44,7 @@ export const API_CONFIG = {
     
     // 武器搜索相关
     SEARCH_WEAPON: (keyword) => `/webSelectWeaponV1/searchWeapon?keyword=${encodeURIComponent(keyword)}`,
+    SEARCH_WEAPON_DETAIL: (keyword) => `/webSelectWeaponV1/searchWeaponDetail?keyword=${encodeURIComponent(keyword)}`,
     
     // 类型和磨损等级搜索相关
     BUY_WEAPON_TYPES: '/webBuyPageV1/getWeaponTypes',
@@ -155,6 +156,7 @@ export const apiUrls = {
   
   // 武器搜索
   searchWeapon: (keyword) => getApiUrl(API_CONFIG.ENDPOINTS.SEARCH_WEAPON(keyword)),
+  searchWeaponDetail: (keyword) => getApiUrl(API_CONFIG.ENDPOINTS.SEARCH_WEAPON_DETAIL(keyword)),
   
   // 爬虫API
   youpinSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.YOUPIN_SPIDER),
