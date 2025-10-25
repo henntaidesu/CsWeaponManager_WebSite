@@ -223,7 +223,7 @@
         
         <el-table-column label="改名" width="150" align="center">
           <template #default="{ row }">
-            <span v-if="row.haveNameTag === 1" style="color: #f56c6c; font-size: 18px; font-weight: bold;">❗</span>
+            <span v-if="row.haveNameTag === 1" style="color: #e6a23c; font-size: 18px; font-weight: bold;">❗</span>
             <span v-else style="color: #909399;">-</span>
           </template>
         </el-table-column>
@@ -234,22 +234,24 @@
           </template>
         </el-table-column>
         
-        <el-table-column label="操作" width="180" align="center" fixed="right">
+        <el-table-column label="操作" width="200" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button 
-              type="primary" 
-              size="small" 
-              @click="handleViewDetail(row)"
-            >
-              查看详情
-            </el-button>
-            <el-button 
-              type="success" 
-              size="small" 
-              @click="handleBuyCommodity(row)"
-            >
-              购买
-            </el-button>
+            <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: nowrap;">
+              <el-button 
+                type="primary" 
+                size="small" 
+                @click="handleViewDetail(row)"
+              >
+                查看详情
+              </el-button>
+              <el-button 
+                type="success" 
+                size="small" 
+                @click="handleBuyCommodity(row)"
+              >
+                购买
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -603,7 +605,7 @@ export default {
       // 最多显示5个印花
       const displayStickers = stickers.slice(0, 5)
 
-      // 构建印花信息HTML - 横向平铺展示
+      // 构建印花信息HTML - 横向平铺展示（自适应宽度）
       let stickersHtml = `
         <div style="padding: 20px;">
           <div style="text-align: center; margin-bottom: 20px;">
@@ -611,7 +613,7 @@ export default {
             <p style="margin: 0; color: #909399; font-size: 14px;">印花数量：${stickers.length} 个${stickers.length > 5 ? '（显示前5个）' : ''}</p>
           </div>
           
-          <div style="display: flex; justify-content: center; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+          <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: nowrap;">
       `
       
       displayStickers.forEach((sticker, index) => {
@@ -645,13 +647,17 @@ export default {
         </div>
       `
       
+      // 根据印花数量计算对话框宽度（最多5个印花）
+      // 每个卡片110px + 间距15px = 125px，再加上左右边距和额外空间
+      const dialogWidth = displayStickers.length * 135 + 100
+      
       ElMessageBox({
         title: '印花信息',
         message: stickersHtml,
         dangerouslyUseHTMLString: true,
         confirmButtonText: '关闭',
         customClass: 'stickers-dialog',
-        width: '700px'
+        width: `${dialogWidth}px`
       }).catch(() => {
         // 用户点击关闭或取消时，忽略错误
       })
