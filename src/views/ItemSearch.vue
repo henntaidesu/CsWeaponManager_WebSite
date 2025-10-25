@@ -50,6 +50,21 @@
               </el-option>
             </el-select>
             
+            <el-select 
+              v-model="selectedStatTrak" 
+              placeholder="StatTrak™" 
+              class="stattrak-select"
+              @change="handleStatTrakChange"
+            >
+              <el-option label="非StatTrak™" value="normal">
+                <span>非StatTrak™</span>
+              </el-option>
+              <el-option label="StatTrak™" value="stattrak">
+                <span :style="{ color: '#cf6a32' }">StatTrak™</span>
+              </el-option>
+              <el-option label="全部" value="" />
+            </el-select>
+            
             <el-autocomplete
               v-model="searchKeyword"
               placeholder="搜索饰品名称..."
@@ -97,13 +112,7 @@
       >
         <el-table-column type="index" label="#" width="60" align="center" />
         
-        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="300" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span class="weapon-name-text" :style="{ color: getExteriorColor(row.market_listing_item_name) }">
-              {{ row.market_listing_item_name }}
-            </span>
-          </template>
-        </el-table-column>
+        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="300" show-overflow-tooltip />
         
         <el-table-column prop="weapon_type" label="武器类型" width="120" align="center">
           <template #default="{ row }">
@@ -193,21 +202,40 @@ export default {
     const steamIdList = ref([])
     const selectedSteamId = ref('')
     const selectedExterior = ref('') // 选择的外观筛选
+    const selectedStatTrak = ref('normal') // 选择的StatTrak筛选，默认非StatTrak™
     
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
 
     // 计算属性 - 筛选后的结果
     const filteredResults = computed(() => {
-      if (!selectedExterior.value) {
-        return searchResults.value
-      }
+      let results = searchResults.value
       
       // 根据选择的外观筛选（使用 float_range 字段）
-      return searchResults.value.filter(item => {
-        const floatRange = item.float_range || ''
-        return floatRange === selectedExterior.value
-      })
+      if (selectedExterior.value) {
+        results = results.filter(item => {
+          const floatRange = item.float_range || ''
+          return floatRange === selectedExterior.value
+        })
+      }
+      
+      // 根据选择的StatTrak筛选
+      if (selectedStatTrak.value === 'stattrak') {
+        // 只显示StatTrak™饰品
+        results = results.filter(item => {
+          const itemName = item.market_listing_item_name || ''
+          return itemName.includes('StatTrak™') || itemName.includes('（StatTrak™）')
+        })
+      } else if (selectedStatTrak.value === 'normal') {
+        // 只显示非StatTrak™饰品
+        results = results.filter(item => {
+          const itemName = item.market_listing_item_name || ''
+          return !itemName.includes('StatTrak™') && !itemName.includes('（StatTrak™）')
+        })
+      }
+      // 如果是空值''，显示全部
+      
+      return results
     })
 
     // 计算属性 - 分页结果
@@ -367,6 +395,13 @@ export default {
       currentPage.value = 1 // 重置到第一页
     }
 
+    // StatTrak筛选改变处理
+    const handleStatTrakChange = (value) => {
+      console.log('StatTrak筛选已改变:', value)
+      selectedStatTrak.value = value
+      currentPage.value = 1 // 重置到第一页
+    }
+
     // 通过行数据搜索悠悠有品
     const handleSearchYYYPByRow = async (row) => {
       if (!row.yyyp_id) {
@@ -436,6 +471,7 @@ export default {
       searchResults.value = []
       searchSource.value = ''
       selectedExterior.value = ''
+      selectedStatTrak.value = 'normal' // 重置为默认值：非StatTrak™
       currentPage.value = 1
       ElMessage.info('已重置搜索')
     }
@@ -471,6 +507,7 @@ export default {
       steamIdList,
       selectedSteamId,
       selectedExterior,
+      selectedStatTrak,
       handleSearchWeapon,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
@@ -481,6 +518,7 @@ export default {
       handleCurrentChange,
       handleSteamIdChange,
       handleExteriorChange,
+      handleStatTrakChange,
       querySearchAsync,
       handleSelect,
       getRarityType,
@@ -613,6 +651,13 @@ export default {
   transition: all 0.5s ease;
   min-width: 150px;
   width: 150px;
+}
+
+/* StatTrak选择框 */
+.stattrak-select {
+  transition: all 0.5s ease;
+  min-width: 140px;
+  width: 140px;
 }
 
 /* 搜索输入框 */
