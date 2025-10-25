@@ -648,8 +648,9 @@ export default {
       `
       
       // 根据印花数量计算对话框宽度（最多5个印花）
-      // 每个卡片110px + 间距15px = 125px，再加上左右边距和额外空间
-      const dialogWidth = displayStickers.length * 135 + 100
+      // 每个卡片宽度110px，间距15px，加上对话框内边距和额外空间
+      // 计算公式：卡片数量*110 + (卡片数量-1)*15 + 对话框边距和额外空间
+      const dialogWidth = displayStickers.length * 110 + (displayStickers.length - 1) * 15 + 160
       
       ElMessageBox({
         title: '印花信息',
