@@ -1,32 +1,66 @@
 <template>
-  <div>
-    <!-- 搜索与统计数据 -->
-    <div class="stats-summary">
-      <div class="card">
-        <!-- 搜索栏 -->
+  <div class="item-search-container">
+    <!-- 搜索区域 - 根据状态切换样式 -->
+    <div :class="['search-wrapper', { 'centered': !hasSearched, 'top-left': hasSearched }]">
+      <div class="card search-card">
         <div class="search-section">
-          <div class="all-controls-row">
-            <el-input
+          <div :class="['search-controls', { 'compact': hasSearched }]">
+            <el-select 
+              v-model="selectedSteamId" 
+              placeholder="选择Steam账号" 
+              :class="['steam-id-select', { 'large': !hasSearched }]"
+              @change="handleSteamIdChange"
+              filterable
+            >
+              <el-option
+                v-for="item in steamIdList"
+                :key="item.steam_id"
+                :label="`${item.steam_id} (${item.item_count}件)`"
+                :value="item.steam_id"
+              >
+                <span style="float: left">{{ item.steam_id }}</span>
+                <span style="float: right; color: var(--el-text-color-secondary); font-size: 13px">
+                  {{ item.item_count }}件
+                </span>
+              </el-option>
+            </el-select>
+            
+            <el-autocomplete
               v-model="searchKeyword"
-              placeholder="搜索饰品名称..."
+              :placeholder="hasSearched ? '搜索饰品名称...' : '请输入饰品名称...'"
               prefix-icon="Search"
-              class="search-input"
-              @keyup.enter="handleSearch"
+              :class="['search-input', { 'large': !hasSearched }]"
+              :fetch-suggestions="querySearchAsync"
+              @select="handleSelect"
+              @keyup.enter="handleSearchYYYP"
               @clear="handleClearSearch"
               clearable
-            />
+              :debounce="300"
+              popper-class="weapon-autocomplete-popper"
+              :teleported="false"
+            >
+              <template #default="{ item }">
+                <div class="autocomplete-item">
+                  {{ item.value }}
+                </div>
+              </template>
+            </el-autocomplete>
             
-            <el-button type="primary" @click="handleSearch" :loading="isSearching">
-              搜索
-            </el-button>
-            
-            <el-button @click="handleClearSearch" :disabled="isSearching">
-              重置
-            </el-button>
-            
+            <div class="button-group">
+              <el-button type="primary" @click="handleSearchYYYP" :loading="isSearching && searchSource === 'yyyp'">
+                搜索悠悠有品
+              </el-button>
+              
+              <el-button type="success" @click="handleSearchBuff" :loading="isSearching && searchSource === 'buff'">
+                搜索BUFF
+              </el-button>
+              
+              <el-button v-if="hasSearched" @click="handleClearSearch" :disabled="isSearching">
+                重置
+              </el-button>
+            </div>
           </div>
         </div>
-        
       </div>
     </div>
 
@@ -144,6 +178,12 @@ export default {
     const hasSearched = ref(false)
     const currentPage = ref(1)
     const pageSize = ref(20)
+    const searchSource = ref('') // 'yyyp' 或 'buff'
+    const steamIdList = ref([])
+    const selectedSteamId = ref('')
+    
+    // API 基础地址
+    const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
 
     // 计算属性
     const paginatedResults = computed(() => {
@@ -156,7 +196,64 @@ export default {
       event.target.src = '/icons/default-weapon.png'
     }
 
-    const handleSearch = async () => {
+    // 实时搜索武器名称
+    const querySearchAsync = async (queryString, cb) => {
+      if (!queryString || queryString.trim().length === 0) {
+        cb([])
+        return
+      }
+
+      try {
+        const response = await axios.get(apiUrls.searchWeapon(queryString.trim()))
+        if (response.data.success && response.data.data) {
+          const results = response.data.data.map(name => ({
+            value: name
+          }))
+          cb(results)
+        } else {
+          cb([])
+        }
+      } catch (error) {
+        console.error('搜索武器名称失败:', error)
+        cb([])
+      }
+    }
+
+    // 选择搜索建议
+    const handleSelect = (item) => {
+      searchKeyword.value = item.value
+      console.log('已选择:', item.value)
+    }
+
+    // 加载Steam ID列表
+    const loadSteamIdList = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/steam_ids`)
+        console.log('Steam ID列表响应:', response.data)
+        if (response.data.success) {
+          steamIdList.value = response.data.data
+          if (steamIdList.value.length > 0) {
+            // 默认选择第一个
+            selectedSteamId.value = steamIdList.value[0].steam_id
+            console.log('默认选择Steam ID:', selectedSteamId.value)
+          } else {
+            ElMessage.warning('没有找到库存数据，请先获取Steam库存')
+          }
+        }
+      } catch (error) {
+        console.error('加载Steam ID列表失败:', error)
+        ElMessage.error('加载Steam ID列表失败: ' + (error.response?.data?.error || error.message))
+      }
+    }
+
+    // Steam ID 改变处理
+    const handleSteamIdChange = (value) => {
+      console.log('Steam ID已改变:', value)
+      selectedSteamId.value = value
+    }
+
+    // 搜索悠悠有品
+    const handleSearchYYYP = async () => {
       if (!searchKeyword.value.trim()) {
         ElMessage.warning('请输入搜索关键词')
         return
@@ -164,14 +261,15 @@ export default {
 
       isSearching.value = true
       hasSearched.value = true
+      searchSource.value = 'yyyp'
       currentPage.value = 1
       
       try {
-        console.log('搜索关键词:', searchKeyword.value)
+        console.log('搜索悠悠有品:', searchKeyword.value)
         
         // TODO: 这里需要根据实际API接口调整
-        // 示例：从库存API搜索
-        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search`, {
+        // 示例：从悠悠有品API搜索
+        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/yyyp`, {
         //   params: { keyword: searchKeyword.value }
         // })
         
@@ -182,13 +280,55 @@ export default {
         searchResults.value = []
         
         if (searchResults.value.length === 0) {
-          ElMessage.info('未找到相关饰品')
+          ElMessage.info('在悠悠有品未找到相关饰品')
         } else {
-          ElMessage.success(`找到 ${searchResults.value.length} 件饰品`)
+          ElMessage.success(`在悠悠有品找到 ${searchResults.value.length} 件饰品`)
         }
         
       } catch (error) {
-        console.error('搜索失败:', error)
+        console.error('搜索悠悠有品失败:', error)
+        ElMessage.error('搜索失败')
+        searchResults.value = []
+      } finally {
+        isSearching.value = false
+      }
+    }
+
+    // 搜索BUFF
+    const handleSearchBuff = async () => {
+      if (!searchKeyword.value.trim()) {
+        ElMessage.warning('请输入搜索关键词')
+        return
+      }
+
+      isSearching.value = true
+      hasSearched.value = true
+      searchSource.value = 'buff'
+      currentPage.value = 1
+      
+      try {
+        console.log('搜索BUFF:', searchKeyword.value)
+        
+        // TODO: 这里需要根据实际API接口调整
+        // 示例：从BUFF API搜索
+        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/buff`, {
+        //   params: { keyword: searchKeyword.value }
+        // })
+        
+        // 模拟搜索延迟
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // 这里应该对接实际的搜索API
+        searchResults.value = []
+        
+        if (searchResults.value.length === 0) {
+          ElMessage.info('在BUFF未找到相关饰品')
+        } else {
+          ElMessage.success(`在BUFF找到 ${searchResults.value.length} 件饰品`)
+        }
+        
+      } catch (error) {
+        console.error('搜索BUFF失败:', error)
         ElMessage.error('搜索失败')
         searchResults.value = []
       } finally {
@@ -200,6 +340,7 @@ export default {
       searchKeyword.value = ''
       searchResults.value = []
       hasSearched.value = false
+      searchSource.value = ''
       currentPage.value = 1
       ElMessage.info('已重置搜索')
     }
@@ -218,50 +359,218 @@ export default {
       currentPage.value = val
     }
 
+    // 页面加载时获取Steam ID列表
+    onMounted(async () => {
+      await loadSteamIdList()
+    })
+
     return {
       searchKeyword,
       searchResults,
       isSearching,
       hasSearched,
+      searchSource,
       currentPage,
       pageSize,
       paginatedResults,
-      handleSearch,
+      steamIdList,
+      selectedSteamId,
+      handleSearchYYYP,
+      handleSearchBuff,
       handleClearSearch,
       handleImageError,
       handleViewDetails,
       handleSizeChange,
-      handleCurrentChange
+      handleCurrentChange,
+      handleSteamIdChange,
+      querySearchAsync,
+      handleSelect
     }
   }
 }
 </script>
 
 <style scoped>
-.stats-summary {
-  margin-bottom: clamp(1rem, 3vw, 1.25rem);
+.item-search-container {
+  position: relative;
+  min-height: 100vh;
+}
+
+/* 搜索包装器 - 居中或左上角 */
+.search-wrapper {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 10;
+}
+
+.search-wrapper.centered {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 800px;
+}
+
+.search-wrapper.top-left {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+/* 搜索卡片 */
+.search-card {
+  padding: 2rem;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-wrapper.centered .search-card {
+  padding: 3rem 2.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.search-wrapper.top-left .search-card {
+  padding: 1rem 1.5rem;
+}
+
+/* 标题样式 */
+.search-title {
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #4CAF50;
+  margin: 0 0 2rem 0;
+  background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInDown 0.6s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .search-section {
-  margin-bottom: 1.5rem;
+  transition: all 0.5s ease;
+}
+
+.search-wrapper.centered .search-section {
+  margin-bottom: 0;
+}
+
+.search-wrapper.top-left .search-section {
+  margin-bottom: 0;
+}
+
+/* 搜索控件 */
+.search-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  transition: all 0.5s ease;
+}
+
+.search-wrapper.centered .search-controls {
+  flex-direction: column;
+  align-items: center;
+}
+
+.search-wrapper.top-left .search-controls {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-controls.compact {
+  gap: 0.75rem;
+}
+
+/* 按钮组 */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.search-wrapper.top-left .button-group {
+  gap: 0.75rem;
+}
+
+.search-controls.compact .button-group {
+  flex-wrap: nowrap;
+}
+
+/* Steam ID 选择框 */
+.steam-id-select {
+  transition: all 0.5s ease;
+  min-width: 200px;
+  width: 200px;
+}
+
+.steam-id-select.large {
+  width: 100%;
+  max-width: 600px;
+  min-width: 300px;
+}
+
+/* 搜索输入框 */
+.search-input {
+  transition: all 0.5s ease;
+  min-width: 200px;
+  flex: 1;
+}
+
+.search-wrapper.top-left .search-input {
+  max-width: 300px;
+}
+
+.search-input.large {
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-wrapper.centered .steam-id-select.large :deep(.el-input__wrapper) {
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+.search-wrapper.centered .steam-id-select.large :deep(.el-input__inner) {
+  font-size: 1.125rem;
+}
+
+.search-wrapper.centered .search-input.large :deep(.el-input__wrapper) {
+  padding: 1rem 1.5rem;
+  font-size: 1.125rem;
+}
+
+.search-wrapper.centered .search-input.large :deep(.el-input__inner) {
+  font-size: 1.125rem;
+}
+
+/* 居中状态下的按钮样式 */
+.search-wrapper.centered .button-group {
+  width: 100%;
+  max-width: 600px;
+}
+
+.search-wrapper.centered .button-group .el-button {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  height: auto;
+  flex: 1;
+  min-width: 160px;
 }
 
 .mb-4 {
   margin-bottom: 1rem;
-}
-
-.all-controls-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: nowrap;
-}
-
-.all-controls-row .steam-id-select,
-.all-controls-row .search-input,
-.all-controls-row .el-button {
-  flex-shrink: 0;
-  white-space: nowrap;
 }
 
 .search-stats-divider {
@@ -334,6 +643,18 @@ export default {
 
 .table-card {
   margin-bottom: clamp(1rem, 3vw, 1.25rem);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .price-text {
@@ -361,16 +682,7 @@ export default {
 .no-results-card {
   padding: clamp(2rem, 4vw, 3rem);
   text-align: center;
-}
-
-.search-input {
-  min-width: 200px;
-  max-width: 300px;
-}
-
-.steam-id-select {
-  width: 200px;
-  min-width: 180px;
+  animation: fadeInUp 0.5s ease-out;
 }
 
 /* Element Plus 组件深色主题适配 */
@@ -442,7 +754,113 @@ export default {
   color: #fff;
 }
 
+/* 自动完成下拉框样式 */
+.autocomplete-item {
+  padding: 0;
+  color: #fff;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  line-height: 1.5;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+:deep(.weapon-autocomplete-popper) {
+  background-color: #2a2a2a !important;
+  border: 1px solid #444 !important;
+  max-width: 800px !important;
+  min-width: 400px !important;
+  width: auto !important;
+}
+
+:deep(.weapon-autocomplete-popper .el-autocomplete-suggestion__wrap) {
+  background-color: #2a2a2a;
+  max-height: 500px !important;
+  overflow-y: auto;
+}
+
+:deep(.weapon-autocomplete-popper .el-autocomplete-suggestion__list) {
+  padding: 0;
+}
+
+:deep(.weapon-autocomplete-popper li) {
+  color: #fff !important;
+  background-color: #2a2a2a !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  line-height: 1.6 !important;
+  padding: 0.75rem 1rem !important;
+  min-height: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  border-bottom: 1px solid #333;
+}
+
+:deep(.weapon-autocomplete-popper li:hover) {
+  background-color: #3a3a3a !important;
+}
+
+:deep(.weapon-autocomplete-popper li.highlighted) {
+  background-color: #3a3a3a !important;
+}
+
+:deep(.el-autocomplete-suggestion) {
+  background-color: #2a2a2a !important;
+}
+
+:deep(.el-autocomplete-suggestion__wrap) {
+  background-color: #2a2a2a;
+}
+
+:deep(.el-autocomplete-suggestion li) {
+  color: #fff;
+  background-color: #2a2a2a;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  line-height: 1.5 !important;
+  padding: 0.75rem 1rem !important;
+  height: auto !important;
+}
+
+:deep(.el-autocomplete-suggestion li:hover) {
+  background-color: #3a3a3a !important;
+}
+
+:deep(.el-autocomplete-suggestion li.highlighted) {
+  background-color: #3a3a3a !important;
+}
+
 @media (max-width: 768px) {
+  .search-wrapper.centered {
+    width: 95%;
+    max-width: none;
+  }
+  
+  .search-wrapper.centered .search-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .steam-id-select.large,
+  .search-input.large {
+    min-width: 100%;
+  }
+  
+  .search-controls {
+    flex-wrap: wrap;
+  }
+  
+  .button-group {
+    width: 100%;
+  }
+  
+  .button-group .el-button {
+    flex: 1;
+    min-width: 100px;
+  }
+  
   .stats-grid-3x2 {
     grid-template-columns: 1fr;
   }
@@ -451,21 +869,6 @@ export default {
     flex-direction: column;
     gap: 0.5rem;
     text-align: center;
-  }
-  
-  .all-controls-row {
-    flex-wrap: wrap;
-  }
-  
-  .all-controls-row .steam-id-select,
-  .all-controls-row .search-input {
-    width: 100%;
-    max-width: none;
-  }
-  
-  .all-controls-row .el-button {
-    flex: 1;
-    min-width: 100px;
   }
 }
 </style>
