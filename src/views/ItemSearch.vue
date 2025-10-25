@@ -86,7 +86,16 @@
 
     <!-- 搜索结果表格 -->
     <div class="card table-card" v-if="searchResults.length > 0">
+      <!-- 折叠/展开控制 -->
+      <div v-if="showYYYPList" class="collapse-header" @click="toggleSearchResults">
+        <span class="collapse-title">
+          <el-icon><CaretRight v-if="!showSearchResults" /><CaretBottom v-if="showSearchResults" /></el-icon>
+          武器搜索结果 ({{ searchResults.length }} 件)
+        </span>
+      </div>
+      
       <el-table 
+        v-show="!showYYYPList || showSearchResults" 
         :data="paginatedResults" 
         style="width: 100%"
         :default-sort="{ prop: 'name', order: 'ascending' }"
@@ -142,7 +151,7 @@
       </el-table>
 
       <!-- 分页器 -->
-      <div class="pagination-container">
+      <div class="pagination-container" v-show="!showYYYPList || showSearchResults">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -153,6 +162,72 @@
           @current-change="handleCurrentChange"
         />
       </div>
+    </div>
+
+    <!-- 悠悠有品商品列表 -->
+    <div v-if="showYYYPList" class="card yyyp-commodity-list">
+      <div class="yyyp-header">
+        <h3>悠悠有品商品列表</h3>
+        <div class="yyyp-weapon-info">
+          <span class="weapon-name">{{ yyypCurrentWeapon?.market_listing_item_name }}</span>
+          <span class="weapon-id">模板ID: {{ yyypCurrentWeapon?.yyyp_id }}</span>
+          <span class="commodity-count">共 {{ yyypCommodities.length }} 件商品</span>
+        </div>
+        <el-button type="danger" size="small" @click="closeYYYPList">返回搜索结果</el-button>
+      </div>
+      
+      <el-table 
+        :data="yyypCommodities" 
+        style="width: 100%"
+        :default-sort="{ prop: 'price', order: 'ascending' }"
+        max-height="600"
+      >
+        <el-table-column type="index" label="#" width="60" align="center" />
+        
+        <el-table-column label="商品图片" width="120" align="center">
+          <template #default="{ row }">
+            <img :src="row.iconUrl" class="commodity-icon" @error="handleImageError" />
+          </template>
+        </el-table-column>
+        
+        <el-table-column prop="commodityName" label="商品名称" min-width="300" show-overflow-tooltip />
+        
+        <el-table-column label="价格" width="120" align="center" sortable>
+          <template #default="{ row }">
+            <span class="price-text">¥{{ (row.price / 100).toFixed(2) }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="磨损值" width="120" align="center" sortable>
+          <template #default="{ row }">
+            <span>{{ row.abrade ? row.abrade.toFixed(4) : '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="图案" width="100" align="center">
+          <template #default="{ row }">
+            <span>{{ row.paintSeed || '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="卖家" width="150" align="center">
+          <template #default="{ row }">
+            <span>{{ row.userNickName || '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="操作" width="120" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button 
+              type="primary" 
+              size="small" 
+              @click="openYYYPDetail(row.id)"
+            >
+              查看详情
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
     <!-- 无结果提示 -->
@@ -166,10 +241,15 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { CaretRight, CaretBottom } from '@element-plus/icons-vue'
 import { API_CONFIG, apiUrls } from '@/config/api.js'
 
 export default {
   name: 'ItemSearch',
+  components: {
+    CaretRight,
+    CaretBottom
+  },
   setup() {
     const searchKeyword = ref('')
     const searchResults = ref([])
@@ -181,6 +261,12 @@ export default {
     const selectedSteamId = ref('')
     const selectedExterior = ref('') // 选择的外观筛选
     const selectedStatTrak = ref('normal') // 选择的StatTrak筛选，默认非StatTrak™
+    
+    // 悠悠有品商品列表
+    const yyypCommodities = ref([])
+    const yyypCurrentWeapon = ref(null)
+    const showYYYPList = ref(false)
+    const showSearchResults = ref(true)  // 控制搜索结果的展开/折叠
     
     // API 基础地址
     const API_BASE = `${API_CONFIG.BASE_URL}/webInventoryV1`
@@ -382,34 +468,177 @@ export default {
 
     // 通过行数据搜索悠悠有品
     const handleSearchYYYPByRow = async (row) => {
+      console.log('=== 开始执行 handleSearchYYYPByRow ===')
+      console.log('row数据:', row)
+      console.log('row.yyyp_id:', row.yyyp_id)
+      console.log('selectedSteamId.value:', selectedSteamId.value)
+      
       if (!row.yyyp_id) {
+        console.log('没有yyyp_id，退出')
         ElMessage.warning('该武器没有悠悠有品ID')
         return
       }
 
+      if (!selectedSteamId.value) {
+        console.log('没有选择Steam账号，退出')
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+
+      console.log('通过验证，开始请求')
       isSearching.value = true
       searchSource.value = 'yyyp'
       
       try {
-        console.log('搜索悠悠有品:', row.market_listing_item_name, 'ID:', row.yyyp_id)
+        console.log('搜索悠悠有品:', row.market_listing_item_name, 'ID:', row.yyyp_id, 'SteamID:', selectedSteamId.value)
         
-        // TODO: 这里需要根据实际API接口调整
-        // 示例：根据yyyp_id搜索悠悠有品
-        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/yyyp/${row.yyyp_id}`)
+        // 构建请求数据
+        const requestData = {
+          steamId: selectedSteamId.value || '',
+          yyypId: row.yyyp_id,
+          pageIndex: 1,
+          pageSize: 50
+        }
         
-        // 模拟搜索延迟
-        await new Promise(resolve => setTimeout(resolve, 500))
+        const apiUrl = `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getCommoditiesByTemplateId`
         
-        ElMessage.success(`正在跳转到悠悠有品: ${row.market_listing_item_name}`)
-        // 可以在这里打开新窗口跳转到悠悠有品页面
-        // window.open(`https://www.youpin898.com/goodInfo?id=${row.yyyp_id}`, '_blank')
+        console.log('请求URL:', apiUrl)
+        console.log('请求数据:', requestData)
+        
+        // 调用悠悠有品商品列表API（使用Spider服务器地址）
+        const response = await axios.post(apiUrl, requestData)
+        
+        console.log('API响应:', response.data)
+        
+        if (response.data.success) {
+          const rawData = response.data.data
+          console.log('获取到悠悠有品原始数据:', rawData)
+          
+          // 解析商品列表
+          const commodityList = rawData.data?.commodityList || []
+          console.log('商品列表:', commodityList)
+          
+          // 更新状态，显示商品列表
+          yyypCurrentWeapon.value = row
+          yyypCommodities.value = commodityList
+          showYYYPList.value = true
+          showSearchResults.value = false  // 默认折叠搜索结果
+          
+          ElMessage.success(`成功获取 ${commodityList.length} 条商品数据`)
+          
+          // 滚动到商品列表区域
+          setTimeout(() => {
+            const listElement = document.querySelector('.yyyp-commodity-list')
+            if (listElement) {
+              listElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }, 100)
+        } else {
+          console.error('API返回失败:', response.data)
+          ElMessage.error(response.data.message || '获取商品列表失败')
+        }
         
       } catch (error) {
-        console.error('搜索悠悠有品失败:', error)
-        ElMessage.error('搜索失败')
+        console.error('搜索悠悠有品失败 - 完整错误:', error)
+        console.error('错误响应:', error.response)
+        console.error('错误数据:', error.response?.data)
+        
+        const errorMessage = error.response?.data?.message || error.message || '搜索失败，请检查网络连接'
+        ElMessage.error(errorMessage)
       } finally {
+        console.log('请求完成，重置加载状态')
         isSearching.value = false
+        searchSource.value = ''
       }
+    }
+
+    // 打开悠悠有品商品详情页
+    const openYYYPDetail = (commodityId) => {
+      const url = `https://www.youpin898.com/goodInfo?id=${commodityId}`
+      window.open(url, '_blank')
+    }
+
+    // 关闭悠悠有品商品列表，返回搜索结果
+    const closeYYYPList = () => {
+      showYYYPList.value = false
+      showSearchResults.value = true
+      yyypCommodities.value = []
+      yyypCurrentWeapon.value = null
+    }
+
+    // 切换搜索结果的展开/折叠
+    const toggleSearchResults = () => {
+      showSearchResults.value = !showSearchResults.value
+    }
+
+    // 旧的对话框函数（已废弃，保留以防需要）
+    const showYYYPCommoditiesDialog_OLD = (row, commodities, total) => {
+      // 构建商品列表HTML
+      let commoditiesHtml = `
+        <div style="max-height: 500px; overflow-y: auto;">
+          <p style="margin-bottom: 15px; color: #606266;">
+            <strong>武器名称：</strong>${row.market_listing_item_name}<br/>
+            <strong>悠悠有品ID：</strong>${row.yyyp_id}<br/>
+            <strong>商品总数：</strong>${total} 条
+          </p>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background-color: #f5f7fa; border-bottom: 2px solid #dcdfe6;">
+                <th style="padding: 10px; text-align: left; border: 1px solid #dcdfe6;">商品名称</th>
+                <th style="padding: 10px; text-align: center; border: 1px solid #dcdfe6; width: 100px;">价格</th>
+                <th style="padding: 10px; text-align: center; border: 1px solid #dcdfe6; width: 80px;">磨损</th>
+                <th style="padding: 10px; text-align: center; border: 1px solid #dcdfe6; width: 100px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+      `
+      
+      if (commodities.length === 0) {
+        commoditiesHtml += `
+          <tr>
+            <td colspan="4" style="padding: 20px; text-align: center; color: #909399;">暂无商品数据</td>
+          </tr>
+        `
+      } else {
+        commodities.forEach((item, index) => {
+          const price = item.price ? (item.price / 100).toFixed(2) : '-'
+          const abrade = item.abrade ? item.abrade.toFixed(4) : '-'
+          const commodityUrl = `https://www.youpin898.com/goodInfo?id=${item.id}`
+          
+          commoditiesHtml += `
+            <tr style="border-bottom: 1px solid #ebeef5; ${index % 2 === 0 ? 'background-color: #fafafa;' : ''}">
+              <td style="padding: 10px; border: 1px solid #ebeef5;">
+                <div style="display: flex; align-items: center;">
+                  ${item.iconUrl ? `<img src="${item.iconUrl}" style="width: 40px; height: 30px; margin-right: 10px; object-fit: contain;" />` : ''}
+                  <span style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.commodityName || '-'}</span>
+                </div>
+              </td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ebeef5;">
+                <span style="color: #f56c6c; font-weight: bold;">¥${price}</span>
+              </td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ebeef5;">${abrade}</td>
+              <td style="padding: 10px; text-align: center; border: 1px solid #ebeef5;">
+                <a href="${commodityUrl}" target="_blank" style="color: #409eff; text-decoration: none;">查看详情</a>
+              </td>
+            </tr>
+          `
+        })
+      }
+      
+      commoditiesHtml += `
+            </tbody>
+          </table>
+        </div>
+      `
+      
+      ElMessageBox({
+        title: '悠悠有品商品列表',
+        message: commoditiesHtml,
+        dangerouslyUseHTMLString: true,
+        confirmButtonText: '关闭',
+        customClass: 'yyyp-commodities-dialog',
+        width: '900px'
+      })
     }
 
     // 通过行数据搜索BUFF
@@ -486,6 +715,14 @@ export default {
       selectedSteamId,
       selectedExterior,
       selectedStatTrak,
+      // 悠悠有品商品列表
+      yyypCommodities,
+      yyypCurrentWeapon,
+      showYYYPList,
+      showSearchResults,
+      toggleSearchResults,
+      openYYYPDetail,
+      closeYYYPList,
       handleSearchWeapon,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
@@ -1026,5 +1263,109 @@ export default {
     gap: 0.5rem;
     text-align: center;
   }
+  
+  :deep(.yyyp-commodities-dialog) {
+    width: 95% !important;
+  }
+}
+
+/* 折叠头部样式 */
+.collapse-header {
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.collapse-header:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.collapse-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.collapse-title .el-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+/* 悠悠有品商品列表样式 */
+.yyyp-commodity-list {
+  margin-top: 1.5rem;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.yyyp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 2px solid var(--el-border-color);
+  margin-bottom: 1rem;
+}
+
+.yyyp-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--el-text-color-primary);
+}
+
+.yyyp-weapon-info {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.yyyp-weapon-info .weapon-name {
+  font-weight: 600;
+  color: var(--el-color-primary);
+  font-size: 1.1rem;
+}
+
+.yyyp-weapon-info .weapon-id {
+  color: var(--el-text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.yyyp-weapon-info .commodity-count {
+  color: var(--el-color-success);
+  font-weight: 600;
+}
+
+.commodity-icon {
+  width: 80px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+  padding: 5px;
+}
+
+.price-text {
+  color: #f56c6c;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+:deep(.yyyp-commodity-list .el-table) {
+  background-color: transparent;
+}
+
+:deep(.yyyp-commodity-list .el-table__header-wrapper) {
+  background-color: var(--el-fill-color-light);
+}
+
+:deep(.yyyp-commodity-list .el-table__row:hover) {
+  background-color: var(--el-fill-color-light);
 }
 </style>
