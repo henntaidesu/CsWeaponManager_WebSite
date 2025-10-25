@@ -65,26 +65,14 @@
               <el-option label="全部" value="" />
             </el-select>
             
-            <el-autocomplete
+            <el-input
               v-model="searchKeyword"
               placeholder="搜索饰品名称..."
               prefix-icon="Search"
               class="search-input"
-              :fetch-suggestions="querySearchAsync"
-              @select="handleSelect"
               @keyup.enter="handleSearchWeapon"
-              @clear="handleClearSearch"
               clearable
-              :debounce="300"
-              popper-class="weapon-autocomplete-popper"
-              :teleported="false"
-            >
-              <template #default="{ item }">
-                <div class="autocomplete-item">
-                  {{ item.value }}
-                </div>
-              </template>
-            </el-autocomplete>
+            />
             
             <div class="button-group">
               <el-button type="primary" @click="handleSearchWeapon" :loading="isSearching && searchSource === 'weapon'">
@@ -653,9 +641,8 @@ export default {
 /* 搜索输入框 */
 .search-input {
   transition: all 0.5s ease;
-  min-width: 250px;
+  min-width: 300px;
   flex: 1;
-  max-width: 400px;
 }
 
 /* el-autocomplete 样式适配 */
