@@ -179,13 +179,14 @@
           :row-style="{ backgroundColor: 'transparent' }"
           :header-row-style="{ backgroundColor: 'var(--bg-tertiary)' }"
         >
-          <el-table-column prop="weapon_name" label="武器类型" width="120" />
-          <el-table-column prop="item_name" label="饰品名称" min-width="200" show-overflow-tooltip />
-          <el-table-column prop="weapon_float" label="Float" min-width="100">
+          <el-table-column prop="ID" label="订单ID" width="180" show-overflow-tooltip />
+          <el-table-column prop="weapon_float" label="Float" min-width="160" show-overflow-tooltip>
             <template #default="scope">
-              {{ scope.row.weapon_float ? scope.row.weapon_float.toFixed(6) : '' }}
+              {{ scope.row.weapon_float || '' }}
             </template>
           </el-table-column>
+          <el-table-column prop="weapon_name" label="武器类型" width="120" />
+          <el-table-column prop="item_name" label="饰品名称" min-width="200" show-overflow-tooltip />
           <el-table-column prop="float_range" label="磨损" min-width="80" />
           <el-table-column prop="price" label="租金" min-width="100">
             <template #default="scope">
