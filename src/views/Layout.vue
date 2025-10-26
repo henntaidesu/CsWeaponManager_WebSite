@@ -66,6 +66,11 @@ export default {
           icon: '/icons/label-zuhu.png'
         },
         {
+          path: '/inventory',
+          title: 'Steam库存',
+          icon: '/icons/In _library.png'
+        },
+        {
           path: '/steam-market',
           title: 'Steam市场记录',
           icon: '/icons/sell.png'
@@ -85,11 +90,6 @@ export default {
         //   title: '出租记录',
         //   icon: '/icons/Rental_records.png'
         // },
-        {
-          path: '/inventory',
-          title: 'Steam库存',
-          icon: '/icons/In _library.png'
-        },
         {
           path: '/stock-components',
           title: '库存组件',

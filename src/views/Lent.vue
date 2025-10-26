@@ -92,11 +92,25 @@
             <el-tag v-if="statusFilter && statusFilter !== 'all'" type="success" size="small" closable @close="statusFilter = 'all'">
               状态: {{ statusFilter }}
             </el-tag>
-            <el-tag v-if="weaponTypeFilter" type="warning" size="small" closable @close="weaponTypeFilter = ''">
-              类型: {{ weaponTypeFilter }}
+            <el-tag 
+              v-for="type in weaponTypeFilter" 
+              :key="type" 
+              type="warning" 
+              size="small" 
+              closable 
+              @close="removeWeaponType(type)"
+            >
+              类型: {{ type }}
             </el-tag>
-            <el-tag v-if="floatRangeFilter" type="info" size="small" closable @close="floatRangeFilter = ''">
-              磨损: {{ floatRangeFilter }}
+            <el-tag 
+              v-for="range in floatRangeFilter" 
+              :key="range" 
+              type="info" 
+              size="small" 
+              closable 
+              @close="removeFloatRange(range)"
+            >
+              磨损: {{ range }}
             </el-tag>
             <el-tag v-if="dateRange && dateRange.length === 2" type="danger" size="small" closable @close="dateRange = null">
               时间: {{ dateRange[0] }} ~ {{ dateRange[1] }}
@@ -665,8 +679,8 @@ export default {
     const handleClearSearch = () => {
       searchText.value = ''
       statusFilter.value = 'all'
-      weaponTypeFilter.value = ''
-      floatRangeFilter.value = ''
+      weaponTypeFilter.value = []
+      floatRangeFilter.value = []
       dateRange.value = null
       currentPage.value = 1
       isSearchMode.value = false
@@ -897,7 +911,8 @@ export default {
 
     // 类型筛选处理
     const handleTypeChange = async () => {
-      if (weaponTypeFilter.value || floatRangeFilter.value) {
+      if (weaponTypeFilter.value && weaponTypeFilter.value.length > 0 || 
+          floatRangeFilter.value && floatRangeFilter.value.length > 0) {
         await searchByTypeAndWear()
       } else {
         await loadLentData()
@@ -906,24 +921,45 @@ export default {
 
     // 磨损等级筛选处理
     const handleWearChange = async () => {
-      if (weaponTypeFilter.value || floatRangeFilter.value) {
+      if (weaponTypeFilter.value && weaponTypeFilter.value.length > 0 || 
+          floatRangeFilter.value && floatRangeFilter.value.length > 0) {
         await searchByTypeAndWear()
       } else {
         await loadLentData()
       }
     }
 
+    // 移除单个武器类型
+    const removeWeaponType = (type) => {
+      const index = weaponTypeFilter.value.indexOf(type)
+      if (index > -1) {
+        weaponTypeFilter.value.splice(index, 1)
+        handleTypeChange()
+      }
+    }
+
+    // 移除单个磨损等级
+    const removeFloatRange = (range) => {
+      const index = floatRangeFilter.value.indexOf(range)
+      if (index > -1) {
+        floatRangeFilter.value.splice(index, 1)
+        handleWearChange()
+      }
+    }
+
     // 按类型和磨损等级搜索
     const searchByTypeAndWear = async () => {
-      if (!weaponTypeFilter.value && !floatRangeFilter.value) {
+      if ((!weaponTypeFilter.value || weaponTypeFilter.value.length === 0) && 
+          (!floatRangeFilter.value || floatRangeFilter.value.length === 0)) {
         return
       }
 
       loading.value = true
+      currentPage.value = 1
       try {
         const requestData = {
-          weapon_type: weaponTypeFilter.value,
-          float_range: floatRangeFilter.value,
+          weapon_type: weaponTypeFilter.value || [],
+          float_range: floatRangeFilter.value || [],
           page: currentPage.value,
           page_size: pageSize.value
         }
@@ -1047,6 +1083,8 @@ export default {
       handleStatusChange,
       handleTypeChange,
       handleWearChange,
+      removeWeaponType,
+      removeFloatRange,
       handleAdvancedSearch,
       hasAdvancedFilters,
       handleDateRangeChange,
