@@ -105,7 +105,43 @@
       >
         <el-table-column type="index" label="#" width="60" align="center" />
         
-        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="250" show-overflow-tooltip />
+        <el-table-column label="饰品名称" min-width="250" show-overflow-tooltip>
+          <template #default="{ row }">
+            <el-popover
+              :visible="activePopoverRow === row"
+              placement="bottom"
+              :width="200"
+              trigger="click"
+            >
+              <template #reference>
+                <span class="clickable-item-name" @click="togglePopover(row)">
+                  {{ row.market_listing_item_name }}
+                </span>
+              </template>
+              <div class="search-platform-selector">
+                <div class="selector-buttons">
+                  <el-button 
+                    type="warning" 
+                    size="small" 
+                    @click="selectPlatform(row, 'yyyp')"
+                    :loading="isSearching && searchSource === 'yyyp'"
+                  >
+                    悠悠有品
+                  </el-button>
+                  <el-button 
+                    type="info" 
+                    size="small" 
+                    class="buff-button"
+                    @click="selectPlatform(row, 'buff')"
+                    :loading="isSearching && searchSource === 'buff'"
+                  >
+                    BUFF
+                  </el-button>
+                </div>
+              </div>
+            </el-popover>
+          </template>
+        </el-table-column>
         
         <el-table-column label="Steam Hash Name" min-width="250" show-overflow-tooltip>
           <template #default="{ row }">
@@ -139,19 +175,6 @@
         <el-table-column prop="buff_id" label="BUFF ID" width="100" align="center">
           <template #default="{ row }">
             <span class="id-text">{{ row.buff_id || '-' }}</span>
-          </template>
-        </el-table-column>
-        
-        <el-table-column label="搜索" width="200" align="center" fixed="right">
-          <template #default="{ row }">
-            <div class="action-buttons">
-              <el-button type="warning" size="small" @click="handleSearchYYYPByRow(row)" :loading="isSearching && searchSource === 'yyyp'">
-                悠悠有品
-              </el-button>
-              <el-button type="default" size="small" @click="handleSearchBuffByRow(row)" :loading="isSearching && searchSource === 'buff'">
-                BUFF
-              </el-button>
-            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -905,6 +928,29 @@ export default {
       })
     }
 
+    // 控制popover显示状态
+    const activePopoverRow = ref(null)
+    
+    // 切换popover显示
+    const togglePopover = (row) => {
+      if (activePopoverRow.value === row) {
+        activePopoverRow.value = null
+      } else {
+        activePopoverRow.value = row
+      }
+    }
+    
+    // 选择平台并搜索
+    const selectPlatform = (row, platform) => {
+      activePopoverRow.value = null // 关闭popover
+      
+      if (platform === 'yyyp') {
+        handleSearchYYYPByRow(row)
+      } else if (platform === 'buff') {
+        handleSearchBuffByRow(row)
+      }
+    }
+
     // 通过行数据搜索BUFF
     const handleSearchBuffByRow = async (row) => {
       if (!row.buff_id) {
@@ -993,6 +1039,9 @@ export default {
       handleSearchWeapon,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
+      activePopoverRow,
+      togglePopover,
+      selectPlatform,
       handleClearSearch,
       handleImageError,
       handleViewDetails,
@@ -1329,6 +1378,17 @@ export default {
   color: #64B5F6;
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+.clickable-item-name {
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.clickable-item-name:hover {
+  color: #4CAF50;
+  transform: translateX(2px);
 }
 
 .action-buttons {
@@ -1718,5 +1778,44 @@ export default {
 :deep(.nametag-dialog .el-message-box__btns) {
   padding: 15px 20px;
   border-top: 1px solid #dcdfe6;
+}
+
+/* 搜索平台选择器样式 */
+.search-platform-selector {
+  padding: 8px;
+}
+
+.selector-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.selector-buttons .el-button {
+  flex: 1;
+  font-weight: 600;
+}
+
+.selector-buttons .buff-button {
+  background-color: #1a1a1a;
+  border-color: #1a1a1a;
+  color: white;
+}
+
+.selector-buttons .buff-button:hover {
+  background-color: #2a2a2a;
+  border-color: #2a2a2a;
+}
+
+.selector-buttons .buff-button:active {
+  background-color: #0a0a0a;
+  border-color: #0a0a0a;
+}
+
+/* Popover 样式优化 */
+:deep(.el-popover) {
+  padding: 0 !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 </style>
