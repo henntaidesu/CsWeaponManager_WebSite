@@ -105,7 +105,13 @@
       >
         <el-table-column type="index" label="#" width="60" align="center" />
         
-        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="market_listing_item_name" label="饰品名称" min-width="250" show-overflow-tooltip />
+        
+        <el-table-column label="Steam Hash Name" min-width="250" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="hash-name-text">{{ row.steam_hash_name || '-' }}</span>
+          </template>
+        </el-table-column>
         
         <el-table-column prop="weapon_type" label="武器类型" width="120" align="center">
           <template #default="{ row }">
@@ -189,6 +195,12 @@
         </el-table-column>
         
         <el-table-column prop="commodityName" label="商品名称" min-width="200" show-overflow-tooltip />
+        
+        <el-table-column label="数据库名称" min-width="200" align="center" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span>{{ yyypCurrentWeapon?.market_listing_item_name || '-' }}</span>
+          </template>
+        </el-table-column>
         
         <el-table-column label="磨损值" width="180" align="center" sortable prop="abrade">
           <template #default="{ row }">
@@ -1311,6 +1323,12 @@ export default {
 .weapon-name-text {
   font-weight: 500;
   text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.hash-name-text {
+  color: #64B5F6;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .action-buttons {
