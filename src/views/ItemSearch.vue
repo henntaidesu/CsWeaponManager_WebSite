@@ -537,6 +537,17 @@ export default {
       await handleSearchWeapon()
     }
 
+    // 刷新悠悠有品商品列表
+    const handleRefreshYYYP = async () => {
+      if (!yyypCurrentWeapon.value) {
+        ElMessage.warning('无法刷新，请重新选择武器')
+        return
+      }
+
+      ElMessage.info('正在刷新悠悠有品商品数据...')
+      await handleSearchYYYPByRow(yyypCurrentWeapon.value)
+    }
+
     // 获取稀有度类型（根据CS:GO品质颜色）
     const getRarityType = (rarity) => {
       if (!rarity) return ''
