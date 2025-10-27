@@ -226,18 +226,22 @@
 
     <!-- 悠悠有品商品列表 -->
     <div v-if="showYYYPList" class="card yyyp-commodity-list">
-      <div class="yyyp-header">
-        <div class="yyyp-header-left">
-          <h3>悠悠有品商品列表</h3>
+      <!-- 折叠/展开控制头部 -->
+      <div class="yyyp-collapse-header" @click.stop="toggleYYYPList">
+        <div class="yyyp-collapse-left">
+          <el-icon class="collapse-icon">
+            <CaretRight v-if="!showYYYPTable" />
+            <CaretBottom v-if="showYYYPTable" />
+          </el-icon>
+          <span class="yyyp-collapse-title">悠悠有品商品列表</span>
           <el-button 
             type="primary" 
             size="small" 
             :icon="Refresh" 
-            @click="handleRefreshYYYP"
+            @click.stop="handleRefreshYYYP"
             :loading="isSearching && searchSource === 'yyyp'"
-          >
-            刷新
-          </el-button>
+            circle
+          />
         </div>
         <div class="yyyp-weapon-info">
           <span class="weapon-name">{{ yyypCurrentWeapon?.market_listing_item_name }}</span>
@@ -248,10 +252,14 @@
       </div>
       
       <el-table 
+        v-show="showYYYPTable"
         :data="yyypCommodities" 
         style="width: 100%"
         :default-sort="{ prop: 'price', order: 'ascending' }"
         max-height="600"
+        v-loading="isSearching && searchSource === 'yyyp'"
+        element-loading-text="加载中..."
+        element-loading-background="rgba(0, 0, 0, 0.8)"
       >
         <el-table-column label="商品图片" width="100" align="center">
           <template #default="{ row }">
@@ -382,6 +390,7 @@ export default {
     const yyypCurrentWeapon = ref(null)
     const yyypTotalCount = ref(0)  // 在售总数量
     const showYYYPList = ref(false)
+    const showYYYPTable = ref(true)  // 控制悠悠有品表格的展开/折叠
     const showSearchResults = ref(true)  // 控制搜索结果的展开/折叠
     
     // 图片缓存 - 存储已加载的图片URL
@@ -923,6 +932,11 @@ export default {
       showSearchResults.value = !showSearchResults.value
     }
 
+    // 切换悠悠有品表格的展开/折叠
+    const toggleYYYPList = () => {
+      showYYYPTable.value = !showYYYPTable.value
+    }
+
     // 旧的对话框函数（已废弃，保留以防需要）
     const showYYYPCommoditiesDialog_OLD = (row, commodities, total) => {
       // 构建商品列表HTML
@@ -1132,14 +1146,17 @@ export default {
       yyypCurrentWeapon,
       yyypTotalCount,
       showYYYPList,
+      showYYYPTable,
       showSearchResults,
       toggleSearchResults,
+      toggleYYYPList,
       handleBuyCommodity,
       fetchSingleNameTag,
       showStickersDialog,
       closeYYYPList,
       handleSearchWeapon,
       handleRefreshSearch,
+      handleRefreshYYYP,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
       handleSearchCsFloatByRow,
@@ -1762,6 +1779,43 @@ export default {
   animation: fadeInUp 0.5s ease-out;
 }
 
+/* 悠悠有品折叠头部样式 */
+.yyyp-collapse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.yyyp-collapse-header:hover {
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+.yyyp-collapse-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.yyyp-collapse-title {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.collapse-icon {
+  color: white;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
 .yyyp-header {
   display: flex;
   justify-content: space-between;
@@ -1769,6 +1823,12 @@ export default {
   padding: 1.5rem;
   border-bottom: 2px solid var(--el-border-color);
   margin-bottom: 1rem;
+}
+
+.yyyp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .yyyp-header h3 {
