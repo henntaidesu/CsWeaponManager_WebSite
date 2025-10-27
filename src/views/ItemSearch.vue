@@ -137,6 +137,15 @@
                   >
                     BUFF
                   </el-button>
+                  <el-button 
+                    type="success" 
+                    size="small" 
+                    class="csfloat-button"
+                    @click="selectPlatform(row, 'csfloat')"
+                    :loading="isSearching && searchSource === 'csfloat'"
+                  >
+                    CsFloat
+                  </el-button>
                 </div>
               </div>
             </el-popover>
@@ -948,6 +957,8 @@ export default {
         handleSearchYYYPByRow(row)
       } else if (platform === 'buff') {
         handleSearchBuffByRow(row)
+      } else if (platform === 'csfloat') {
+        handleSearchCsFloatByRow(row)
       }
     }
 
@@ -977,6 +988,41 @@ export default {
         
       } catch (error) {
         console.error('搜索BUFF失败:', error)
+        ElMessage.error('搜索失败')
+      } finally {
+        isSearching.value = false
+      }
+    }
+
+    // 通过行数据搜索CsFloat
+    const handleSearchCsFloatByRow = async (row) => {
+      if (!row.steam_hash_name) {
+        ElMessage.warning('该武器没有Steam Hash Name')
+        return
+      }
+
+      isSearching.value = true
+      searchSource.value = 'csfloat'
+      
+      try {
+        console.log('搜索CsFloat:', row.market_listing_item_name, 'Hash Name:', row.steam_hash_name)
+        
+        // TODO: 这里需要根据实际API接口调整
+        // 示例：根据steam_hash_name搜索CsFloat
+        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/csfloat`, {
+        //   params: { hash_name: row.steam_hash_name }
+        // })
+        
+        // 模拟搜索延迟
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        ElMessage.success(`正在跳转到CsFloat: ${row.market_listing_item_name}`)
+        // 可以在这里打开新窗口跳转到CsFloat页面
+        // const encodedName = encodeURIComponent(row.steam_hash_name)
+        // window.open(`https://csfloat.com/search?name=${encodedName}`, '_blank')
+        
+      } catch (error) {
+        console.error('搜索CsFloat失败:', error)
         ElMessage.error('搜索失败')
       } finally {
         isSearching.value = false
@@ -1039,6 +1085,7 @@ export default {
       handleSearchWeapon,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
+      handleSearchCsFloatByRow,
       activePopoverRow,
       togglePopover,
       selectPlatform,
@@ -1810,6 +1857,22 @@ export default {
 .selector-buttons .buff-button:active {
   background-color: #0a0a0a;
   border-color: #0a0a0a;
+}
+
+.selector-buttons .csfloat-button {
+  background-color: #67c23a;
+  border-color: #67c23a;
+  color: white;
+}
+
+.selector-buttons .csfloat-button:hover {
+  background-color: #85ce61;
+  border-color: #85ce61;
+}
+
+.selector-buttons .csfloat-button:active {
+  background-color: #5daf34;
+  border-color: #5daf34;
 }
 
 /* Popover 样式优化 */
