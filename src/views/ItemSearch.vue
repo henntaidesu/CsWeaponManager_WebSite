@@ -225,6 +225,129 @@
       </div>
     </div>
 
+    <!-- BUFF商品列表 -->
+    <div v-if="showBuffList" class="card buff-commodity-list">
+      <!-- 折叠/展开控制头部 -->
+      <div class="buff-collapse-header" @click.stop="toggleBuffList">
+        <div class="buff-collapse-left">
+          <el-icon class="collapse-icon">
+            <CaretRight v-if="!showBuffTable" />
+            <CaretBottom v-if="showBuffTable" />
+          </el-icon>
+          <span class="buff-collapse-title">BUFF商品列表</span>
+          <el-button 
+            type="primary" 
+            size="small" 
+            :icon="Refresh" 
+            @click.stop="handleRefreshBuff"
+            :loading="isSearching && searchSource === 'buff'"
+          >
+            刷新列表
+          </el-button>
+        </div>
+        <div class="buff-weapon-info">
+          <span class="weapon-name">{{ buffCurrentWeapon?.market_listing_item_name }}</span>
+          <span class="weapon-id">商品ID: {{ buffCurrentWeapon?.buff_id }}</span>
+          <span class="commodity-count">当前页: {{ paginatedBuffCommodities.length }} 件</span>
+          <span class="total-count">在售总数: {{ buffTotalCount }} 件</span>
+          <span class="buy-count">求购: {{ buffBuyNum }} 件</span>
+          <span class="rent-count">租赁: {{ buffRentNum }} 件</span>
+        </div>
+      </div>
+      
+      <el-table 
+        v-show="showBuffTable"
+        :data="paginatedBuffCommodities" 
+        style="width: 100%"
+        :default-sort="{ prop: 'price', order: 'ascending' }"
+        v-loading="isSearching && searchSource === 'buff'"
+        element-loading-text="加载中..."
+        element-loading-background="rgba(0, 0, 0, 0.8)"
+      >
+        <el-table-column label="商品图片" width="100" align="center">
+          <template #default="{ row }">
+            <img :src="row.iconUrl" class="commodity-icon" @error="handleImageError" />
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="数据库名称" min-width="200" align="center" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span>{{ buffCurrentWeapon?.market_listing_item_name || '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="磨损值" width="180" align="center" sortable prop="abrade">
+          <template #default="{ row }">
+            <span>{{ row.abrade || '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="价格" width="100" align="center" sortable prop="price">
+          <template #default="{ row }">
+            <span class="price-text">{{ row.price }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="模板编号" width="100" align="center">
+          <template #default="{ row }">
+            <span>{{ row.paintSeed || '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="印花" width="120" align="center">
+          <template #default="{ row }">
+            <el-button 
+              v-if="row.stickers && row.stickers.length > 0"
+              type="info" 
+              size="small"
+              @click="showStickersDialog(row)"
+              style="background-color: #303133; border-color: #303133; color: white;"
+            >
+              查看({{ row.stickers.length }})
+            </el-button>
+            <span v-else style="color: #909399;">无</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="卖家描述" min-width="200" align="center" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span>{{ row.description || '-' }}</span>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="议价" width="80" align="center">
+          <template #default="{ row }">
+            <el-tag :type="row.allowBargain ? 'success' : 'info'" size="small">
+              {{ row.allowBargain ? '可议价' : '不可' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        
+        <el-table-column label="操作" width="100" align="center" fixed="right">
+          <template #default="{ row }">
+            <el-button 
+              type="success" 
+              size="small" 
+              @click="handleBuyBuffCommodity(row)"
+            >
+              购买
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      
+      <!-- BUFF分页器 -->
+      <div class="pagination-container" v-show="showBuffTable">
+        <el-pagination
+          v-model:current-page="buffCurrentPage"
+          :page-size="buffPageSize"
+          :total="buffCommodities.length"
+          layout="total, prev, pager, next, jumper"
+          @current-change="handleBuffPageChange"
+        />
+      </div>
+    </div>
+
     <!-- 悠悠有品商品列表 -->
     <div v-if="showYYYPList" class="card yyyp-commodity-list">
       <!-- 折叠/展开控制头部 -->
@@ -248,17 +371,16 @@
         <div class="yyyp-weapon-info">
           <span class="weapon-name">{{ yyypCurrentWeapon?.market_listing_item_name }}</span>
           <span class="weapon-id">模板ID: {{ yyypCurrentWeapon?.yyyp_id }}</span>
-          <span class="commodity-count">当前页: {{ yyypCommodities.length }} 件</span>
+          <span class="commodity-count">当前页: {{ paginatedYYYPCommodities.length }} 件</span>
           <span class="total-count">在售总数: {{ yyypTotalCount }} 件</span>
         </div>
       </div>
       
       <el-table 
         v-show="showYYYPTable"
-        :data="yyypCommodities" 
+        :data="paginatedYYYPCommodities" 
         style="width: 100%"
         :default-sort="{ prop: 'price', order: 'ascending' }"
-        max-height="600"
         v-loading="isSearching && searchSource === 'yyyp'"
         element-loading-text="加载中..."
         element-loading-background="rgba(0, 0, 0, 0.8)"
@@ -352,6 +474,17 @@
           </template>
         </el-table-column>
       </el-table>
+      
+      <!-- 悠悠有品分页器 -->
+      <div class="pagination-container" v-show="showYYYPTable">
+        <el-pagination
+          v-model:current-page="yyypCurrentPage"
+          :page-size="yyypPageSize"
+          :total="yyypCommodities.length"
+          layout="total, prev, pager, next, jumper"
+          @current-change="handleYYYPPageChange"
+        />
+      </div>
     </div>
 
     <!-- 无结果提示 -->
@@ -387,12 +520,25 @@ export default {
     const selectedExterior = ref('') // 选择的外观筛选
     const selectedStatTrak = ref('normal') // 选择的StatTrak筛选，默认非StatTrak™
     
+    // BUFF商品列表
+    const buffCommodities = ref([])
+    const buffCurrentWeapon = ref(null)
+    const buffTotalCount = ref(0)  // 在售总数量
+    const buffBuyNum = ref(0)  // 求购数量
+    const buffRentNum = ref(0)  // 租赁数量
+    const showBuffList = ref(false)
+    const showBuffTable = ref(true)  // 控制BUFF表格的展开/折叠
+    const buffCurrentPage = ref(1)  // BUFF分页当前页
+    const buffPageSize = ref(5)  // BUFF每页显示5条
+    
     // 悠悠有品商品列表
     const yyypCommodities = ref([])
     const yyypCurrentWeapon = ref(null)
     const yyypTotalCount = ref(0)  // 在售总数量
     const showYYYPList = ref(false)
     const showYYYPTable = ref(true)  // 控制悠悠有品表格的展开/折叠
+    const yyypCurrentPage = ref(1)  // 悠悠有品分页当前页
+    const yyypPageSize = ref(5)  // 悠悠有品每页显示5条
     const showSearchResults = ref(true)  // 控制搜索结果的展开/折叠
     
     // 图片缓存 - 存储已加载的图片URL
@@ -437,6 +583,20 @@ export default {
       const start = (currentPage.value - 1) * pageSize.value
       const end = start + pageSize.value
       return filteredResults.value.slice(start, end)
+    })
+
+    // 计算属性 - BUFF商品分页结果
+    const paginatedBuffCommodities = computed(() => {
+      const start = (buffCurrentPage.value - 1) * buffPageSize.value
+      const end = start + buffPageSize.value
+      return buffCommodities.value.slice(start, end)
+    })
+
+    // 计算属性 - 悠悠有品商品分页结果
+    const paginatedYYYPCommodities = computed(() => {
+      const start = (yyypCurrentPage.value - 1) * yyypPageSize.value
+      const end = start + yyypPageSize.value
+      return yyypCommodities.value.slice(start, end)
     })
 
     const handleImageError = (event) => {
@@ -555,8 +715,33 @@ export default {
         return
       }
 
+      yyypCurrentPage.value = 1  // 重置分页到第一页
       ElMessage.info('正在刷新悠悠有品商品数据...')
       await handleSearchYYYPByRow(yyypCurrentWeapon.value)
+    }
+    
+    // 刷新BUFF商品列表
+    const handleRefreshBuff = async () => {
+      if (!buffCurrentWeapon.value) {
+        ElMessage.warning('无法刷新，请重新选择武器')
+        return
+      }
+
+      buffCurrentPage.value = 1  // 重置分页到第一页
+      ElMessage.info('正在刷新BUFF商品数据...')
+      await handleSearchBuffByRow(buffCurrentWeapon.value)
+    }
+    
+    // 切换BUFF表格的展开/折叠
+    const toggleBuffList = () => {
+      showBuffTable.value = !showBuffTable.value
+    }
+    
+    // 购买BUFF商品（暂未对接）
+    const handleBuyBuffCommodity = (commodity) => {
+      console.log('购买BUFF商品:', commodity)
+      ElMessage.info(`购买功能开发中... 订单ID: ${commodity.id}`)
+      // TODO: 对接BUFF购买接口
     }
 
     // 获取稀有度类型（根据CS:GO品质颜色）
@@ -703,6 +888,7 @@ export default {
           yyypCurrentWeapon.value = row
           yyypCommodities.value = commodityList
           yyypTotalCount.value = totalCount
+          yyypCurrentPage.value = 1  // 重置分页到第一页
           showYYYPList.value = true
           showSearchResults.value = false  // 默认折叠搜索结果
           
@@ -754,7 +940,7 @@ export default {
       // TODO: 对接购买接口
     }
 
-    // 批量获取改名信息（自动调用，只获取前3条）
+    // 批量获取改名信息（自动调用，只获取第一条）
     const fetchAllNameTags = async (commodityList) => {
       // 筛选出有改名标签的商品
       const commoditiesWithNameTag = commodityList.filter(item => item.haveNameTag === 1)
@@ -764,49 +950,40 @@ export default {
         return
       }
 
-      // 只自动获取前3条
-      const autoFetchCount = Math.min(3, commoditiesWithNameTag.length)
-      console.log(`开始自动获取改名信息，共 ${commoditiesWithNameTag.length} 个商品，自动获取前 ${autoFetchCount} 个`)
+      // 只自动获取第一条
+      console.log(`共有 ${commoditiesWithNameTag.length} 个商品有改名标签，自动获取第一个`)
       
-      // 使用 for 循环依次获取前3条，每次间隔1秒
-      for (let i = 0; i < autoFetchCount; i++) {
-        const commodity = commoditiesWithNameTag[i]
+      const commodity = commoditiesWithNameTag[0]
+      
+      try {
+        console.log(`正在获取商品 ${commodity.id} 的改名信息`)
         
-        try {
-          console.log(`[${i + 1}/${autoFetchCount}] 正在获取商品 ${commodity.id} 的改名信息`)
-          
-          // 调用接口获取详细信息
-          const response = await axios.post(
-            `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getWeaponDetail`,
-            {
-              steamId: selectedSteamId.value,
-              id: commodity.id
-            }
-          )
-
-          if (response.data.success && response.data.data) {
-            const detailData = response.data.data.Data
-            const nameTags = detailData.NameTags || []
-            
-            // 缓存改名信息到商品对象中
-            commodity.nameTags = nameTags
-            commodity.nameTagText = nameTags.length > 0 ? nameTags[0].replace(/^名称标签：[""]?|[""]$/g, '') : ''
-            
-            console.log(`商品 ${commodity.id} 改名信息:`, nameTags)
-          } else {
-            console.error(`获取商品 ${commodity.id} 改名信息失败:`, response.data.message)
+        // 调用接口获取详细信息
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getWeaponDetail`,
+          {
+            steamId: selectedSteamId.value,
+            id: commodity.id
           }
-        } catch (error) {
-          console.error(`获取商品 ${commodity.id} 改名信息异常:`, error)
+        )
+
+        if (response.data.success && response.data.data) {
+          const detailData = response.data.data.Data
+          const nameTags = detailData.NameTags || []
+          
+          // 缓存改名信息到商品对象中
+          commodity.nameTags = nameTags
+          commodity.nameTagText = nameTags.length > 0 ? nameTags[0].replace(/^名称标签：[""]?|[""]$/g, '') : ''
+          
+          console.log(`商品 ${commodity.id} 改名信息:`, nameTags)
+        } else {
+          console.error(`获取商品 ${commodity.id} 改名信息失败:`, response.data.message)
         }
-        
-        // 如果不是最后一个，等待1秒
-        if (i < autoFetchCount - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
-        }
+      } catch (error) {
+        console.error(`获取商品 ${commodity.id} 改名信息异常:`, error)
       }
       
-      console.log(`自动获取改名信息完成，已获取 ${autoFetchCount} 个`)
+      console.log(`自动获取改名信息完成`)
     }
 
     // 获取单个商品的改名信息（点击按钮时调用）
@@ -1036,33 +1213,101 @@ export default {
 
     // 通过行数据搜索BUFF
     const handleSearchBuffByRow = async (row) => {
+      console.log('=== 开始执行 handleSearchBuffByRow ===')
+      console.log('row数据:', row)
+      console.log('row.buff_id:', row.buff_id)
+      console.log('selectedSteamId.value:', selectedSteamId.value)
+      
       if (!row.buff_id) {
+        console.log('没有buff_id，退出')
         ElMessage.warning('该武器没有BUFF ID')
         return
       }
 
+      if (!selectedSteamId.value) {
+        console.log('没有选择Steam账号，退出')
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+
+      console.log('通过验证，开始请求')
       isSearching.value = true
       searchSource.value = 'buff'
       
       try {
-        console.log('搜索BUFF:', row.market_listing_item_name, 'ID:', row.buff_id)
+        console.log('搜索BUFF:', row.market_listing_item_name, 'ID:', row.buff_id, 'SteamID:', selectedSteamId.value)
         
-        // TODO: 这里需要根据实际API接口调整
-        // 示例：根据buff_id搜索BUFF
-        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/buff/${row.buff_id}`)
+        // 构建请求数据
+        const requestData = {
+          steamId: selectedSteamId.value || '',
+          goodsId: row.buff_id
+        }
         
-        // 模拟搜索延迟
-        await new Promise(resolve => setTimeout(resolve, 500))
+        const apiUrl = `${API_CONFIG.SPIDER_BASE_URL}/buffSpiderV1/getCommoditiesByGoodsId`
         
-        ElMessage.success(`正在跳转到BUFF: ${row.market_listing_item_name}`)
-        // 可以在这里打开新窗口跳转到BUFF页面
-        // window.open(`https://buff.163.com/goods/${row.buff_id}`, '_blank')
+        console.log('请求URL:', apiUrl)
+        console.log('请求数据:', requestData)
+        
+        // 调用BUFF商品列表API
+        const response = await axios.post(apiUrl, requestData)
+        
+        console.log('API响应:', response.data)
+        
+        if (response.data.success) {
+          const parsedData = response.data.data
+          console.log('获取到BUFF已解析数据:', parsedData)
+          
+          // 直接使用Spider解析后的数据
+          const commodityList = parsedData.commodityList || []
+          const totalCount = parsedData.totalCount || 0
+          const buyNum = parsedData.buy_num || 0
+          const sellNum = parsedData.sell_num || 0
+          const rentNum = parsedData.rent_num || 0
+          
+          console.log('商品列表:', commodityList)
+          console.log('在售总数:', totalCount)
+          console.log('求购数:', buyNum, '在售数:', sellNum, '租赁数:', rentNum)
+          
+          // 更新BUFF状态，显示商品列表
+          buffCurrentWeapon.value = row
+          buffCommodities.value = commodityList
+          buffTotalCount.value = totalCount
+          buffBuyNum.value = buyNum
+          buffRentNum.value = rentNum
+          buffCurrentPage.value = 1  // 重置分页到第一页
+          showBuffList.value = true
+          // showYYYPList.value = false  // 允许同时显示两个列表
+          showSearchResults.value = false  // 默认折叠搜索结果
+          
+          ElMessage.success(`成功获取 ${commodityList.length} 条商品数据，在售总数: ${totalCount}（求购:${buyNum}, 租赁:${rentNum}）`)
+          
+          // 预加载图片（相同URL只加载一次）
+          preloadImages(commodityList)
+          
+          // 滚动到商品列表区域
+          setTimeout(() => {
+            const listElement = document.querySelector('.buff-commodity-list')
+            if (listElement) {
+              listElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }, 100)
+          
+        } else {
+          console.error('API返回失败:', response.data)
+          ElMessage.error(response.data.message || '获取商品列表失败')
+        }
         
       } catch (error) {
-        console.error('搜索BUFF失败:', error)
-        ElMessage.error('搜索失败')
+        console.error('搜索BUFF失败 - 完整错误:', error)
+        console.error('错误响应:', error.response)
+        console.error('错误数据:', error.response?.data)
+        
+        const errorMessage = error.response?.data?.message || error.message || '搜索失败，请检查网络连接'
+        ElMessage.error(errorMessage)
       } finally {
+        console.log('请求完成，重置加载状态')
         isSearching.value = false
+        searchSource.value = ''
       }
     }
 
@@ -1125,6 +1370,16 @@ export default {
       currentPage.value = val
     }
 
+    // BUFF分页切换
+    const handleBuffPageChange = (val) => {
+      buffCurrentPage.value = val
+    }
+
+    // 悠悠有品分页切换
+    const handleYYYPPageChange = (val) => {
+      yyypCurrentPage.value = val
+    }
+
     // 页面加载时获取Steam ID列表
     onMounted(async () => {
       await loadSteamIdList()
@@ -1143,12 +1398,30 @@ export default {
       selectedSteamId,
       selectedExterior,
       selectedStatTrak,
+      // BUFF商品列表
+      buffCommodities,
+      buffCurrentWeapon,
+      buffTotalCount,
+      buffBuyNum,
+      buffRentNum,
+      showBuffList,
+      showBuffTable,
+      buffCurrentPage,
+      buffPageSize,
+      paginatedBuffCommodities,
+      toggleBuffList,
+      handleRefreshBuff,
+      handleBuyBuffCommodity,
+      handleBuffPageChange,
       // 悠悠有品商品列表
       yyypCommodities,
       yyypCurrentWeapon,
       yyypTotalCount,
       showYYYPList,
       showYYYPTable,
+      yyypCurrentPage,
+      yyypPageSize,
+      paginatedYYYPCommodities,
       showSearchResults,
       toggleSearchResults,
       toggleYYYPList,
@@ -1156,6 +1429,7 @@ export default {
       fetchSingleNameTag,
       showStickersDialog,
       closeYYYPList,
+      handleYYYPPageChange,
       handleSearchWeapon,
       handleRefreshSearch,
       handleRefreshYYYP,
@@ -1773,6 +2047,92 @@ export default {
   color: var(--el-text-color-primary);
   font-weight: 600;
   font-size: 1.1rem;
+}
+
+/* BUFF商品列表样式 */
+.buff-commodity-list {
+  margin-top: 1.5rem;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* BUFF折叠头部样式 */
+.buff-collapse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background-color: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color);
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  user-select: none;
+}
+
+.buff-collapse-header:hover {
+  background-color: var(--el-fill-color);
+}
+
+.buff-collapse-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.buff-collapse-title {
+  color: var(--el-text-color-primary);
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.buff-weapon-info {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.buff-weapon-info .weapon-name {
+  font-weight: 600;
+  color: var(--el-color-primary);
+  font-size: 1.1rem;
+}
+
+.buff-weapon-info .weapon-id {
+  color: var(--el-text-color-secondary);
+  font-size: 0.9rem;
+}
+
+.buff-weapon-info .commodity-count {
+  color: var(--el-color-success);
+  font-weight: 600;
+}
+
+.buff-weapon-info .total-count {
+  color: var(--el-color-primary);
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.buff-weapon-info .buy-count {
+  color: var(--el-color-warning);
+  font-weight: 600;
+}
+
+.buff-weapon-info .rent-count {
+  color: var(--el-text-color-secondary);
+  font-weight: 600;
+}
+
+:deep(.buff-commodity-list .el-table) {
+  background-color: transparent;
+}
+
+:deep(.buff-commodity-list .el-table__header-wrapper) {
+  background-color: var(--el-fill-color-light);
+}
+
+:deep(.buff-commodity-list .el-table__row:hover) {
+  background-color: var(--el-fill-color-light);
 }
 
 /* 悠悠有品商品列表样式 */
