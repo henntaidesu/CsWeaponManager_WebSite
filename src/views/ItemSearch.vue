@@ -98,8 +98,9 @@
           :icon="Refresh" 
           @click.stop="handleRefreshSearch"
           :loading="isSearching && searchSource === 'weapon'"
-          circle
-        />
+        >
+          刷新列表
+        </el-button>
       </div>
       
       <!-- 无折叠时的标题栏 -->
@@ -112,7 +113,7 @@
           @click="handleRefreshSearch"
           :loading="isSearching && searchSource === 'weapon'"
         >
-          刷新
+          刷新列表
         </el-button>
       </div>
       
@@ -240,8 +241,9 @@
             :icon="Refresh" 
             @click.stop="handleRefreshYYYP"
             :loading="isSearching && searchSource === 'yyyp'"
-            circle
-          />
+          >
+            刷新列表
+          </el-button>
         </div>
         <div class="yyyp-weapon-info">
           <span class="weapon-name">{{ yyypCurrentWeapon?.market_listing_item_name }}</span>
@@ -688,12 +690,12 @@ export default {
         console.log('API响应:', response.data)
         
         if (response.data.success) {
-          const rawData = response.data.data
-          console.log('获取到悠悠有品原始数据:', rawData)
+          const parsedData = response.data.data
+          console.log('获取到悠悠有品已解析数据:', parsedData)
           
-          // 解析商品列表和在售总数
-          const commodityList = rawData.data?.commodityList || []
-          const totalCount = rawData.totalCount || 0
+          // 直接使用Spider解析后的数据
+          const commodityList = parsedData.commodityList || []
+          const totalCount = parsedData.totalCount || 0
           console.log('商品列表:', commodityList)
           console.log('在售总数:', totalCount)
           
@@ -1729,7 +1731,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color);
   cursor: pointer;
   border-radius: 8px 8px 0 0;
   transition: all 0.3s ease;
@@ -1737,16 +1740,14 @@ export default {
 }
 
 .collapse-header:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background-color: var(--el-fill-color);
 }
 
 .collapse-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: white;
+  color: var(--el-text-color-primary);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -1762,13 +1763,14 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color);
   border-radius: 8px 8px 0 0;
   margin-bottom: 0;
 }
 
 .table-title {
-  color: white;
+  color: var(--el-text-color-primary);
   font-weight: 600;
   font-size: 1.1rem;
 }
@@ -1785,7 +1787,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background-color: var(--el-fill-color-light);
+  border-bottom: 1px solid var(--el-border-color);
   cursor: pointer;
   border-radius: 8px 8px 0 0;
   transition: all 0.3s ease;
@@ -1793,9 +1796,7 @@ export default {
 }
 
 .yyyp-collapse-header:hover {
-  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  background-color: var(--el-fill-color);
 }
 
 .yyyp-collapse-left {
@@ -1805,13 +1806,13 @@ export default {
 }
 
 .yyyp-collapse-title {
-  color: white;
+  color: var(--el-text-color-primary);
   font-weight: 600;
   font-size: 1.1rem;
 }
 
 .collapse-icon {
-  color: white;
+  color: var(--el-text-color-primary);
   font-size: 1.2rem;
   transition: transform 0.3s ease;
 }
