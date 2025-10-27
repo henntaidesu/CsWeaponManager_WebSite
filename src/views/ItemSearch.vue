@@ -1007,25 +1007,25 @@ export default {
       try {
         console.log('搜索CsFloat:', row.market_listing_item_name, 'Hash Name:', row.steam_hash_name)
         
-        // TODO: 这里需要根据实际API接口调整
-        // 示例：根据steam_hash_name搜索CsFloat
-        // const response = await axios.get(`${API_CONFIG.BASE_URL}/search/csfloat`, {
-        //   params: { hash_name: row.steam_hash_name }
-        // })
+        // 对hash name进行URL编码
+        const encodedName = encodeURIComponent(row.steam_hash_name)
         
-        // 模拟搜索延迟
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // 构建CsFloat搜索URL
+        const csfloatUrl = `https://csfloat.com/search?name=${encodedName}`
+        
+        // 在新窗口中打开CsFloat搜索页面
+        window.open(csfloatUrl, '_blank')
         
         ElMessage.success(`正在跳转到CsFloat: ${row.market_listing_item_name}`)
-        // 可以在这里打开新窗口跳转到CsFloat页面
-        // const encodedName = encodeURIComponent(row.steam_hash_name)
-        // window.open(`https://csfloat.com/search?name=${encodedName}`, '_blank')
         
       } catch (error) {
         console.error('搜索CsFloat失败:', error)
-        ElMessage.error('搜索失败')
+        ElMessage.error('跳转失败,请检查浏览器设置是否允许弹出窗口')
       } finally {
-        isSearching.value = false
+        // 延迟关闭加载状态,给用户反馈
+        setTimeout(() => {
+          isSearching.value = false
+        }, 300)
       }
     }
 
