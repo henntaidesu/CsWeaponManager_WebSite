@@ -86,8 +86,8 @@
 
     <!-- 搜索结果表格 -->
     <div class="card table-card" v-if="searchResults.length > 0">
-      <!-- 折叠/展开控制 -->
-      <div v-if="showYYYPList" class="collapse-header" @click.stop="toggleSearchResults">
+      <!-- 折叠/展开控制（始终显示） -->
+      <div class="collapse-header" @click.stop="toggleSearchResults">
         <span class="collapse-title">
           <el-icon><CaretRight v-if="!showSearchResults" /><CaretBottom v-if="showSearchResults" /></el-icon>
           武器搜索结果 ({{ searchResults.length }} 件)
@@ -103,22 +103,8 @@
         </el-button>
       </div>
       
-      <!-- 无折叠时的标题栏 -->
-      <div v-else class="table-header">
-        <span class="table-title">武器搜索结果 ({{ searchResults.length }} 件)</span>
-        <el-button 
-          type="primary" 
-          size="small" 
-          :icon="Refresh" 
-          @click="handleRefreshSearch"
-          :loading="isSearching && searchSource === 'weapon'"
-        >
-          刷新列表
-        </el-button>
-      </div>
-      
       <el-table 
-        v-show="!showYYYPList || showSearchResults" 
+        v-show="showSearchResults" 
         :data="paginatedResults" 
         style="width: 100%"
         :default-sort="{ prop: 'name', order: 'ascending' }"
@@ -169,6 +155,15 @@
                   >
                     CsFloat
                   </el-button>
+                  <el-button 
+                    type="primary" 
+                    size="small" 
+                    class="all-button"
+                    @click="selectPlatform(row, 'all')"
+                    :loading="isSearching && searchSource === 'all'"
+                  >
+                    全部搜索
+                  </el-button>
                 </div>
               </div>
             </el-popover>
@@ -212,7 +207,7 @@
       </el-table>
 
       <!-- 分页器 -->
-      <div class="pagination-container" v-show="!showYYYPList || showSearchResults">
+      <div class="pagination-container" v-show="showSearchResults">
         <el-pagination
           v-model:current-page="currentPage"
           v-model:page-size="pageSize"
@@ -539,7 +534,7 @@ export default {
     const showYYYPTable = ref(true)  // 控制悠悠有品表格的展开/折叠
     const yyypCurrentPage = ref(1)  // 悠悠有品分页当前页
     const yyypPageSize = ref(5)  // 悠悠有品每页显示5条
-    const showSearchResults = ref(true)  // 控制搜索结果的展开/折叠
+    const showSearchResults = ref(false)  // 控制搜索结果的展开/折叠，默认折叠
     
     // 图片缓存 - 存储已加载的图片URL
     const imageCache = new Set()
@@ -890,7 +885,7 @@ export default {
           yyypTotalCount.value = totalCount
           yyypCurrentPage.value = 1  // 重置分页到第一页
           showYYYPList.value = true
-          showSearchResults.value = false  // 默认折叠搜索结果
+          showSearchResults.value = false  // 折叠搜索结果
           
           ElMessage.success(`成功获取 ${commodityList.length} 条商品数据，在售总数: ${totalCount}`)
           
@@ -1208,6 +1203,60 @@ export default {
         handleSearchBuffByRow(row)
       } else if (platform === 'csfloat') {
         handleSearchCsFloatByRow(row)
+      } else if (platform === 'all') {
+        handleSearchAllPlatforms(row)
+      }
+    }
+
+    // 同时搜索悠悠有品和BUFF
+    const handleSearchAllPlatforms = async (row) => {
+      console.log('=== 开始执行 handleSearchAllPlatforms ===')
+      console.log('row数据:', row)
+      
+      if (!selectedSteamId.value) {
+        console.log('没有选择Steam账号，退出')
+        ElMessage.warning('请先选择Steam账号')
+        return
+      }
+
+      // 检查是否有悠悠有品ID或BUFF ID
+      const hasYYYPId = row.yyyp_id
+      const hasBuffId = row.buff_id
+      
+      if (!hasYYYPId && !hasBuffId) {
+        ElMessage.warning('该武器没有悠悠有品ID和BUFF ID')
+        return
+      }
+
+      isSearching.value = true
+      searchSource.value = 'all'
+      
+      try {
+        ElMessage.info('正在同时搜索悠悠有品和BUFF...')
+        
+        // 并行请求悠悠有品和BUFF
+        const promises = []
+        
+        if (hasYYYPId) {
+          promises.push(handleSearchYYYPByRow(row))
+        }
+        
+        if (hasBuffId) {
+          promises.push(handleSearchBuffByRow(row))
+        }
+        
+        await Promise.all(promises)
+        
+        ElMessage.success('全部平台搜索完成！')
+        
+      } catch (error) {
+        console.error('搜索全部平台失败:', error)
+        ElMessage.error('搜索失败，请重试')
+      } finally {
+        setTimeout(() => {
+          isSearching.value = false
+          searchSource.value = ''
+        }, 300)
       }
     }
 
@@ -1277,7 +1326,7 @@ export default {
           buffCurrentPage.value = 1  // 重置分页到第一页
           showBuffList.value = true
           // showYYYPList.value = false  // 允许同时显示两个列表
-          showSearchResults.value = false  // 默认折叠搜索结果
+          showSearchResults.value = false  // 折叠搜索结果
           
           ElMessage.success(`成功获取 ${commodityList.length} 条商品数据，在售总数: ${totalCount}（求购:${buyNum}, 租赁:${rentNum}）`)
           
@@ -1436,6 +1485,7 @@ export default {
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
       handleSearchCsFloatByRow,
+      handleSearchAllPlatforms,
       activePopoverRow,
       togglePopover,
       selectPlatform,
@@ -2332,12 +2382,14 @@ export default {
 
 .selector-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   justify-content: center;
 }
 
 .selector-buttons .el-button {
   flex: 1;
+  min-width: 80px;
   font-weight: 600;
 }
 
@@ -2371,6 +2423,26 @@ export default {
 .selector-buttons .csfloat-button:active {
   background-color: #5daf34;
   border-color: #5daf34;
+}
+
+.selector-buttons .all-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  font-weight: 700;
+  flex-basis: 100%;
+  margin-top: 4px;
+}
+
+.selector-buttons .all-button:hover {
+  background: linear-gradient(135deg, #7c8ff0 0%, #8b5bb8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.selector-buttons .all-button:active {
+  background: linear-gradient(135deg, #5568d3 0%, #63408c 100%);
+  transform: translateY(0);
 }
 
 /* Popover 样式优化 */
