@@ -87,11 +87,33 @@
     <!-- 搜索结果表格 -->
     <div class="card table-card" v-if="searchResults.length > 0">
       <!-- 折叠/展开控制 -->
-      <div v-if="showYYYPList" class="collapse-header" @click="toggleSearchResults">
+      <div v-if="showYYYPList" class="collapse-header" @click.stop="toggleSearchResults">
         <span class="collapse-title">
           <el-icon><CaretRight v-if="!showSearchResults" /><CaretBottom v-if="showSearchResults" /></el-icon>
           武器搜索结果 ({{ searchResults.length }} 件)
         </span>
+        <el-button 
+          type="primary" 
+          size="small" 
+          :icon="Refresh" 
+          @click.stop="handleRefreshSearch"
+          :loading="isSearching && searchSource === 'weapon'"
+          circle
+        />
+      </div>
+      
+      <!-- 无折叠时的标题栏 -->
+      <div v-else class="table-header">
+        <span class="table-title">武器搜索结果 ({{ searchResults.length }} 件)</span>
+        <el-button 
+          type="primary" 
+          size="small" 
+          :icon="Refresh" 
+          @click="handleRefreshSearch"
+          :loading="isSearching && searchSource === 'weapon'"
+        >
+          刷新
+        </el-button>
       </div>
       
       <el-table 
@@ -205,7 +227,18 @@
     <!-- 悠悠有品商品列表 -->
     <div v-if="showYYYPList" class="card yyyp-commodity-list">
       <div class="yyyp-header">
-        <h3>悠悠有品商品列表</h3>
+        <div class="yyyp-header-left">
+          <h3>悠悠有品商品列表</h3>
+          <el-button 
+            type="primary" 
+            size="small" 
+            :icon="Refresh" 
+            @click="handleRefreshYYYP"
+            :loading="isSearching && searchSource === 'yyyp'"
+          >
+            刷新
+          </el-button>
+        </div>
         <div class="yyyp-weapon-info">
           <span class="weapon-name">{{ yyypCurrentWeapon?.market_listing_item_name }}</span>
           <span class="weapon-id">模板ID: {{ yyypCurrentWeapon?.yyyp_id }}</span>
@@ -322,14 +355,15 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CaretRight, CaretBottom } from '@element-plus/icons-vue'
+import { CaretRight, CaretBottom, Refresh } from '@element-plus/icons-vue'
 import { API_CONFIG, apiUrls } from '@/config/api.js'
 
 export default {
   name: 'ItemSearch',
   components: {
     CaretRight,
-    CaretBottom
+    CaretBottom,
+    Refresh
   },
   setup() {
     const searchKeyword = ref('')
@@ -490,6 +524,17 @@ export default {
       } finally {
         isSearching.value = false
       }
+    }
+
+    // 刷新搜索结果
+    const handleRefreshSearch = async () => {
+      if (!searchKeyword.value.trim()) {
+        ElMessage.warning('请先输入搜索关键词')
+        return
+      }
+
+      ElMessage.info('正在刷新数据...')
+      await handleSearchWeapon()
     }
 
     // 获取稀有度类型（根据CS:GO品质颜色）
@@ -1083,6 +1128,7 @@ export default {
       showStickersDialog,
       closeYYYPList,
       handleSearchWeapon,
+      handleRefreshSearch,
       handleSearchYYYPByRow,
       handleSearchBuffByRow,
       handleSearchCsFloatByRow,
@@ -1651,6 +1697,9 @@ export default {
 
 /* 折叠头部样式 */
 .collapse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem 1.5rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   cursor: pointer;
@@ -1677,6 +1726,23 @@ export default {
 .collapse-title .el-icon {
   font-size: 1.2rem;
   transition: transform 0.3s ease;
+}
+
+/* 表格头部样式（无折叠时） */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 0;
+}
+
+.table-title {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 /* 悠悠有品商品列表样式 */
