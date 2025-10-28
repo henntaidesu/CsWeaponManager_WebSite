@@ -131,7 +131,7 @@
                 <el-icon><Loading /></el-icon> 等待手机APP访问...
               </div>
               <div style="color: #666; font-size: 12px;">
-                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                1. 在手机WiFi设置中配置代理: <strong>{{ proxyAddress || '...' }}</strong><br/>
                 2. 打开悠悠有品APP并登录<br/>
                 3. 系统将自动获取令牌
               </div>
@@ -263,7 +263,7 @@
                 <el-icon><Loading /></el-icon> 等待手机APP访问...
               </div>
               <div style="color: #666; font-size: 12px;">
-                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                1. 在手机WiFi设置中配置代理: <strong>{{ proxyAddress || '...' }}</strong><br/>
                 2. 打开BUFF APP并登录<br/>
                 3. 系统将自动获取令牌
               </div>
@@ -581,7 +581,7 @@
                 <el-icon><Loading /></el-icon> 等待手机APP访问...
               </div>
               <div style="color: #666; font-size: 12px;">
-                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                1. 在手机WiFi设置中配置代理: <strong>{{ proxyAddress || '...' }}</strong><br/>
                 2. 打开完美世界APP并登录<br/>
                 3. 系统将自动获取令牌
               </div>
@@ -783,7 +783,7 @@
                 <el-icon><Loading /></el-icon> 等待手机APP访问...
               </div>
               <div style="color: #666; font-size: 12px;">
-                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                1. 在手机WiFi设置中配置代理: <strong>{{ proxyAddress || '...' }}</strong><br/>
                 2. 打开BUFF APP并登录<br/>
                 3. 系统将自动获取令牌
               </div>
@@ -1101,7 +1101,7 @@
                 <el-icon><Loading /></el-icon> 等待手机APP访问...
               </div>
               <div style="color: #666; font-size: 12px;">
-                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                1. 在手机WiFi设置中配置代理: <strong>{{ proxyAddress || '...' }}</strong><br/>
                 2. 打开完美世界APP并登录<br/>
                 3. 系统将自动获取令牌
               </div>
@@ -1216,7 +1216,7 @@
                 <el-icon><Loading /></el-icon> 等待手机APP访问...
               </div>
               <div style="color: #666; font-size: 12px;">
-                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                1. 在手机WiFi设置中配置代理: <strong>{{ proxyAddress || '...' }}</strong><br/>
                 2. 打开悠悠有品APP并登录<br/>
                 3. 系统将自动获取令牌
               </div>
@@ -2075,8 +2075,18 @@ export default {
         const response = await axios.post(url)
         
         if (response.data.code === 200) {
+          // 保存代理地址
+          if (response.data.data && response.data.data.proxy_address) {
+            proxyAddress.value = response.data.data.proxy_address
+          }
           perfectWorldTokenStatus.value = 'waiting'
           ElMessage.success('完美世界APP代理已启动,请在手机上配置代理并登录APP')
+          if (proxyAddress.value) {
+            ElMessage.info({
+              message: `代理地址: ${proxyAddress.value}`,
+              duration: 5000
+            })
+          }
           // 开始轮询检查是否获取到数据
           startPerfectWorldTokenPolling(isEdit)
         } else {
@@ -3849,7 +3859,7 @@ export default {
       startBuffTokenCollection,
       startYyypTokenCollection,
       startPerfectWorldTokenCollection,
-      getServerIP,
+      proxyAddress,
       // 编辑对话框折叠面板
       editYyypBasicCollapse,
       editYyypTokenCollapse,
