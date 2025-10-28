@@ -56,6 +56,131 @@
                     <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
                   </div>
                   
+                  <!-- 详细配置下拉框 -->
+                  <el-collapse v-model="source.activeCollapse" class="config-collapse">
+                    <el-collapse-item name="config">
+                      <template #title>
+                        <span style="color: #409EFF; font-size: 13px;">
+                          <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+                          查看详细配置
+                        </span>
+                      </template>
+                      <div class="config-details">
+                        <!-- 悠悠有品配置 -->
+                        <template v-if="source.type === 'youpin'">
+                          <div class="config-item">
+                            <span class="config-label">手机号:</span>
+                            <span class="config-value">{{ source.config?.yyyp_phone || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Session ID:</span>
+                            <span class="config-value">{{ source.config?.yyyp_Sessionid || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Token:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_token || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">设备名称:</span>
+                            <span class="config-value">{{ source.config?.yyyp_DeviceName || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">应用版本:</span>
+                            <span class="config-value">{{ source.config?.yyyp_app_version || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">应用类型:</span>
+                            <span class="config-value">{{ source.config?.yyyp_app_type || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">用户ID:</span>
+                            <span class="config-value">{{ source.config?.yyyp_userId || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Device Token:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_devicetoken || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Device ID:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_deviceid || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Device UK:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_deviceuk || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">UK:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_uk || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">SK:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_sk || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Device Info:</span>
+                            <span class="config-value ellipsis">{{ source.config?.yyyp_device_info || '-' }}</span>
+                          </div>
+                        </template>
+                        
+                        <!-- BUFF配置 -->
+                        <template v-else-if="source.type === 'buff'">
+                          <div class="config-item">
+                            <span class="config-label">Cookie:</span>
+                            <span class="config-value ellipsis">{{ source.config?.buff_cookie || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">System Version:</span>
+                            <span class="config-value">{{ source.config?.buff_system_version || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">System Type:</span>
+                            <span class="config-value">{{ source.config?.buff_system_type || '-' }}</span>
+                          </div>
+                        </template>
+                        
+                        <!-- Steam配置 -->
+                        <template v-else-if="source.type === 'steam' || source.type === 'steam_login'">
+                          <div class="config-item">
+                            <span class="config-label">Cookies:</span>
+                            <span class="config-value ellipsis">{{ source.config?.steam_cookies || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Cookie获取方式:</span>
+                            <span class="config-value">{{ source.config?.steam_steamCookieMethod || '-' }}</span>
+                          </div>
+                        </template>
+                        
+                        <!-- 完美世界APP配置 -->
+                        <template v-else-if="source.type === 'perfectworld'">
+                          <div class="config-item">
+                            <span class="config-label">App Version:</span>
+                            <span class="config-value">{{ source.config?.pw_appversion || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Device:</span>
+                            <span class="config-value">{{ source.config?.pw_device || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Game Type:</span>
+                            <span class="config-value">{{ source.config?.pw_gameType || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Platform:</span>
+                            <span class="config-value">{{ source.config?.pw_platform || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">Token:</span>
+                            <span class="config-value ellipsis">{{ source.config?.pw_token || '-' }}</span>
+                          </div>
+                          <div class="config-item">
+                            <span class="config-label">TD Sign:</span>
+                            <span class="config-value ellipsis">{{ source.config?.pw_tdSign || '-' }}</span>
+                          </div>
+                        </template>
+                      </div>
+                    </el-collapse-item>
+                  </el-collapse>
+                  
                   <div class="source-actions">
                     <el-button type="primary" size="small" @click="editSource(source)">
                       编辑
@@ -142,83 +267,107 @@
               </div>
             </div>
           </el-form-item>
-          <el-form-item label="手机号" required>
-            <el-input v-model="editForm.phone" placeholder="请输入手机号" />
-          </el-form-item>
-          <el-form-item label="Session ID" required>
-            <el-input v-model="editForm.sessionid" placeholder="请输入Session ID" />
-          </el-form-item>
-          <el-form-item label="Token" required>
-            <el-input 
-              v-model="editForm.token" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入Token"
-            />
-          </el-form-item>
-          <el-form-item label="设备名称" required>
-            <el-input v-model="editForm.deviceName" placeholder="请输入设备名称" />
-          </el-form-item>
-          <el-form-item label="应用版本" required>
-            <el-input v-model="editForm.appVersion" placeholder="请输入应用版本" />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="应用类型" required>
-            <el-input v-model="editForm.appType" placeholder="请输入应用类型" />
-          </el-form-item>
-          <el-form-item label="用户ID" required>
-            <el-input v-model="editForm.userId" placeholder="请输入用户ID" />
-          </el-form-item>
-          <el-form-item label="SteamID" required>
-            <el-input v-model="editForm.steamId" placeholder="请输入SteamID" />
-          </el-form-item>
-          <el-form-item label="Device Token" required>
-            <el-input v-model="editForm.devicetoken" placeholder="请输入Device Token" />
-          </el-form-item>
-          <el-form-item label="Device ID" required>
-            <el-input v-model="editForm.deviceid" placeholder="请输入Device ID" />
-          </el-form-item>
-          <el-form-item label="Device UK" required>
-            <el-input 
-              v-model="editForm.deviceuk" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入Device UK"
-            />
-          </el-form-item>
-          <el-form-item label="UK" required>
-            <el-input 
-              v-model="editForm.uk" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入UK"
-            />
-          </el-form-item>
-          <el-form-item label="SK" required>
-            <el-input 
-              v-model="editForm.sk" 
-              type="textarea"
-              :rows="3"
-              placeholder="请输入SK"
-            />
-          </el-form-item>
-          <el-form-item label="Device Info" required>
-            <el-input 
-              v-model="editForm.deviceInfo" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入Device Info (JSON格式)"
-            />
-          </el-form-item>
+          
+          <!-- 基础配置 -->
+          <el-collapse v-model="editYyypBasicCollapse" style="margin-bottom: 20px;">
+            <el-collapse-item title="基础配置" name="basic">
+              <el-form-item label="手机号" required>
+                <el-input v-model="editForm.phone" placeholder="请输入手机号" />
+              </el-form-item>
+              <el-form-item label="应用版本" required>
+                <el-input v-model="editForm.appVersion" placeholder="请输入应用版本" />
+              </el-form-item>
+              <el-form-item label="更新频率">
+                <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="应用类型" required>
+                <el-input v-model="editForm.appType" placeholder="请输入应用类型" />
+              </el-form-item>
+              <el-form-item label="用户ID" required>
+                <el-input v-model="editForm.userId" placeholder="请输入用户ID" />
+              </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input v-model="editForm.steamId" placeholder="请输入SteamID" />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
+          
+          <!-- 认证令牌配置 -->
+          <el-collapse v-model="editYyypTokenCollapse" style="margin-bottom: 20px;">
+            <el-collapse-item title="认证令牌配置" name="token">
+              <el-form-item label="Session ID" required>
+                <el-input v-model="editForm.sessionid" placeholder="请输入Session ID" />
+              </el-form-item>
+              <el-form-item label="Token" required>
+                <el-input 
+                  v-model="editForm.token" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入Token"
+                />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
+          
+          <!-- 设备信息配置 -->
+          <el-collapse v-model="editYyypDeviceCollapse" style="margin-bottom: 20px;">
+            <el-collapse-item title="设备信息配置" name="device">
+              <el-form-item label="设备名称" required>
+                <el-input v-model="editForm.deviceName" placeholder="请输入设备名称" />
+              </el-form-item>
+              <el-form-item label="Device Token" required>
+                <el-input v-model="editForm.devicetoken" placeholder="请输入Device Token" />
+              </el-form-item>
+              <el-form-item label="Device ID" required>
+                <el-input v-model="editForm.deviceid" placeholder="请输入Device ID" />
+              </el-form-item>
+              <el-form-item label="Device Info" required>
+                <el-input 
+                  v-model="editForm.deviceInfo" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入Device Info (JSON格式)"
+                />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
+          
+          <!-- 高级密钥配置 -->
+          <el-collapse v-model="editYyypAdvancedCollapse">
+            <el-collapse-item title="高级密钥配置" name="advanced">
+              <el-form-item label="Device UK" required>
+                <el-input 
+                  v-model="editForm.deviceuk" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入Device UK"
+                />
+              </el-form-item>
+              <el-form-item label="UK" required>
+                <el-input 
+                  v-model="editForm.uk" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入UK"
+                />
+              </el-form-item>
+              <el-form-item label="SK" required>
+                <el-input 
+                  v-model="editForm.sk" 
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入SK"
+                />
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
 
         <!-- BUFF特有配置 -->
@@ -250,48 +399,57 @@
               </div>
             </div>
           </el-form-item>
-          <el-form-item label="Cookie" required>
-            <el-input 
-              v-model="editForm.cookie" 
-              type="textarea"
-              :rows="3"
-              placeholder="请输入Cookie"
-            />
-          </el-form-item>
-          <el-form-item label="system_version" required>
-            <el-input v-model="editForm.systemVersion" placeholder="请输入system_version" />
-          </el-form-item>
-          <el-form-item label="system_type" required>
-            <el-input v-model="editForm.systemType" placeholder="请输入system_type" />
-          </el-form-item>
-          <el-form-item label="SteamID" required>
-            <el-input v-model="editForm.steamID" placeholder="请输入SteamID" />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
+          
+          <!-- BUFF配置 -->
+          <el-collapse v-model="editBuffCollapse">
+            <el-collapse-item title="BUFF配置" name="config">
+              <el-form-item label="Cookie" required>
+                <el-input 
+                  v-model="editForm.cookie" 
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入Cookie"
+                />
+              </el-form-item>
+              <el-form-item label="system_version" required>
+                <el-input v-model="editForm.systemVersion" placeholder="请输入system_version" />
+              </el-form-item>
+              <el-form-item label="system_type" required>
+                <el-input v-model="editForm.systemType" placeholder="请输入system_type" />
+              </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input v-model="editForm.steamID" placeholder="请输入SteamID" />
+              </el-form-item>
+              <el-form-item label="更新频率">
+                <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
 
         <!-- Steam特有配置 -->
         <template v-else-if="editForm.type === 'steam'">
-          <!-- Cookie获取方式选择 -->
-          <el-form-item label="Cookie获取方式" required>
-            <el-radio-group v-model="editForm.steamCookieMethod">
-              <el-radio label="qrcode">扫码登录</el-radio>
-              <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
-              <el-radio label="manual">手动输入</el-radio>
-            </el-radio-group>
-          </el-form-item>
+          <!-- Steam配置 -->
+          <el-collapse v-model="editSteamCollapse">
+            <el-collapse-item title="Steam配置" name="config">
+              <!-- Cookie获取方式选择 -->
+              <el-form-item label="Cookie获取方式" required>
+                <el-radio-group v-model="editForm.steamCookieMethod">
+                  <el-radio label="qrcode">扫码登录</el-radio>
+                  <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
+                  <el-radio label="manual">手动输入</el-radio>
+                </el-radio-group>
+              </el-form-item>
 
-          <!-- 扫码登录 -->
-          <template v-if="editForm.steamCookieMethod === 'qrcode'">
+              <!-- 扫码登录 -->
+              <template v-if="editForm.steamCookieMethod === 'qrcode'">
             <el-form-item label="登录二维码">
               <div 
                 @click="steamQRStatus !== 'success' ? handleEditGenerateQRCode() : null"
@@ -382,33 +540,38 @@
             </el-form-item>
           </template>
 
-          <el-form-item label="SteamID" required>
-            <el-input 
-              v-model="editForm.steamID" 
-              placeholder="请输入SteamID"
-            />
-          </el-form-item>
-          
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input 
+                  v-model="editForm.steamID" 
+                  placeholder="请输入SteamID"
+                />
+              </el-form-item>
+              
+              <el-form-item label="更新频率">
+                <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
 
         <!-- Steam登录特有配置（兼容旧数据，使用与steam相同的表单） -->
         <template v-else-if="editForm.type === 'steam_login'">
-          <!-- Cookie获取方式选择 -->
-          <el-form-item label="Cookie获取方式" required>
-            <el-radio-group v-model="editForm.steamCookieMethod">
-              <el-radio label="qrcode">扫码登录</el-radio>
-              <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
-              <el-radio label="manual">手动输入</el-radio>
+          <!-- Steam配置 -->
+          <el-collapse v-model="editSteamLoginCollapse">
+            <el-collapse-item title="Steam配置" name="config">
+              <!-- Cookie获取方式选择 -->
+              <el-form-item label="Cookie获取方式" required>
+                <el-radio-group v-model="editForm.steamCookieMethod">
+                  <el-radio label="qrcode">扫码登录</el-radio>
+                  <el-radio label="password" disabled>账号密码登录（暂不可用）</el-radio>
+                  <el-radio label="manual">手动输入</el-radio>
             </el-radio-group>
           </el-form-item>
 
@@ -504,68 +667,75 @@
             </el-form-item>
           </template>
 
-          <el-form-item label="SteamID" required>
-            <el-input 
-              v-model="editForm.steamID" 
-              placeholder="请输入SteamID"
-            />
-          </el-form-item>
-          
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input 
+                  v-model="editForm.steamID" 
+                  placeholder="请输入SteamID"
+                />
+              </el-form-item>
+              
+              <el-form-item label="更新频率">
+                <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
 
         <!-- 完美世界APP特有配置 -->
         <template v-else-if="editForm.type === 'perfectworld'">
-          <el-form-item label="appversion" required>
-            <el-input v-model="editForm.appversion" placeholder="请输入appversion" />
-          </el-form-item>
-          <el-form-item label="device" required>
-            <el-input v-model="editForm.device" placeholder="请输入device" />
-          </el-form-item>
-          <el-form-item label="gameType" required>
-            <el-input v-model="editForm.gameType" placeholder="请输入gameType" />
-          </el-form-item>
-          <el-form-item label="platform" required>
-            <el-input v-model="editForm.platform" placeholder="请输入platform" />
-          </el-form-item>
-          <el-form-item label="token" required>
-            <el-input 
-              v-model="editForm.pwToken" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入token"
-            />
-          </el-form-item>
-          <el-form-item label="tdSign" required>
-            <el-input 
-              v-model="editForm.tdSign" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入tdSign"
-            />
-          </el-form-item>
-          <el-form-item label="SteamID" required>
-            <el-input v-model="editForm.pwSteamID" placeholder="请输入SteamID" />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
+          <!-- 完美世界配置 -->
+          <el-collapse v-model="editPerfectWorldCollapse">
+            <el-collapse-item title="完美世界APP配置" name="config">
+              <el-form-item label="appversion" required>
+                <el-input v-model="editForm.appversion" placeholder="请输入appversion" />
+              </el-form-item>
+              <el-form-item label="device" required>
+                <el-input v-model="editForm.device" placeholder="请输入device" />
+              </el-form-item>
+              <el-form-item label="gameType" required>
+                <el-input v-model="editForm.gameType" placeholder="请输入gameType" />
+              </el-form-item>
+              <el-form-item label="platform" required>
+                <el-input v-model="editForm.platform" placeholder="请输入platform" />
+              </el-form-item>
+              <el-form-item label="token" required>
+                <el-input 
+                  v-model="editForm.pwToken" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入token"
+                />
+              </el-form-item>
+              <el-form-item label="tdSign" required>
+                <el-input 
+                  v-model="editForm.tdSign" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入tdSign"
+                />
+              </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input v-model="editForm.pwSteamID" placeholder="请输入SteamID" />
+              </el-form-item>
+              <el-form-item label="更新频率">
+                <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
 
         <!-- 通用配置 -->
@@ -1291,6 +1461,17 @@ export default {
     const buffTokenStatus = ref('')  // BUFF Token 获取状态: waiting, success, failed
     const yyypTokenStatus = ref('')  // 悠悠有品 Token 获取状态: waiting, success, failed
     const tokenCheckTimer = ref(null)  // Token 获取状态检查定时器
+    
+    // 编辑对话框折叠面板状态
+    const editYyypBasicCollapse = ref(['basic'])
+    const editYyypTokenCollapse = ref(['token'])
+    const editYyypDeviceCollapse = ref(['device'])
+    const editYyypAdvancedCollapse = ref(['advanced'])
+    const editBuffCollapse = ref(['config'])
+    const editSteamCollapse = ref(['config'])
+    const editSteamLoginCollapse = ref(['config'])
+    const editPerfectWorldCollapse = ref(['config'])
+    
     const editForm = ref({
       name: '',
       type: '',
@@ -3638,6 +3819,15 @@ export default {
       startBuffTokenCollection,
       startYyypTokenCollection,
       getServerIP,
+      // 编辑对话框折叠面板
+      editYyypBasicCollapse,
+      editYyypTokenCollapse,
+      editYyypDeviceCollapse,
+      editYyypAdvancedCollapse,
+      editBuffCollapse,
+      editSteamCollapse,
+      editSteamLoginCollapse,
+      editPerfectWorldCollapse,
       handleEditBuffCollectAll,
       handleEditSteamCollectAll,
       handleEditDelete,
@@ -4293,6 +4483,40 @@ export default {
 :deep(.el-button.is-loading) {
   background-color: #666 !important;
   border-color: #666 !important;
+}
+
+/* 折叠面板样式 */
+:deep(.el-collapse) {
+  border: none;
+  background-color: transparent;
+}
+
+:deep(.el-collapse-item__header) {
+  background-color: #2a2a2a;
+  color: #409EFF;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 0 15px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+:deep(.el-collapse-item__header:hover) {
+  background-color: #333;
+}
+
+:deep(.el-collapse-item__wrap) {
+  background-color: transparent;
+  border: none;
+}
+
+:deep(.el-collapse-item__content) {
+  padding: 10px 0;
+  color: #ccc;
+}
+
+:deep(.el-collapse-item) {
+  margin-bottom: 10px;
 }
 
 /* 遮罩层样式 */
