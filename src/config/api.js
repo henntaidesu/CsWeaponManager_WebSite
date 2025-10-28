@@ -75,16 +75,32 @@ export const API_CONFIG = {
     STEAM_SPIDER: '/steamSpiderV1/getNewData',  // Steam增量采集（获取新数据）
     STEAM_FULL_SPIDER: '/steamSpiderV1/NoneData',  // Steam全量采集
     STEAM_COLLECT_HASH_NAMES: '/steamSpiderV1/collectMarketHashNames',  // 采集Steam市场Hash Names
+    CSQAQ_GET_GOODS: '/csqaqSpiderV1/getGoodsList',  // CSQAQ同步获取商品
+    CSQAQ_GET_GOODS_ASYNC: '/csqaqSpiderV1/getGoodsListAsync',  // CSQAQ异步获取商品
+    CSQAQ_TASK_STATUS: '/csqaqSpiderV1/getTaskStatus',  // CSQAQ获取任务状态
+    CSQAQ_TASK_RESULT: '/csqaqSpiderV1/getTaskResult',  // CSQAQ获取任务结果
+    CSQAQ_EXPORT: '/csqaqSpiderV1/exportGoods',  // CSQAQ导出商品
     
-  // Steam登录相关
-  STEAM_LOGIN: '/steamLoginV1/login',
-  STEAM_LOGIN_VERIFY: '/steamLoginV1/verify',
-  STEAM_LOGIN_REFRESH: '/steamLoginV1/refresh',
-  STEAM_LOGIN_CAPTCHA: (captchaGid) => `/steamLoginV1/captcha/${captchaGid}`,
-  STEAM_LOGIN_GENERATE_CODE: '/steamLoginV1/generate_code',
-  STEAM_QR_GENERATE: '/steamLoginV1/qrcode/generate',
-  STEAM_QR_POLL: '/steamLoginV1/qrcode/poll'
+    // Steam登录相关
+    STEAM_LOGIN: '/steamLoginV1/login',
+    STEAM_LOGIN_VERIFY: '/steamLoginV1/verify',
+    STEAM_LOGIN_REFRESH: '/steamLoginV1/refresh',
+    STEAM_LOGIN_CAPTCHA: (captchaGid) => `/steamLoginV1/captcha/${captchaGid}`,
+    STEAM_LOGIN_GENERATE_CODE: '/steamLoginV1/generate_code',
+    STEAM_QR_GENERATE: '/steamLoginV1/qrcode/generate',
+    STEAM_QR_POLL: '/steamLoginV1/qrcode/poll',
     
+    // GetAppToken 相关接口
+    GET_APP_TOKEN_START_BUFF: '/getAppTokenV1/start_buff_proxy',  // 启动BUFF代理
+    GET_APP_TOKEN_STOP_BUFF: '/getAppTokenV1/stop_buff_proxy',  // 停止BUFF代理
+    GET_APP_TOKEN_GET_BUFF_DATA: '/getAppTokenV1/get_buff_data',  // 获取BUFF数据
+    GET_APP_TOKEN_CLEAR_BUFF_DATA: '/getAppTokenV1/clear_buff_data',  // 清除BUFF数据
+    GET_APP_TOKEN_START_YYYP: '/getAppTokenV1/start_yyyp_proxy',  // 启动悠悠有品代理
+    GET_APP_TOKEN_STOP_YYYP: '/getAppTokenV1/stop_yyyp_proxy',  // 停止悠悠有品代理
+    GET_APP_TOKEN_GET_YYYP_DATA: '/getAppTokenV1/get_yyyp_data',  // 获取悠悠有品数据
+    GET_APP_TOKEN_CLEAR_YYYP_DATA: '/getAppTokenV1/clear_yyyp_data',  // 清除悠悠有品数据
+    GET_APP_TOKEN_PROXY_STATUS: '/getAppTokenV1/proxy_status',  // 查询代理状态
+    GET_APP_TOKEN_HELP: '/getAppTokenV1/help',  // 获取帮助信息
   }
 }
 
@@ -168,6 +184,11 @@ export const apiUrls = {
   steamSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_SPIDER),
   steamFullSpider: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_FULL_SPIDER),
   steamCollectHashNames: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_COLLECT_HASH_NAMES),
+  csqaqGetGoods: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_GET_GOODS),
+  csqaqGetGoodsAsync: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_GET_GOODS_ASYNC),
+  csqaqTaskStatus: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_TASK_STATUS),
+  csqaqTaskResult: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_TASK_RESULT),
+  csqaqExport: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_EXPORT),
   
   // Steam登录API
   steamLogin: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN),
@@ -176,5 +197,17 @@ export const apiUrls = {
   steamLoginCaptcha: (captchaGid) => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_CAPTCHA(captchaGid)),
   steamLoginGenerateCode: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN_GENERATE_CODE),
   steamQRGenerate: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_QR_GENERATE),
-  steamQRPoll: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_QR_POLL)
+  steamQRPoll: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_QR_POLL),
+  
+  // GetAppToken API
+  getAppTokenStartBuff: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_START_BUFF),
+  getAppTokenStopBuff: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_STOP_BUFF),
+  getAppTokenGetBuffData: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_GET_BUFF_DATA),
+  getAppTokenClearBuffData: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_CLEAR_BUFF_DATA),
+  getAppTokenStartYyyp: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_START_YYYP),
+  getAppTokenStopYyyp: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_STOP_YYYP),
+  getAppTokenGetYyypData: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_GET_YYYP_DATA),
+  getAppTokenClearYyypData: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_CLEAR_YYYP_DATA),
+  getAppTokenProxyStatus: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_PROXY_STATUS),
+  getAppTokenHelp: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.GET_APP_TOKEN_HELP),
 }

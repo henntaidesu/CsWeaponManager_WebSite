@@ -81,6 +81,41 @@
           </div>
         </div>
       </div>
+
+      <!-- CSQAQ商品采集区域 -->
+      <div class="sync-section">
+        <h2 class="section-title">CSQAQ 商品数据全量采集</h2>
+        
+        <div class="sync-controls">
+          <el-button 
+            type="warning" 
+            @click="startCsqaqCrawlAll"
+            :disabled="isCrawlingCsqaq"
+            :loading="isCrawlingCsqaq"
+          >
+            {{ isCrawlingCsqaq ? '采集中...' : '全量采集 CSQAQ 商品' }}
+          </el-button>
+        </div>
+        
+        <div v-if="csqaqStatus.message" class="sync-info">
+          <div class="status-row">
+            <span class="status-label">消息:</span>
+            <span class="status-value">{{ csqaqStatus.message }}</span>
+          </div>
+          <div v-if="csqaqStatus.total_goods > 0" class="status-row">
+            <span class="status-label">已获取:</span>
+            <span class="status-value highlight">{{ csqaqStatus.total_goods }} 个商品</span>
+          </div>
+          <div v-if="csqaqStatus.duration" class="status-row">
+            <span class="status-label">耗时:</span>
+            <span class="status-value">{{ csqaqStatus.duration.toFixed(2) }} 秒</span>
+          </div>
+        </div>
+        
+        <div v-if="lastCsqaqTime" class="sync-info">
+          <span class="sync-time">最后采集时间: {{ lastCsqaqTime }}</span>
+        </div>
+      </div>
       
     </div>
   </div>
@@ -105,6 +140,16 @@ export default {
     const isCollectingHashNames = ref(false)
     const lastCollectTime = ref('')
     const collectProgress = ref(null)
+
+    // CSQAQ 相关状态
+    const isCrawlingCsqaq = ref(false)
+    const csqaqStatus = ref({
+      status: 'idle',
+      message: '',
+      total_goods: 0,
+      duration: null
+    })
+    const lastCsqaqTime = ref('')
 
     // 加载Steam ID列表
     const loadSteamIdList = async () => {
@@ -344,6 +389,77 @@ export default {
       }
     }
 
+    // CSQAQ 全量采集
+    const startCsqaqCrawlAll = async () => {
+      try {
+        await ElMessageBox.confirm(
+          '确定要全量采集 CSQAQ 商品数据吗？将爬取所有页面，预计需要较长时间。',
+          '确认全量采集',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+      } catch {
+        return
+      }
+
+      isCrawlingCsqaq.value = true
+      ElMessage.info('开始全量采集 CSQAQ 商品数据...')
+
+      try {
+        const response = await axios.post(apiUrls.csqaqGetGoods(), {
+          maxPages: null,  // 全量采集
+          headless: true,  // 后台运行
+          delayMin: 1,
+          delayMax: 3,
+          scrollLoad: true
+        })
+
+        if (response.data.success) {
+          csqaqStatus.value = {
+            status: 'completed',
+            message: response.data.message,
+            total_goods: response.data.data.total,
+            duration: response.data.data.duration
+          }
+          lastCsqaqTime.value = new Date().toLocaleString('zh-CN')
+          ElMessage.success(`全量采集成功！${response.data.message}`)
+          console.log('CSQAQ全量采集结果:', response.data)
+        } else {
+          csqaqStatus.value = {
+            status: 'error',
+            message: response.data.message,
+            total_goods: 0,
+            duration: null
+          }
+          ElMessage.error(`采集失败: ${response.data.message}`)
+        }
+      } catch (error) {
+        console.error('CSQAQ采集失败:', error)
+        let errorMessage = '采集失败'
+
+        if (error.response) {
+          errorMessage = error.response.data?.message || `采集失败 (${error.response.status})`
+        } else if (error.request) {
+          errorMessage = '无法连接到爬虫服务器，请检查服务是否运行'
+        } else {
+          errorMessage = error.message || '采集失败'
+        }
+
+        csqaqStatus.value = {
+          status: 'error',
+          message: errorMessage,
+          total_goods: 0,
+          duration: null
+        }
+        ElMessage.error(errorMessage)
+      } finally {
+        isCrawlingCsqaq.value = false
+      }
+    }
+
     // 组件挂载时加载Steam ID列表
     onMounted(() => {
       loadSteamIdList()
@@ -361,7 +477,12 @@ export default {
       isCollectingHashNames,
       lastCollectTime,
       collectProgress,
-      collectHashNamesFull
+      collectHashNamesFull,
+      // CSQAQ 相关
+      isCrawlingCsqaq,
+      csqaqStatus,
+      lastCsqaqTime,
+      startCsqaqCrawlAll
     }
   }
 }
@@ -464,6 +585,130 @@ export default {
   padding: 0.625rem 1rem;
 }
 
+/* CSQAQ 控制区域 */
+.csqaq-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.control-label {
+  color: #aaa;
+  font-size: 0.875rem;
+}
+
+.page-input {
+  width: 150px;
+}
+
+.status-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-label {
+  color: #888;
+  min-width: 60px;
+  font-weight: 500;
+}
+
+.status-value {
+  color: #fff;
+}
+
+.status-value.running {
+  color: #409EFF;
+  font-weight: 600;
+}
+
+.status-value.completed {
+  color: #67C23A;
+  font-weight: 600;
+}
+
+.status-value.error {
+  color: #F56C6C;
+  font-weight: 600;
+}
+
+.status-value.highlight {
+  color: #E6A23C;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* 进度信息样式 */
+.progress-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(64, 158, 255, 0.1);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(64, 158, 255, 0.3);
+}
+
+.progress-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.progress-item:last-child {
+  margin-bottom: 0;
+}
+
+.progress-label {
+  color: #888;
+  font-size: 0.875rem;
+}
+
+.progress-value {
+  color: #409EFF;
+  font-weight: 600;
+}
+
+.progress-value.success-rate {
+  color: #67C23A;
+}
+
+/* Element Plus 组件样式 */
+:deep(.el-input-number) {
+  background-color: #1e1e1e;
+}
+
+:deep(.el-input-number .el-input__wrapper) {
+  background-color: #1e1e1e;
+  box-shadow: 0 0 0 1px #444 inset;
+}
+
+:deep(.el-input-number .el-input__wrapper:hover) {
+  box-shadow: 0 0 0 1px #4CAF50 inset;
+}
+
+:deep(.el-switch) {
+  --el-switch-on-color: #4CAF50;
+  --el-switch-off-color: #555;
+}
+
+:deep(.el-switch__core) {
+  border-color: #444;
+}
+
+:deep(.el-switch__label) {
+  color: #aaa;
+}
+
+:deep(.el-switch__label.is-active) {
+  color: #4CAF50;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .dev-card {
@@ -492,6 +737,19 @@ export default {
   }
 
   .sync-controls .el-button {
+    width: 100%;
+  }
+
+  .control-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-input {
+    width: 100%;
+  }
+
+  .control-row .el-button {
     width: 100%;
   }
 }

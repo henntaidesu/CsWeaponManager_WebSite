@@ -115,6 +115,33 @@
 
         <!-- 悠悠有品特有配置 -->
         <template v-if="editForm.type === 'youpin'">
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="startYyypTokenCollection(true)" 
+              :loading="yyypTokenLoading"
+              :disabled="yyypTokenStatus === 'success'"
+              style="width: 100%;"
+            >
+              <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+              {{ yyypTokenLoading ? '正在获取令牌...' : yyypTokenStatus === 'success' ? '✓ 令牌已获取' : '重新获取悠悠有品令牌' }}
+            </el-button>
+            <div v-if="yyypTokenStatus === 'waiting'" style="margin-top: 10px; padding: 10px; background: #fff7e6; border-radius: 4px; border-left: 3px solid #faad14;">
+              <div style="color: #faad14; font-weight: 500; margin-bottom: 5px;">
+                <el-icon><Loading /></el-icon> 等待手机APP访问...
+              </div>
+              <div style="color: #666; font-size: 12px;">
+                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                2. 打开悠悠有品APP并登录<br/>
+                3. 系统将自动获取令牌
+              </div>
+            </div>
+            <div v-if="yyypTokenStatus === 'success'" style="margin-top: 10px; padding: 10px; background: #f6ffed; border-radius: 4px; border-left: 3px solid #52c41a;">
+              <div style="color: #52c41a; font-weight: 500;">
+                <el-icon><CircleCheck /></el-icon> 令牌获取成功!
+              </div>
+            </div>
+          </el-form-item>
           <el-form-item label="手机号" required>
             <el-input v-model="editForm.phone" placeholder="请输入手机号" />
           </el-form-item>
@@ -158,6 +185,33 @@
 
         <!-- BUFF特有配置 -->
         <template v-else-if="editForm.type === 'buff'">
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="startBuffTokenCollection(true)" 
+              :loading="buffTokenLoading"
+              :disabled="buffTokenStatus === 'success'"
+              style="width: 100%;"
+            >
+              <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+              {{ buffTokenLoading ? '正在获取令牌...' : buffTokenStatus === 'success' ? '✓ 令牌已获取' : '重新获取BUFF令牌' }}
+            </el-button>
+            <div v-if="buffTokenStatus === 'waiting'" style="margin-top: 10px; padding: 10px; background: #fff7e6; border-radius: 4px; border-left: 3px solid #faad14;">
+              <div style="color: #faad14; font-weight: 500; margin-bottom: 5px;">
+                <el-icon><Loading /></el-icon> 等待手机APP访问...
+              </div>
+              <div style="color: #666; font-size: 12px;">
+                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                2. 打开BUFF APP并登录<br/>
+                3. 系统将自动获取令牌
+              </div>
+            </div>
+            <div v-if="buffTokenStatus === 'success'" style="margin-top: 10px; padding: 10px; background: #f6ffed; border-radius: 4px; border-left: 3px solid #52c41a;">
+              <div style="color: #52c41a; font-weight: 500;">
+                <el-icon><CircleCheck /></el-icon> 令牌获取成功!
+              </div>
+            </div>
+          </el-form-item>
           <el-form-item label="Cookie" required>
             <el-input 
               v-model="editForm.cookie" 
@@ -602,6 +656,33 @@
         
         <!-- BUFF特有配置 -->
         <template v-if="inputForm.type === 'buff'">
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="startBuffTokenCollection(false)" 
+              :loading="buffTokenLoading"
+              :disabled="buffTokenStatus === 'success'"
+              style="width: 100%;"
+            >
+              <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+              {{ buffTokenLoading ? '正在获取令牌...' : buffTokenStatus === 'success' ? '✓ 令牌已获取' : '一键获取BUFF令牌' }}
+            </el-button>
+            <div v-if="buffTokenStatus === 'waiting'" style="margin-top: 10px; padding: 10px; background: #fff7e6; border-radius: 4px; border-left: 3px solid #faad14;">
+              <div style="color: #faad14; font-weight: 500; margin-bottom: 5px;">
+                <el-icon><Loading /></el-icon> 等待手机APP访问...
+              </div>
+              <div style="color: #666; font-size: 12px;">
+                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                2. 打开BUFF APP并登录<br/>
+                3. 系统将自动获取令牌
+              </div>
+            </div>
+            <div v-if="buffTokenStatus === 'success'" style="margin-top: 10px; padding: 10px; background: #f6ffed; border-radius: 4px; border-left: 3px solid #52c41a;">
+              <div style="color: #52c41a; font-weight: 500;">
+                <el-icon><CircleCheck /></el-icon> 令牌获取成功!
+              </div>
+            </div>
+          </el-form-item>
           <el-form-item label="Cookie" required>
             <el-input 
               v-model="inputForm.cookie" 
@@ -981,6 +1062,33 @@
         
         <!-- 悠悠有品特有配置 -->
         <template v-if="inputForm.type === 'youpin'">
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="startYyypTokenCollection(false)" 
+              :loading="yyypTokenLoading"
+              :disabled="yyypTokenStatus === 'success'"
+              style="width: 100%;"
+            >
+              <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+              {{ yyypTokenLoading ? '正在获取令牌...' : yyypTokenStatus === 'success' ? '✓ 令牌已获取' : '一键获取悠悠有品令牌' }}
+            </el-button>
+            <div v-if="yyypTokenStatus === 'waiting'" style="margin-top: 10px; padding: 10px; background: #fff7e6; border-radius: 4px; border-left: 3px solid #faad14;">
+              <div style="color: #faad14; font-weight: 500; margin-bottom: 5px;">
+                <el-icon><Loading /></el-icon> 等待手机APP访问...
+              </div>
+              <div style="color: #666; font-size: 12px;">
+                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                2. 打开悠悠有品APP并登录<br/>
+                3. 系统将自动获取令牌
+              </div>
+            </div>
+            <div v-if="yyypTokenStatus === 'success'" style="margin-top: 10px; padding: 10px; background: #f6ffed; border-radius: 4px; border-left: 3px solid #52c41a;">
+              <div style="color: #52c41a; font-weight: 500;">
+                <el-icon><CircleCheck /></el-icon> 令牌获取成功!
+              </div>
+            </div>
+          </el-form-item>
           <el-form-item label="手机号" required>
             <el-input 
               v-model="inputForm.phone" 
@@ -1094,6 +1202,13 @@ export default {
     const steamQRStatus = ref('') // 二维码状态: waiting, success, expired
     const steamQRCheckTimer = ref(null) // 二维码状态检查定时器
     const autoRefreshTimer = ref(null) // 数据源列表自动刷新定时器
+    
+    // GetAppToken 相关状态
+    const buffTokenLoading = ref(false)  // BUFF Token 获取loading
+    const yyypTokenLoading = ref(false)  // 悠悠有品 Token 获取loading
+    const buffTokenStatus = ref('')  // BUFF Token 获取状态: waiting, success, failed
+    const yyypTokenStatus = ref('')  // 悠悠有品 Token 获取状态: waiting, success, failed
+    const tokenCheckTimer = ref(null)  // Token 获取状态检查定时器
     const editForm = ref({
       name: '',
       type: '',
@@ -1477,6 +1592,218 @@ export default {
         ElMessage.error(errorMessage)
       } finally {
         submitting.value = false
+      }
+    }
+
+    // 获取服务器IP地址
+    const getServerIP = () => {
+      // 从当前页面URL获取主机名
+      return window.location.hostname || '127.0.0.1'
+    }
+    
+    // ===== BUFF Token 获取相关函数 =====
+    const startBuffTokenCollection = async (isEdit = false) => {
+      try {
+        buffTokenLoading.value = true
+        buffTokenStatus.value = 'waiting'
+        
+        const url = apiUrls.getAppTokenStartBuff()
+        const response = await axios.post(url)
+        
+        if (response.data.code === 200) {
+          ElMessage.success('BUFF 代理服务器已启动，请在手机上配置代理')
+          ElMessage.info({
+            message: `代理地址: ${getServerIP()}:9005`,
+            duration: 5000
+          })
+          
+          // 开始轮询获取数据
+          startBuffTokenPolling(isEdit)
+        } else {
+          ElMessage.error(response.data.msg || '启动BUFF代理失败')
+          buffTokenLoading.value = false
+          buffTokenStatus.value = 'failed'
+        }
+      } catch (error) {
+        console.error('启动BUFF代理失败:', error)
+        ElMessage.error('启动BUFF代理失败: ' + (error.message || '网络错误'))
+        buffTokenLoading.value = false
+        buffTokenStatus.value = 'failed'
+      }
+    }
+
+    const startBuffTokenPolling = (isEdit = false) => {
+      // 清除旧的定时器
+      if (tokenCheckTimer.value) {
+        clearInterval(tokenCheckTimer.value)
+      }
+      
+      // 每3秒检查一次数据是否收集完成
+      tokenCheckTimer.value = setInterval(async () => {
+        try {
+          const url = apiUrls.getAppTokenGetBuffData()
+          const response = await axios.get(url)
+          
+          if (response.data.code === 200) {
+            // 数据收集完成
+            const data = response.data.data
+            
+            // 填充表单
+            if (isEdit) {
+              editForm.value.cookie = data.cookie
+              editForm.value.systemVersion = data.system_version
+              editForm.value.systemType = data.system_type
+            } else {
+              inputForm.value.cookie = data.cookie
+              inputForm.value.systemVersion = data.system_version
+              inputForm.value.systemType = data.system_type
+            }
+            
+            ElMessage.success('BUFF Token 获取成功!')
+            buffTokenStatus.value = 'success'
+            buffTokenLoading.value = false
+            
+            // 停止轮询
+            if (tokenCheckTimer.value) {
+              clearInterval(tokenCheckTimer.value)
+              tokenCheckTimer.value = null
+            }
+            
+            // 停止代理服务器
+            stopBuffTokenCollection()
+            
+            // 自动保存
+            ElMessage.info('正在自动保存数据源配置...')
+            setTimeout(() => {
+              if (isEdit) {
+                handleEditSubmit()
+              } else {
+                handleSubmit()
+              }
+            }, 1000)
+          } else if (response.data.code === 202) {
+            // 数据正在收集中
+            console.log('BUFF Token 收集中...')
+          }
+        } catch (error) {
+          console.error('获取BUFF数据失败:', error)
+        }
+      }, 3000)
+    }
+
+    const stopBuffTokenCollection = async () => {
+      try {
+        const url = apiUrls.getAppTokenStopBuff()
+        await axios.post(url)
+      } catch (error) {
+        console.error('停止BUFF代理失败:', error)
+      }
+    }
+
+    // ===== 悠悠有品 Token 获取相关函数 =====
+    const startYyypTokenCollection = async (isEdit = false) => {
+      try {
+        yyypTokenLoading.value = true
+        yyypTokenStatus.value = 'waiting'
+        
+        const url = apiUrls.getAppTokenStartYyyp()
+        const response = await axios.post(url)
+        
+        if (response.data.code === 200) {
+          ElMessage.success('悠悠有品代理服务器已启动，请在手机上配置代理')
+          ElMessage.info({
+            message: `代理地址: ${getServerIP()}:9005`,
+            duration: 5000
+          })
+          
+          // 开始轮询获取数据
+          startYyypTokenPolling(isEdit)
+        } else {
+          ElMessage.error(response.data.msg || '启动悠悠有品代理失败')
+          yyypTokenLoading.value = false
+          yyypTokenStatus.value = 'failed'
+        }
+      } catch (error) {
+        console.error('启动悠悠有品代理失败:', error)
+        ElMessage.error('启动悠悠有品代理失败: ' + (error.message || '网络错误'))
+        yyypTokenLoading.value = false
+        yyypTokenStatus.value = 'failed'
+      }
+    }
+
+    const startYyypTokenPolling = (isEdit = false) => {
+      // 清除旧的定时器
+      if (tokenCheckTimer.value) {
+        clearInterval(tokenCheckTimer.value)
+      }
+      
+      // 每3秒检查一次数据是否收集完成
+      tokenCheckTimer.value = setInterval(async () => {
+        try {
+          const url = apiUrls.getAppTokenGetYyypData()
+          const response = await axios.get(url)
+          
+          if (response.data.code === 200) {
+            // 数据收集完成
+            const data = response.data.data
+            
+            // 填充表单
+            if (isEdit) {
+              editForm.value.sessionid = data.Sessionid
+              editForm.value.token = data.authorization
+              editForm.value.deviceName = `${data.device_manu} ${data.device_model}`
+              editForm.value.appVersion = data.app_version
+              editForm.value.appType = data.apptype
+              editForm.value.userId = data.userId
+              editForm.value.steamId = data.steamId
+            } else {
+              inputForm.value.sessionid = data.Sessionid
+              inputForm.value.token = data.authorization
+              inputForm.value.deviceName = `${data.device_manu} ${data.device_model}`
+              inputForm.value.appVersion = data.app_version
+              inputForm.value.appType = data.apptype
+              inputForm.value.userId = data.userId
+              inputForm.value.steamId = data.steamId
+            }
+            
+            ElMessage.success('悠悠有品 Token 获取成功!')
+            yyypTokenStatus.value = 'success'
+            yyypTokenLoading.value = false
+            
+            // 停止轮询
+            if (tokenCheckTimer.value) {
+              clearInterval(tokenCheckTimer.value)
+              tokenCheckTimer.value = null
+            }
+            
+            // 停止代理服务器
+            stopYyypTokenCollection()
+            
+            // 自动保存
+            ElMessage.info('正在自动保存数据源配置...')
+            setTimeout(() => {
+              if (isEdit) {
+                handleEditSubmit()
+              } else {
+                handleSubmit()
+              }
+            }, 1000)
+          } else if (response.data.code === 202) {
+            // 数据正在收集中
+            console.log('悠悠有品 Token 收集中...')
+          }
+        } catch (error) {
+          console.error('获取悠悠有品数据失败:', error)
+        }
+      }, 3000)
+    }
+
+    const stopYyypTokenCollection = async () => {
+      try {
+        const url = apiUrls.getAppTokenStopYyyp()
+        await axios.post(url)
+      } catch (error) {
+        console.error('停止悠悠有品代理失败:', error)
       }
     }
 
@@ -2035,6 +2362,18 @@ export default {
     }
 
     const handleEditDialogClose = () => {
+      // 清除 Token 获取定时器
+      if (tokenCheckTimer.value) {
+        clearInterval(tokenCheckTimer.value)
+        tokenCheckTimer.value = null
+      }
+      
+      // 重置 Token 获取状态
+      buffTokenStatus.value = ''
+      yyypTokenStatus.value = ''
+      buffTokenLoading.value = false
+      yyypTokenLoading.value = false
+      
       // 对话框关闭时清理状态
       editingSourceId.value = null
       editForm.value = {
@@ -2093,10 +2432,22 @@ export default {
         steamQRCheckTimer.value = null
       }
       
+      // 清除 Token 获取定时器
+      if (tokenCheckTimer.value) {
+        clearInterval(tokenCheckTimer.value)
+        tokenCheckTimer.value = null
+      }
+      
       // 重置二维码相关状态
       steamQRCode.value = ''
       steamQRStatus.value = ''
       steamQRLoading.value = false
+      
+      // 重置 Token 获取状态
+      buffTokenStatus.value = ''
+      yyypTokenStatus.value = ''
+      buffTokenLoading.value = false
+      yyypTokenLoading.value = false
       
       resetForm() // 关闭时重置表单
     }
@@ -3065,6 +3416,9 @@ export default {
       if (steamQRCheckTimer.value) {
         clearInterval(steamQRCheckTimer.value)
       }
+      if (tokenCheckTimer.value) {
+        clearInterval(tokenCheckTimer.value)
+      }
     })
 
     return {
@@ -3096,6 +3450,14 @@ export default {
       handleEditDialogClose,
       handleEditSubmit,
       handleEditCollectAll,
+      // GetAppToken 相关
+      buffTokenLoading,
+      yyypTokenLoading,
+      buffTokenStatus,
+      yyypTokenStatus,
+      startBuffTokenCollection,
+      startYyypTokenCollection,
+      getServerIP,
       handleEditBuffCollectAll,
       handleEditSteamCollectAll,
       handleEditDelete,
