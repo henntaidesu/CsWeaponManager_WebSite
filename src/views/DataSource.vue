@@ -278,6 +278,87 @@
           <!-- BUFF配置 -->
           <el-collapse v-model="editBuffCollapse">
             <el-collapse-item title="BUFF配置" name="config">
+              <el-form-item label="app-version" required>
+                <el-input v-model="editForm.buffAppVersion" placeholder="请输入app-version" />
+              </el-form-item>
+              <el-form-item label="app-version-code">
+                <el-input v-model="editForm.buffAppVersionCode" placeholder="请输入app-version-code" />
+              </el-form-item>
+              <el-form-item label="brand">
+                <el-input v-model="editForm.buffBrand" placeholder="请输入brand" />
+              </el-form-item>
+              <el-form-item label="build-fingerprint">
+                <el-input v-model="editForm.buffBuildFingerprint" placeholder="请输入build-fingerprint" />
+              </el-form-item>
+              <el-form-item label="channel">
+                <el-input v-model="editForm.buffChannel" placeholder="请输入channel" />
+              </el-form-item>
+              <el-form-item label="device-id">
+                <el-input v-model="editForm.buffDeviceId" placeholder="请输入device-id" />
+              </el-form-item>
+              <el-form-item label="device-id-weak">
+                <el-input v-model="editForm.buffDeviceIdWeak" placeholder="请输入device-id-weak" />
+              </el-form-item>
+              <el-form-item label="manufacturer">
+                <el-input v-model="editForm.buffManufacturer" placeholder="请输入manufacturer" />
+              </el-form-item>
+              <el-form-item label="model">
+                <el-input v-model="editForm.buffModel" placeholder="请输入model" />
+              </el-form-item>
+              <el-form-item label="network">
+                <el-input v-model="editForm.buffNetwork" placeholder="请输入network" />
+              </el-form-item>
+              <el-form-item label="product">
+                <el-input v-model="editForm.buffProduct" placeholder="请输入product" />
+              </el-form-item>
+              <el-form-item label="resolution">
+                <el-input v-model="editForm.buffResolution" placeholder="请输入resolution" />
+              </el-form-item>
+              <el-form-item label="rom">
+                <el-input v-model="editForm.buffRom" placeholder="请输入rom" />
+              </el-form-item>
+              <el-form-item label="rom-id">
+                <el-input v-model="editForm.buffRomId" placeholder="请输入rom-id" />
+              </el-form-item>
+              <el-form-item label="screen-density">
+                <el-input v-model="editForm.buffScreenDensity" placeholder="请输入screen-density" />
+              </el-form-item>
+              <el-form-item label="screen-size">
+                <el-input v-model="editForm.buffScreenSize" placeholder="请输入screen-size" />
+              </el-form-item>
+              <el-form-item label="seed">
+                <el-input v-model="editForm.buffSeed" placeholder="请输入seed" />
+              </el-form-item>
+              <el-form-item label="system-type">
+                <el-input v-model="editForm.buffSystemType" placeholder="请输入system-type" />
+              </el-form-item>
+              <el-form-item label="system-version">
+                <el-input v-model="editForm.buffSystemVersion" placeholder="请输入system-version" />
+              </el-form-item>
+              <el-form-item label="timestamp">
+                <el-input v-model="editForm.buffTimestamp" placeholder="请输入timestamp" />
+              </el-form-item>
+              <el-form-item label="timezone">
+                <el-input v-model="editForm.buffTimezone" placeholder="请输入timezone" />
+              </el-form-item>
+              <el-form-item label="timezone-offset">
+                <el-input v-model="editForm.buffTimezoneOffset" placeholder="请输入timezone-offset" />
+              </el-form-item>
+              <el-form-item label="timezone-offset-dst">
+                <el-input v-model="editForm.buffTimezoneOffsetDst" placeholder="请输入timezone-offset-dst" />
+              </el-form-item>
+              <el-form-item label="user-agent">
+                <el-input v-model="editForm.buffUserAgent" placeholder="请输入user-agent" />
+              </el-form-item>
+              <el-form-item label="locale">
+                <el-input v-model="editForm.buffLocale" placeholder="请输入locale" />
+              </el-form-item>
+              <el-form-item label="locale-supported">
+                <el-input v-model="editForm.buffLocaleSupported" placeholder="请输入locale-supported" />
+              </el-form-item>
+              <el-form-item label="devicename">
+                <el-input v-model="editForm.buffDevicename" placeholder="请输入devicename" />
+              </el-form-item>
               <el-form-item label="Cookie" required>
                 <el-input 
                   v-model="editForm.cookie" 
@@ -285,12 +366,6 @@
                   :rows="3"
                   placeholder="请输入Cookie"
                 />
-              </el-form-item>
-              <el-form-item label="system_version" required>
-                <el-input v-model="editForm.systemVersion" placeholder="请输入system_version" />
-              </el-form-item>
-              <el-form-item label="system_type" required>
-                <el-input v-model="editForm.systemType" placeholder="请输入system_type" />
               </el-form-item>
               <el-form-item label="SteamID" required>
                 <el-input v-model="editForm.steamID" placeholder="请输入SteamID" />
@@ -794,42 +869,114 @@
               </div>
             </div>
           </el-form-item>
-          <el-form-item label="Cookie" required>
-            <el-input 
-              v-model="inputForm.cookie" 
-              type="textarea"
-              :rows="3"
-              placeholder="请输入Cookie"
-            />
-          </el-form-item>
-          <el-form-item label="system_version" required>
-            <el-input 
-              v-model="inputForm.systemVersion" 
-              placeholder="请输入system_version"
-            />
-          </el-form-item>
-          <el-form-item label="system_type" required>
-            <el-input 
-              v-model="inputForm.systemType" 
-              placeholder="请输入system_type"
-            />
-          </el-form-item>
-          <el-form-item label="SteamID" required>
-            <el-input 
-              v-model="inputForm.steamID" 
-              placeholder="请输入SteamID"
-            />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
+          
+          <!-- BUFF配置 -->
+          <el-collapse v-model="inputBuffCollapse">
+            <el-collapse-item title="BUFF配置" name="config">
+              <el-form-item label="app-version" required>
+                <el-input v-model="inputForm.buffAppVersion" placeholder="请输入app-version" />
+              </el-form-item>
+              <el-form-item label="app-version-code">
+                <el-input v-model="inputForm.buffAppVersionCode" placeholder="请输入app-version-code" />
+              </el-form-item>
+              <el-form-item label="brand">
+                <el-input v-model="inputForm.buffBrand" placeholder="请输入brand" />
+              </el-form-item>
+              <el-form-item label="build-fingerprint">
+                <el-input v-model="inputForm.buffBuildFingerprint" placeholder="请输入build-fingerprint" />
+              </el-form-item>
+              <el-form-item label="channel">
+                <el-input v-model="inputForm.buffChannel" placeholder="请输入channel" />
+              </el-form-item>
+              <el-form-item label="device-id">
+                <el-input v-model="inputForm.buffDeviceId" placeholder="请输入device-id" />
+              </el-form-item>
+              <el-form-item label="device-id-weak">
+                <el-input v-model="inputForm.buffDeviceIdWeak" placeholder="请输入device-id-weak" />
+              </el-form-item>
+              <el-form-item label="manufacturer">
+                <el-input v-model="inputForm.buffManufacturer" placeholder="请输入manufacturer" />
+              </el-form-item>
+              <el-form-item label="model">
+                <el-input v-model="inputForm.buffModel" placeholder="请输入model" />
+              </el-form-item>
+              <el-form-item label="network">
+                <el-input v-model="inputForm.buffNetwork" placeholder="请输入network" />
+              </el-form-item>
+              <el-form-item label="product">
+                <el-input v-model="inputForm.buffProduct" placeholder="请输入product" />
+              </el-form-item>
+              <el-form-item label="resolution">
+                <el-input v-model="inputForm.buffResolution" placeholder="请输入resolution" />
+              </el-form-item>
+              <el-form-item label="rom">
+                <el-input v-model="inputForm.buffRom" placeholder="请输入rom" />
+              </el-form-item>
+              <el-form-item label="rom-id">
+                <el-input v-model="inputForm.buffRomId" placeholder="请输入rom-id" />
+              </el-form-item>
+              <el-form-item label="screen-density">
+                <el-input v-model="inputForm.buffScreenDensity" placeholder="请输入screen-density" />
+              </el-form-item>
+              <el-form-item label="screen-size">
+                <el-input v-model="inputForm.buffScreenSize" placeholder="请输入screen-size" />
+              </el-form-item>
+              <el-form-item label="seed">
+                <el-input v-model="inputForm.buffSeed" placeholder="请输入seed" />
+              </el-form-item>
+              <el-form-item label="system-type">
+                <el-input v-model="inputForm.buffSystemType" placeholder="请输入system-type" />
+              </el-form-item>
+              <el-form-item label="system-version">
+                <el-input v-model="inputForm.buffSystemVersion" placeholder="请输入system-version" />
+              </el-form-item>
+              <el-form-item label="timestamp">
+                <el-input v-model="inputForm.buffTimestamp" placeholder="请输入timestamp" />
+              </el-form-item>
+              <el-form-item label="timezone">
+                <el-input v-model="inputForm.buffTimezone" placeholder="请输入timezone" />
+              </el-form-item>
+              <el-form-item label="timezone-offset">
+                <el-input v-model="inputForm.buffTimezoneOffset" placeholder="请输入timezone-offset" />
+              </el-form-item>
+              <el-form-item label="timezone-offset-dst">
+                <el-input v-model="inputForm.buffTimezoneOffsetDst" placeholder="请输入timezone-offset-dst" />
+              </el-form-item>
+              <el-form-item label="user-agent">
+                <el-input v-model="inputForm.buffUserAgent" placeholder="请输入user-agent" />
+              </el-form-item>
+              <el-form-item label="locale">
+                <el-input v-model="inputForm.buffLocale" placeholder="请输入locale" />
+              </el-form-item>
+              <el-form-item label="locale-supported">
+                <el-input v-model="inputForm.buffLocaleSupported" placeholder="请输入locale-supported" />
+              </el-form-item>
+              <el-form-item label="devicename">
+                <el-input v-model="inputForm.buffDevicename" placeholder="请输入devicename" />
+              </el-form-item>
+              <el-form-item label="Cookie" required>
+                <el-input 
+                  v-model="inputForm.cookie" 
+                  type="textarea"
+                  :rows="3"
+                  placeholder="请输入Cookie"
+                />
+              </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input v-model="inputForm.steamID" placeholder="请输入SteamID" />
+              </el-form-item>
+              <el-form-item label="更新频率">
+                <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
         
         <!-- Steam特有配置 -->
@@ -1401,6 +1548,7 @@ export default {
     const editYyypDeviceCollapse = ref(['device'])
     const editYyypAdvancedCollapse = ref(['advanced'])
     const editBuffCollapse = ref(['config'])
+    const inputBuffCollapse = ref(['config'])
     const editSteamCollapse = ref(['config'])
     const editSteamLoginCollapse = ref(['config'])
     const editPerfectWorldCollapse = ref(['config'])
@@ -1750,9 +1898,34 @@ export default {
         } else if (inputForm.value.type === 'buff') {
           // BUFF特殊配置
           requestData.configJson = JSON.stringify({
+            app_version: inputForm.value.buffAppVersion,
+            app_version_code: inputForm.value.buffAppVersionCode,
+            brand: inputForm.value.buffBrand,
+            build_fingerprint: inputForm.value.buffBuildFingerprint,
+            channel: inputForm.value.buffChannel,
+            device_id: inputForm.value.buffDeviceId,
+            device_id_weak: inputForm.value.buffDeviceIdWeak,
+            manufacturer: inputForm.value.buffManufacturer,
+            model: inputForm.value.buffModel,
+            network: inputForm.value.buffNetwork,
+            product: inputForm.value.buffProduct,
+            resolution: inputForm.value.buffResolution,
+            rom: inputForm.value.buffRom,
+            rom_id: inputForm.value.buffRomId,
+            screen_density: inputForm.value.buffScreenDensity,
+            screen_size: inputForm.value.buffScreenSize,
+            seed: inputForm.value.buffSeed,
+            system_type: inputForm.value.buffSystemType,
+            system_version: inputForm.value.buffSystemVersion,
+            timestamp: inputForm.value.buffTimestamp,
+            timezone: inputForm.value.buffTimezone,
+            timezone_offset: inputForm.value.buffTimezoneOffset,
+            timezone_offset_dst: inputForm.value.buffTimezoneOffsetDst,
+            user_agent: inputForm.value.buffUserAgent,
+            locale: inputForm.value.buffLocale,
+            locale_supported: inputForm.value.buffLocaleSupported,
+            devicename: inputForm.value.buffDevicename,
             cookie: inputForm.value.cookie,
-            system_version: inputForm.value.systemVersion,
-            system_type: inputForm.value.systemType,
             steamID: inputForm.value.steamID,
             updateFreq: inputForm.value.updateFreq,
             sleep_time: '6000'
@@ -1888,13 +2061,65 @@ export default {
             
             // 填充表单
             if (isEdit) {
-              editForm.value.cookie = data.cookie
-              editForm.value.systemVersion = data.system_version
-              editForm.value.systemType = data.system_type
+              editForm.value.buffAppVersion = data.app_version || editForm.value.buffAppVersion
+              editForm.value.buffAppVersionCode = data.app_version_code || editForm.value.buffAppVersionCode
+              editForm.value.buffBrand = data.brand || editForm.value.buffBrand
+              editForm.value.buffBuildFingerprint = data.build_fingerprint || editForm.value.buffBuildFingerprint
+              editForm.value.buffChannel = data.channel || editForm.value.buffChannel
+              editForm.value.buffDeviceId = data.device_id || editForm.value.buffDeviceId
+              editForm.value.buffDeviceIdWeak = data.device_id_weak || editForm.value.buffDeviceIdWeak
+              editForm.value.buffManufacturer = data.manufacturer || editForm.value.buffManufacturer
+              editForm.value.buffModel = data.model || editForm.value.buffModel
+              editForm.value.buffNetwork = data.network || editForm.value.buffNetwork
+              editForm.value.buffProduct = data.product || editForm.value.buffProduct
+              editForm.value.buffResolution = data.resolution || editForm.value.buffResolution
+              editForm.value.buffRom = data.rom || editForm.value.buffRom
+              editForm.value.buffRomId = data.rom_id || editForm.value.buffRomId
+              editForm.value.buffScreenDensity = data.screen_density || editForm.value.buffScreenDensity
+              editForm.value.buffScreenSize = data.screen_size || editForm.value.buffScreenSize
+              editForm.value.buffSeed = data.seed || editForm.value.buffSeed
+              editForm.value.buffSystemType = data.system_type || editForm.value.buffSystemType
+              editForm.value.buffSystemVersion = data.system_version || editForm.value.buffSystemVersion
+              editForm.value.buffTimestamp = data.timestamp || editForm.value.buffTimestamp
+              editForm.value.buffTimezone = data.timezone || editForm.value.buffTimezone
+              editForm.value.buffTimezoneOffset = data.timezone_offset || editForm.value.buffTimezoneOffset
+              editForm.value.buffTimezoneOffsetDst = data.timezone_offset_dst || editForm.value.buffTimezoneOffsetDst
+              editForm.value.buffUserAgent = data.user_agent || editForm.value.buffUserAgent
+              editForm.value.buffLocale = data.locale || editForm.value.buffLocale
+              editForm.value.buffLocaleSupported = data.locale_supported || editForm.value.buffLocaleSupported
+              editForm.value.buffDevicename = data.devicename || editForm.value.buffDevicename
+              editForm.value.cookie = data.cookie || editForm.value.cookie
+              editForm.value.steamID = data.steamid || editForm.value.steamID
             } else {
-              inputForm.value.cookie = data.cookie
-              inputForm.value.systemVersion = data.system_version
-              inputForm.value.systemType = data.system_type
+              inputForm.value.buffAppVersion = data.app_version || inputForm.value.buffAppVersion
+              inputForm.value.buffAppVersionCode = data.app_version_code || inputForm.value.buffAppVersionCode
+              inputForm.value.buffBrand = data.brand || inputForm.value.buffBrand
+              inputForm.value.buffBuildFingerprint = data.build_fingerprint || inputForm.value.buffBuildFingerprint
+              inputForm.value.buffChannel = data.channel || inputForm.value.buffChannel
+              inputForm.value.buffDeviceId = data.device_id || inputForm.value.buffDeviceId
+              inputForm.value.buffDeviceIdWeak = data.device_id_weak || inputForm.value.buffDeviceIdWeak
+              inputForm.value.buffManufacturer = data.manufacturer || inputForm.value.buffManufacturer
+              inputForm.value.buffModel = data.model || inputForm.value.buffModel
+              inputForm.value.buffNetwork = data.network || inputForm.value.buffNetwork
+              inputForm.value.buffProduct = data.product || inputForm.value.buffProduct
+              inputForm.value.buffResolution = data.resolution || inputForm.value.buffResolution
+              inputForm.value.buffRom = data.rom || inputForm.value.buffRom
+              inputForm.value.buffRomId = data.rom_id || inputForm.value.buffRomId
+              inputForm.value.buffScreenDensity = data.screen_density || inputForm.value.buffScreenDensity
+              inputForm.value.buffScreenSize = data.screen_size || inputForm.value.buffScreenSize
+              inputForm.value.buffSeed = data.seed || inputForm.value.buffSeed
+              inputForm.value.buffSystemType = data.system_type || inputForm.value.buffSystemType
+              inputForm.value.buffSystemVersion = data.system_version || inputForm.value.buffSystemVersion
+              inputForm.value.buffTimestamp = data.timestamp || inputForm.value.buffTimestamp
+              inputForm.value.buffTimezone = data.timezone || inputForm.value.buffTimezone
+              inputForm.value.buffTimezoneOffset = data.timezone_offset || inputForm.value.buffTimezoneOffset
+              inputForm.value.buffTimezoneOffsetDst = data.timezone_offset_dst || inputForm.value.buffTimezoneOffsetDst
+              inputForm.value.buffUserAgent = data.user_agent || inputForm.value.buffUserAgent
+              inputForm.value.buffLocale = data.locale || inputForm.value.buffLocale
+              inputForm.value.buffLocaleSupported = data.locale_supported || inputForm.value.buffLocaleSupported
+              inputForm.value.buffDevicename = data.devicename || inputForm.value.buffDevicename
+              inputForm.value.cookie = data.cookie || inputForm.value.cookie
+              inputForm.value.steamID = data.steamid || inputForm.value.steamID
             }
             
             ElMessage.success('BUFF Token 获取成功!')
@@ -3306,9 +3531,34 @@ export default {
         } else if (editForm.value.type === 'buff') {
           // BUFF特殊配置
           requestData.configJson = JSON.stringify({
+            app_version: editForm.value.buffAppVersion,
+            app_version_code: editForm.value.buffAppVersionCode,
+            brand: editForm.value.buffBrand,
+            build_fingerprint: editForm.value.buffBuildFingerprint,
+            channel: editForm.value.buffChannel,
+            device_id: editForm.value.buffDeviceId,
+            device_id_weak: editForm.value.buffDeviceIdWeak,
+            manufacturer: editForm.value.buffManufacturer,
+            model: editForm.value.buffModel,
+            network: editForm.value.buffNetwork,
+            product: editForm.value.buffProduct,
+            resolution: editForm.value.buffResolution,
+            rom: editForm.value.buffRom,
+            rom_id: editForm.value.buffRomId,
+            screen_density: editForm.value.buffScreenDensity,
+            screen_size: editForm.value.buffScreenSize,
+            seed: editForm.value.buffSeed,
+            system_type: editForm.value.buffSystemType,
+            system_version: editForm.value.buffSystemVersion,
+            timestamp: editForm.value.buffTimestamp,
+            timezone: editForm.value.buffTimezone,
+            timezone_offset: editForm.value.buffTimezoneOffset,
+            timezone_offset_dst: editForm.value.buffTimezoneOffsetDst,
+            user_agent: editForm.value.buffUserAgent,
+            locale: editForm.value.buffLocale,
+            locale_supported: editForm.value.buffLocaleSupported,
+            devicename: editForm.value.buffDevicename,
             cookie: editForm.value.cookie,
-            system_version: editForm.value.systemVersion,
-            system_type: editForm.value.systemType,
             steamID: editForm.value.steamID,
             updateFreq: editForm.value.updateFreq,
             sleep_time: '6000'
@@ -3870,6 +4120,7 @@ export default {
       editYyypDeviceCollapse,
       editYyypAdvancedCollapse,
       editBuffCollapse,
+      inputBuffCollapse,
       editSteamCollapse,
       editSteamLoginCollapse,
       editPerfectWorldCollapse,
