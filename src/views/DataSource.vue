@@ -2122,6 +2122,7 @@ export default {
               editForm.value.pwToken = data.token || editForm.value.pwToken
               editForm.value.gameType = data.gameTypeStr || editForm.value.gameType
               editForm.value.tdSign = data.tdSign || editForm.value.tdSign
+              editForm.value.pwSteamID = data.steamId || editForm.value.pwSteamID
             } else {
               inputForm.value.platform = data.platform || inputForm.value.platform
               inputForm.value.device = data.device || inputForm.value.device
@@ -2129,6 +2130,7 @@ export default {
               inputForm.value.pwToken = data.token || inputForm.value.pwToken
               inputForm.value.gameType = data.gameTypeStr || inputForm.value.gameType
               inputForm.value.tdSign = data.tdSign || inputForm.value.tdSign
+              inputForm.value.pwSteamID = data.steamId || inputForm.value.pwSteamID
             }
             
             // 停止代理
