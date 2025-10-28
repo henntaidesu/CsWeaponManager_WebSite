@@ -2117,16 +2117,18 @@ export default {
             const data = response.data.data
             if (isEdit) {
               editForm.value.platform = data.platform || editForm.value.platform
-              editForm.value.device = data.deviceId || editForm.value.device
+              editForm.value.device = data.device || editForm.value.device
               editForm.value.appversion = data.appVersion || editForm.value.appversion
               editForm.value.pwToken = data.token || editForm.value.pwToken
               editForm.value.gameType = data.gameTypeStr || editForm.value.gameType
+              editForm.value.tdSign = data.tdSign || editForm.value.tdSign
             } else {
               inputForm.value.platform = data.platform || inputForm.value.platform
-              inputForm.value.device = data.deviceId || inputForm.value.device
+              inputForm.value.device = data.device || inputForm.value.device
               inputForm.value.appversion = data.appVersion || inputForm.value.appversion
               inputForm.value.pwToken = data.token || inputForm.value.pwToken
               inputForm.value.gameType = data.gameTypeStr || inputForm.value.gameType
+              inputForm.value.tdSign = data.tdSign || inputForm.value.tdSign
             }
             
             // 停止代理
