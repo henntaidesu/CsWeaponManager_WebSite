@@ -181,6 +181,44 @@
           <el-form-item label="SteamID" required>
             <el-input v-model="editForm.steamId" placeholder="请输入SteamID" />
           </el-form-item>
+          <el-form-item label="Device Token" required>
+            <el-input v-model="editForm.devicetoken" placeholder="请输入Device Token" />
+          </el-form-item>
+          <el-form-item label="Device ID" required>
+            <el-input v-model="editForm.deviceid" placeholder="请输入Device ID" />
+          </el-form-item>
+          <el-form-item label="Device UK" required>
+            <el-input 
+              v-model="editForm.deviceuk" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入Device UK"
+            />
+          </el-form-item>
+          <el-form-item label="UK" required>
+            <el-input 
+              v-model="editForm.uk" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入UK"
+            />
+          </el-form-item>
+          <el-form-item label="SK" required>
+            <el-input 
+              v-model="editForm.sk" 
+              type="textarea"
+              :rows="3"
+              placeholder="请输入SK"
+            />
+          </el-form-item>
+          <el-form-item label="Device Info" required>
+            <el-input 
+              v-model="editForm.deviceInfo" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入Device Info (JSON格式)"
+            />
+          </el-form-item>
         </template>
 
         <!-- BUFF特有配置 -->
@@ -1149,6 +1187,50 @@
               placeholder="请输入SteamID"
             />
           </el-form-item>
+          <el-form-item label="Device Token" required>
+            <el-input 
+              v-model="inputForm.devicetoken" 
+              placeholder="请输入Device Token"
+            />
+          </el-form-item>
+          <el-form-item label="Device ID" required>
+            <el-input 
+              v-model="inputForm.deviceid" 
+              placeholder="请输入Device ID"
+            />
+          </el-form-item>
+          <el-form-item label="Device UK" required>
+            <el-input 
+              v-model="inputForm.deviceuk" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入Device UK"
+            />
+          </el-form-item>
+          <el-form-item label="UK" required>
+            <el-input 
+              v-model="inputForm.uk" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入UK"
+            />
+          </el-form-item>
+          <el-form-item label="SK" required>
+            <el-input 
+              v-model="inputForm.sk" 
+              type="textarea"
+              :rows="3"
+              placeholder="请输入SK"
+            />
+          </el-form-item>
+          <el-form-item label="Device Info" required>
+            <el-input 
+              v-model="inputForm.deviceInfo" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入Device Info (JSON格式)"
+            />
+          </el-form-item>
         </template>
         
         <el-form-item label="启用状态">
@@ -1226,6 +1308,12 @@ export default {
       appType: '',
       userId: '',
       steamId: '',
+      devicetoken: '',
+      deviceid: '',
+      deviceuk: '',
+      uk: '',
+      sk: '',
+      deviceInfo: '',
       // BUFF特有字段
       cookie: '',
       systemVersion: '',
@@ -1267,6 +1355,12 @@ export default {
       appType: '',
       userId: '',
       steamId: '',
+      devicetoken: '',
+      deviceid: '',
+      deviceuk: '',
+      uk: '',
+      sk: '',
+      deviceInfo: '',
       // BUFF特有字段
       cookie: '',
       systemVersion: '',
@@ -1440,6 +1534,30 @@ export default {
           ElMessage.error('请填写SteamID')
           return
         }
+        if (!inputForm.value.devicetoken) {
+          ElMessage.error('请填写Device Token')
+          return
+        }
+        if (!inputForm.value.deviceid) {
+          ElMessage.error('请填写Device ID')
+          return
+        }
+        if (!inputForm.value.deviceuk) {
+          ElMessage.error('请填写Device UK')
+          return
+        }
+        if (!inputForm.value.uk) {
+          ElMessage.error('请填写UK')
+          return
+        }
+        if (!inputForm.value.sk) {
+          ElMessage.error('请填写SK')
+          return
+        }
+        if (!inputForm.value.deviceInfo) {
+          ElMessage.error('请填写Device Info')
+          return
+        }
       }
 
       // 完美世界APP类型的字段校验
@@ -1494,7 +1612,13 @@ export default {
             sleep_time: inputForm.value.sleepTime.toString(),
             app_type: inputForm.value.appType,
             userId: inputForm.value.userId,
-            steamId: inputForm.value.steamId
+            steamId: inputForm.value.steamId,
+            devicetoken: inputForm.value.devicetoken,
+            deviceid: inputForm.value.deviceid,
+            deviceuk: inputForm.value.deviceuk,
+            uk: inputForm.value.uk,
+            sk: inputForm.value.sk,
+            device_info: inputForm.value.deviceInfo
           })
         } else if (inputForm.value.type === 'perfectworld') {
           // 完美世界APP特殊配置
@@ -1756,6 +1880,13 @@ export default {
               editForm.value.appType = data.apptype
               editForm.value.userId = data.userId
               editForm.value.steamId = data.steamId
+              // 新增字段
+              editForm.value.devicetoken = data.devicetoken
+              editForm.value.deviceid = data.deviceid
+              editForm.value.deviceuk = data.deviceuk
+              editForm.value.uk = data.uk
+              editForm.value.sk = data.sk
+              editForm.value.deviceInfo = data.device_info
             } else {
               inputForm.value.sessionid = data.Sessionid
               inputForm.value.token = data.authorization
@@ -1764,6 +1895,13 @@ export default {
               inputForm.value.appType = data.apptype
               inputForm.value.userId = data.userId
               inputForm.value.steamId = data.steamId
+              // 新增字段
+              inputForm.value.devicetoken = data.devicetoken
+              inputForm.value.deviceid = data.deviceid
+              inputForm.value.deviceuk = data.deviceuk
+              inputForm.value.uk = data.uk
+              inputForm.value.sk = data.sk
+              inputForm.value.deviceInfo = data.device_info
             }
             
             ElMessage.success('悠悠有品 Token 获取成功!')
@@ -1825,6 +1963,12 @@ export default {
         appType: '',
         userId: '',
         steamId: '',
+        devicetoken: '',
+        deviceid: '',
+        deviceuk: '',
+        uk: '',
+        sk: '',
+        deviceInfo: '',
         // BUFF特有字段
         cookie: '',
         systemVersion: '',
@@ -2262,6 +2406,12 @@ export default {
         editForm.value.appType = config.yyyp_app_type || ''
         editForm.value.userId = config.yyyp_userId || ''
         editForm.value.steamId = config.yyyp_steamId || ''
+        editForm.value.devicetoken = config.yyyp_devicetoken || ''
+        editForm.value.deviceid = config.yyyp_deviceid || ''
+        editForm.value.deviceuk = config.yyyp_deviceuk || ''
+        editForm.value.uk = config.yyyp_uk || ''
+        editForm.value.sk = config.yyyp_sk || ''
+        editForm.value.deviceInfo = config.yyyp_device_info || ''
         
         console.log('悠悠有品配置解析结果:', {
           phone: editForm.value.phone,
@@ -2830,6 +2980,30 @@ export default {
           ElMessage.error('请填写SteamID')
           return
         }
+        if (!editForm.value.devicetoken) {
+          ElMessage.error('请填写Device Token')
+          return
+        }
+        if (!editForm.value.deviceid) {
+          ElMessage.error('请填写Device ID')
+          return
+        }
+        if (!editForm.value.deviceuk) {
+          ElMessage.error('请填写Device UK')
+          return
+        }
+        if (!editForm.value.uk) {
+          ElMessage.error('请填写UK')
+          return
+        }
+        if (!editForm.value.sk) {
+          ElMessage.error('请填写SK')
+          return
+        }
+        if (!editForm.value.deviceInfo) {
+          ElMessage.error('请填写Device Info')
+          return
+        }
       }
 
       // 完美世界APP类型的字段校验
@@ -2885,7 +3059,13 @@ export default {
             sleep_time: editForm.value.sleepTime.toString(),
             app_type: editForm.value.appType,
             userId: editForm.value.userId,
-            steamId: editForm.value.steamId
+            steamId: editForm.value.steamId,
+            devicetoken: editForm.value.devicetoken,
+            deviceid: editForm.value.deviceid,
+            deviceuk: editForm.value.deviceuk,
+            uk: editForm.value.uk,
+            sk: editForm.value.sk,
+            device_info: editForm.value.deviceInfo
           })
         } else if (editForm.value.type === 'perfectworld') {
           // 完美世界APP特殊配置
