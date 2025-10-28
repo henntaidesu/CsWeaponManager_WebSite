@@ -565,6 +565,34 @@
 
         <!-- 完美世界APP特有配置 -->
         <template v-else-if="editForm.type === 'perfectworld'">
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="startPerfectWorldTokenCollection(true)" 
+              :loading="perfectWorldTokenLoading"
+              :disabled="perfectWorldTokenStatus === 'success'"
+              style="width: 100%;"
+            >
+              <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+              {{ perfectWorldTokenLoading ? '正在获取令牌...' : perfectWorldTokenStatus === 'success' ? '✓ 令牌已获取' : '重新获取完美世界APP令牌' }}
+            </el-button>
+            <div v-if="perfectWorldTokenStatus === 'waiting'" style="margin-top: 10px; padding: 10px; background: #fff7e6; border-radius: 4px; border-left: 3px solid #faad14;">
+              <div style="color: #faad14; font-weight: 500; margin-bottom: 5px;">
+                <el-icon><Loading /></el-icon> 等待手机APP访问...
+              </div>
+              <div style="color: #666; font-size: 12px;">
+                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                2. 打开完美世界APP并登录<br/>
+                3. 系统将自动获取令牌
+              </div>
+            </div>
+            <div v-if="perfectWorldTokenStatus === 'success'" style="margin-top: 10px; padding: 10px; background: #f6ffed; border-radius: 4px; border-left: 3px solid #52c41a;">
+              <div style="color: #52c41a; font-weight: 500;">
+                <el-icon><CircleCheck /></el-icon> 令牌获取成功!
+              </div>
+            </div>
+          </el-form-item>
+          
           <!-- 完美世界配置 -->
           <el-collapse v-model="editPerfectWorldCollapse">
             <el-collapse-item title="完美世界APP配置" name="config">
@@ -1057,6 +1085,33 @@
 
         <!-- 完美世界APP特有配置 -->
         <template v-else-if="inputForm.type === 'perfectworld'">
+          <el-form-item>
+            <el-button 
+              type="success" 
+              @click="startPerfectWorldTokenCollection(false)" 
+              :loading="perfectWorldTokenLoading"
+              :disabled="perfectWorldTokenStatus === 'success'"
+              style="width: 100%;"
+            >
+              <el-icon style="margin-right: 5px;"><Grid /></el-icon>
+              {{ perfectWorldTokenLoading ? '正在获取令牌...' : perfectWorldTokenStatus === 'success' ? '✓ 令牌已获取' : '一键获取完美世界APP令牌' }}
+            </el-button>
+            <div v-if="perfectWorldTokenStatus === 'waiting'" style="margin-top: 10px; padding: 10px; background: #fff7e6; border-radius: 4px; border-left: 3px solid #faad14;">
+              <div style="color: #faad14; font-weight: 500; margin-bottom: 5px;">
+                <el-icon><Loading /></el-icon> 等待手机APP访问...
+              </div>
+              <div style="color: #666; font-size: 12px;">
+                1. 在手机WiFi设置中配置代理: <strong>{{ getServerIP() }}:9005</strong><br/>
+                2. 打开完美世界APP并登录<br/>
+                3. 系统将自动获取令牌
+              </div>
+            </div>
+            <div v-if="perfectWorldTokenStatus === 'success'" style="margin-top: 10px; padding: 10px; background: #f6ffed; border-radius: 4px; border-left: 3px solid #52c41a;">
+              <div style="color: #52c41a; font-weight: 500;">
+                <el-icon><CircleCheck /></el-icon> 令牌获取成功!
+              </div>
+            </div>
+          </el-form-item>
           <el-form-item label="appversion" required>
             <el-input 
               v-model="inputForm.appversion" 
@@ -1333,9 +1388,12 @@ export default {
     // GetAppToken 相关状态
     const buffTokenLoading = ref(false)  // BUFF Token 获取loading
     const yyypTokenLoading = ref(false)  // 悠悠有品 Token 获取loading
+    const perfectWorldTokenLoading = ref(false)  // 完美世界APP Token 获取loading
     const buffTokenStatus = ref('')  // BUFF Token 获取状态: waiting, success, failed
     const yyypTokenStatus = ref('')  // 悠悠有品 Token 获取状态: waiting, success, failed
+    const perfectWorldTokenStatus = ref('')  // 完美世界APP Token 获取状态: waiting, success, failed
     const tokenCheckTimer = ref(null)  // Token 获取状态检查定时器
+    const proxyAddress = ref('')  // 代理地址 (从后端获取)
     
     // 编辑对话框折叠面板状态
     const editYyypBasicCollapse = ref(['basic'])
@@ -1775,12 +1833,6 @@ export default {
       }
     }
 
-    // 获取服务器IP地址
-    const getServerIP = () => {
-      // 从当前页面URL获取主机名
-      return window.location.hostname || '127.0.0.1'
-    }
-    
     // ===== BUFF Token 获取相关函数 =====
     const startBuffTokenCollection = async (isEdit = false) => {
       try {
@@ -1791,11 +1843,17 @@ export default {
         const response = await axios.post(url)
         
         if (response.data.code === 200) {
+          // 保存代理地址
+          if (response.data.data && response.data.data.proxy_address) {
+            proxyAddress.value = response.data.data.proxy_address
+          }
           ElMessage.success('BUFF 代理服务器已启动，请在手机上配置代理')
-          ElMessage.info({
-            message: `代理地址: ${getServerIP()}:9005`,
-            duration: 5000
-          })
+          if (proxyAddress.value) {
+            ElMessage.info({
+              message: `代理地址: ${proxyAddress.value}`,
+              duration: 5000
+            })
+          }
           
           // 开始轮询获取数据
           startBuffTokenPolling(isEdit)
@@ -1890,11 +1948,17 @@ export default {
         const response = await axios.post(url)
         
         if (response.data.code === 200) {
+          // 保存代理地址
+          if (response.data.data && response.data.data.proxy_address) {
+            proxyAddress.value = response.data.data.proxy_address
+          }
           ElMessage.success('悠悠有品代理服务器已启动，请在手机上配置代理')
-          ElMessage.info({
-            message: `代理地址: ${getServerIP()}:9005`,
-            duration: 5000
-          })
+          if (proxyAddress.value) {
+            ElMessage.info({
+              message: `代理地址: ${proxyAddress.value}`,
+              duration: 5000
+            })
+          }
           
           // 开始轮询获取数据
           startYyypTokenPolling(isEdit)
@@ -1998,6 +2062,91 @@ export default {
         await axios.post(url)
       } catch (error) {
         console.error('停止悠悠有品代理失败:', error)
+      }
+    }
+
+    // 完美世界APP令牌获取相关函数
+    const startPerfectWorldTokenCollection = async (isEdit) => {
+      try {
+        perfectWorldTokenLoading.value = true
+        perfectWorldTokenStatus.value = ''
+        
+        const url = apiUrls.getAppTokenStartPerfectWorld()
+        const response = await axios.post(url)
+        
+        if (response.data.code === 200) {
+          perfectWorldTokenStatus.value = 'waiting'
+          ElMessage.success('完美世界APP代理已启动,请在手机上配置代理并登录APP')
+          // 开始轮询检查是否获取到数据
+          startPerfectWorldTokenPolling(isEdit)
+        } else {
+          ElMessage.error(response.data.msg || '启动完美世界APP代理失败')
+          perfectWorldTokenLoading.value = false
+        }
+      } catch (error) {
+        console.error('启动完美世界APP代理失败:', error)
+        ElMessage.error('启动完美世界APP代理失败')
+        perfectWorldTokenLoading.value = false
+      }
+    }
+
+    const startPerfectWorldTokenPolling = (isEdit) => {
+      tokenCheckTimer.value = setInterval(async () => {
+        try {
+          const url = apiUrls.getAppTokenGetPerfectWorldData()
+          const response = await axios.get(url)
+          
+          if (response.data.code === 200 && response.data.data) {
+            // 获取到数据,停止轮询
+            clearInterval(tokenCheckTimer.value)
+            perfectWorldTokenLoading.value = false
+            perfectWorldTokenStatus.value = 'success'
+            ElMessage.success('完美世界APP令牌获取成功!')
+            
+            // 填充表单
+            const data = response.data.data
+            if (isEdit) {
+              editForm.value.platform = data.platform || editForm.value.platform
+              editForm.value.device = data.deviceId || editForm.value.device
+              editForm.value.appversion = data.appVersion || editForm.value.appversion
+              editForm.value.pwToken = data.token || editForm.value.pwToken
+              editForm.value.gameType = data.gameTypeStr || editForm.value.gameType
+            } else {
+              inputForm.value.platform = data.platform || inputForm.value.platform
+              inputForm.value.device = data.deviceId || inputForm.value.device
+              inputForm.value.appversion = data.appVersion || inputForm.value.appversion
+              inputForm.value.pwToken = data.token || inputForm.value.pwToken
+              inputForm.value.gameType = data.gameTypeStr || inputForm.value.gameType
+            }
+            
+            // 停止代理
+            stopPerfectWorldTokenCollection()
+            
+            // 自动保存
+            ElMessage.info('正在自动保存数据源配置...')
+            setTimeout(() => {
+              if (isEdit) {
+                handleEditSubmit()
+              } else {
+                handleSubmit()
+              }
+            }, 1000)
+          } else if (response.data.code === 202) {
+            // 数据正在收集中
+            console.log('完美世界APP Token 收集中...')
+          }
+        } catch (error) {
+          console.error('获取完美世界APP数据失败:', error)
+        }
+      }, 3000)
+    }
+
+    const stopPerfectWorldTokenCollection = async () => {
+      try {
+        const url = apiUrls.getAppTokenStopPerfectWorld()
+        await axios.post(url)
+      } catch (error) {
+        console.error('停止完美世界APP代理失败:', error)
       }
     }
 
@@ -2577,8 +2726,10 @@ export default {
       // 重置 Token 获取状态
       buffTokenStatus.value = ''
       yyypTokenStatus.value = ''
+      perfectWorldTokenStatus.value = ''
       buffTokenLoading.value = false
       yyypTokenLoading.value = false
+      perfectWorldTokenLoading.value = false
       
       // 对话框关闭时清理状态
       editingSourceId.value = null
@@ -2652,8 +2803,10 @@ export default {
       // 重置 Token 获取状态
       buffTokenStatus.value = ''
       yyypTokenStatus.value = ''
+      perfectWorldTokenStatus.value = ''
       buffTokenLoading.value = false
       yyypTokenLoading.value = false
+      perfectWorldTokenLoading.value = false
       
       resetForm() // 关闭时重置表单
     }
@@ -3689,10 +3842,13 @@ export default {
       // GetAppToken 相关
       buffTokenLoading,
       yyypTokenLoading,
+      perfectWorldTokenLoading,
       buffTokenStatus,
       yyypTokenStatus,
+      perfectWorldTokenStatus,
       startBuffTokenCollection,
       startYyypTokenCollection,
+      startPerfectWorldTokenCollection,
       getServerIP,
       // 编辑对话框折叠面板
       editYyypBasicCollapse,
