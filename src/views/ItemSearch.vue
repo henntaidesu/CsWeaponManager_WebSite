@@ -675,18 +675,22 @@ export default {
           
           if (searchResults.value.length === 0) {
             ElMessage.info('未找到匹配的武器')
+            showSearchResults.value = false
           } else {
             ElMessage.success(`找到 ${searchResults.value.length} 件武器`)
+            showSearchResults.value = true  // 搜索成功后自动展开
           }
         } else {
           ElMessage.error('搜索失败: ' + (response.data.error || '未知错误'))
           searchResults.value = []
+          showSearchResults.value = false
         }
         
       } catch (error) {
         console.error('搜索武器失败:', error)
         ElMessage.error('搜索失败: ' + (error.response?.data?.error || error.message))
         searchResults.value = []
+        showSearchResults.value = false
       } finally {
         isSearching.value = false
       }
