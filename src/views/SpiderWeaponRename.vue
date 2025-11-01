@@ -610,40 +610,25 @@ export default {
     // 加载配置列表
     const loadConfigList = async () => {
       try {
-        // 同时加载悠悠有品和BUFF的配置
-        const [youpinResponse, buffResponse] = await Promise.all([
-          axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
-            params: {
-              key1: 'spider_youpin',
-              key2: 'spider'
-            }
-          }),
-          axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
-            params: {
-              key1: 'spider_buff',
-              key2: 'spider'
-            }
-          })
-        ])
+        // 只加载 key2 = spider 的配置
+        const response = await axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
+          params: {
+            key2: 'spider'
+          }
+        })
         
-        console.log('悠悠有品配置响应:', youpinResponse.data)
-        console.log('BUFF配置响应:', buffResponse.data)
+        console.log('配置列表响应:', response.data)
         
-        // 合并两个列表，并添加平台类型标识
-        const youpinConfigs = (youpinResponse.data.data || []).map(config => ({
+        // 根据 key1 字段判断平台类型
+        savedConfigs.value = (response.data.data || []).map(config => ({
           ...config,
-          platformType: 'youpin'
-        }))
-        const buffConfigs = (buffResponse.data.data || []).map(config => ({
-          ...config,
-          platformType: 'buff'
+          platformType: config.key1 === 'spider_buff' ? 'buff' : 'youpin'
         }))
         
-        savedConfigs.value = [...youpinConfigs, ...buffConfigs]
         // 按ID降序排序
         savedConfigs.value.sort((a, b) => b.id - a.id)
         
-        console.log('合并后的配置列表:', savedConfigs.value)
+        console.log('加载的配置列表:', savedConfigs.value)
       } catch (error) {
         console.error('加载配置列表失败:', error)
         // ElMessage.error('加载配置列表失败')
@@ -652,55 +637,77 @@ export default {
 
     // 选择并加载配置
     const selectConfig = async (configId) => {
+      console.log('=== 开始加载配置 ===')
+      console.log('配置ID:', configId)
+      
       if (!configId) {
+        console.warn('配置ID为空')
         return
       }
 
       selectedConfigId.value = configId
+      console.log('已设置selectedConfigId:', selectedConfigId.value)
 
       try {
         const config = savedConfigs.value.find(c => c.id === configId)
-        console.log('选中的配置:', config)
+        console.log('找到的配置对象:', config)
         
         if (config && config.value) {
           // 解析 value 字段（JSON字符串）
-          const valueObj = typeof config.value === 'string' 
-            ? JSON.parse(config.value) 
-            : config.value
-          
-          console.log('解析后的配置值:', valueObj)
+          let valueObj
+          try {
+            valueObj = typeof config.value === 'string' 
+              ? JSON.parse(config.value) 
+              : config.value
+            console.log('解析后的配置值:', valueObj)
+          } catch (parseError) {
+            console.error('JSON解析失败:', parseError)
+            ElMessage.error('配置数据格式错误')
+            return
+          }
           
           // 从 value 对象中提取饰品ID
           const weaponId = valueObj.weapon_id || ''
           const steamId = valueObj.steam_id || ''
           
-          console.log('提取的数据 - weaponId:', weaponId, 'steamId:', steamId)
+          console.log('提取的数据:')
+          console.log('  - weaponId:', weaponId)
+          console.log('  - steamId:', steamId)
+          console.log('  - platformType:', config.platformType)
           
-          // 移除已提取的字段，剩余的作为自定义配置
-          const { weapon_id, steam_id, ...restConfig } = valueObj
-          
-          // 加载配置数据到表单
-          crawlForm.value = {
+          // 构建新的表单数据
+          const newFormData = {
             configName: config.dataName || '',
             steamId: steamId,
-            platformType: config.platformType || 'youpin', // 从配置中获取平台类型
+            platformType: config.platformType || 'youpin',
             weaponId: weaponId,
-            customConfig: Object.keys(restConfig).length > 0 ? JSON.stringify(restConfig, null, 2) : ''
+            customConfig: JSON.stringify(valueObj, null, 2) // 显示完整的原始配置
           }
           
-          console.log('填充后的表单数据:', crawlForm.value)
-          console.log('当前Steam ID列表:', steamIdList.value)
-          console.log('表单中的Steam ID:', crawlForm.value.steamId)
-          console.log('表单中的饰品ID:', crawlForm.value.weaponId)
-          console.log('表单中的平台类型:', crawlForm.value.platformType)
+          console.log('准备填充的表单数据:', newFormData)
+          
+          // 加载配置数据到表单
+          crawlForm.value = newFormData
+          
+          // 等待下一个tick确保数据已更新
+          await new Promise(resolve => setTimeout(resolve, 50))
+          
+          console.log('表单填充完成，当前表单值:')
+          console.log('  - configName:', crawlForm.value.configName)
+          console.log('  - steamId:', crawlForm.value.steamId)
+          console.log('  - platformType:', crawlForm.value.platformType)
+          console.log('  - weaponId:', crawlForm.value.weaponId)
+          console.log('  - customConfig:', crawlForm.value.customConfig)
+          console.log('=== 配置加载完成 ===')
           
           ElMessage.success(`已加载配置: ${config.dataName}`)
         } else {
-          console.warn('配置没有value字段:', config)
+          console.warn('配置缺少value字段:', config)
           ElMessage.warning('配置数据为空')
         }
       } catch (error) {
         console.error('加载配置失败:', error)
+        console.error('错误堆栈:', error.stack)
         ElMessage.error(`加载配置失败: ${error.message}`)
       }
     }

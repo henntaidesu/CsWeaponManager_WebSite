@@ -27,29 +27,15 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue'
 import { EditPen } from '@element-plus/icons-vue'
 import SpiderWeaponRenameContent from './SpiderWeaponRename.vue'
 
-export default {
-  name: 'Automation',
-  components: {
-    EditPen,
-    SpiderWeaponRenameContent
-  },
-  setup() {
-    const selectedCategory = ref('spider_rename')
+const selectedCategory = ref('spider_rename')
 
-    const selectCategory = (categoryId) => {
-      selectedCategory.value = categoryId
-    }
-
-    return {
-      selectedCategory,
-      selectCategory
-    }
-  }
+const selectCategory = (categoryId) => {
+  selectedCategory.value = categoryId
 }
 </script>
 
