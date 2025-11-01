@@ -300,21 +300,28 @@
               </template>
             </el-table-column>
             
-            <el-table-column label="磨损" width="100">
+            <el-table-column label="磨损" width="120">
               <template #default="scope">
                 {{ scope.row.abrade }}
-              </template>
-            </el-table-column>
-            
-            <el-table-column label="印花种子" width="120">
-              <template #default="scope">
-                {{ scope.row.paintSeed || '-' }}
               </template>
             </el-table-column>
             
             <el-table-column label="卖家" min-width="150">
               <template #default="scope">
                 {{ scope.row.userNickName || '未知' }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="操作" width="100" fixed="right">
+              <template #default="scope">
+                <el-button 
+                  type="primary" 
+                  size="small"
+                  @click="handleBuyWeapon(scope.row)"
+                  :loading="buyingItems[scope.row.id]"
+                >
+                  购买
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -359,6 +366,9 @@ export default {
     const weaponSearchKeyword = ref('')
     const weaponSearchResults = ref([])
     const isSearchingWeapon = ref(false)
+    
+    // 购买相关
+    const buyingItems = ref({})
 
     const crawlForm = ref({
       configName: '',      // 对应 dataName
@@ -898,6 +908,42 @@ export default {
       ElMessage.success('已删除饰品')
     }
 
+    // 购买饰品
+    const handleBuyWeapon = async (item) => {
+      try {
+        // 设置当前商品为购买中状态
+        buyingItems.value[item.id] = true
+        
+        // 构造购买请求数据
+        const buyData = {
+          steamId: crawlForm.value.steamId,
+          commodityId: item.id,
+          commodityNo: item.commodityNo,
+          price: item.price
+        }
+        
+        // 调用购买API
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/buy_weapon`,
+          buyData
+        )
+        
+        if (response.data.success) {
+          ElMessage.success(`购买成功！商品: ${item.nameTag || '改名饰品'}`)
+          // TODO: 可以刷新列表或更新UI状态
+        } else {
+          throw new Error(response.data.message || '购买失败')
+        }
+      } catch (error) {
+        console.error('购买饰品失败:', error)
+        const errorMessage = error.response?.data?.message || error.message || '购买失败'
+        ElMessage.error(errorMessage)
+      } finally {
+        // 移除购买中状态
+        buyingItems.value[item.id] = false
+      }
+    }
+
     // 表格行样式
     const getRowClassName = () => {
       return 'weapon-row'
@@ -940,7 +986,10 @@ export default {
       addWeaponId,
       removeWeaponId,
       weaponIdList,
-      getRowClassName
+      getRowClassName,
+      // 购买相关
+      buyingItems,
+      handleBuyWeapon
     }
   }
 }
