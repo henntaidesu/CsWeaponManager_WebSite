@@ -6,7 +6,7 @@
       
       <!-- 饰品映射同步区域 -->
       <div class="sync-section">
-        <h2 class="section-title">饰品映射同步</h2>
+        <h2 class="section-title">平台饰品映射</h2>
         
         <div class="sync-controls">
           <el-select 
@@ -40,18 +40,7 @@
           >
             {{ isSyncingBuff ? '同步中...' : '获取BUFF饰品映射' }}
           </el-button>
-        </div>
-        
-        <div v-if="lastSyncTime" class="sync-info">
-          <span class="sync-time">最后同步时间: {{ lastSyncTime }}</span>
-        </div>
-      </div>
 
-      <!-- Steam市场Hash Names采集区域 -->
-      <div class="sync-section">
-        <h2 class="section-title">Steam市场饰品哈希采集</h2>
-
-        <div class="sync-controls">
           <el-button 
             type="primary" 
             @click="collectHashNamesFull"
@@ -60,9 +49,22 @@
           >
             {{ isCollectingHashNames ? '采集中...' : '获取Steam饰品哈希' }}
           </el-button>
+
+          <el-button 
+            type="warning" 
+            @click="startCsqaqCrawlAll"
+            :disabled="isCrawlingCsqaq"
+            :loading="isCrawlingCsqaq"
+          >
+            {{ isCrawlingCsqaq ? '采集中...' : '全量采集 CSQAQ 商品' }}
+          </el-button>
+        </div>
+        
+        <div v-if="lastSyncTime" class="sync-info">
+          <span class="sync-time">最后同步时间: {{ lastSyncTime }}</span>
         </div>
 
-        <div v-if="lastCollectTime" class="sync-info">
+        <div v-if="lastCollectTime" class="sync-info" style="margin-top: 0.5rem;">
           <span class="sync-time">最后采集时间: {{ lastCollectTime }}</span>
         </div>
 
@@ -80,24 +82,8 @@
             </span>
           </div>
         </div>
-      </div>
 
-      <!-- CSQAQ商品采集区域 -->
-      <div class="sync-section">
-        <h2 class="section-title">CSQAQ 商品数据全量采集</h2>
-        
-        <div class="sync-controls">
-          <el-button 
-            type="warning" 
-            @click="startCsqaqCrawlAll"
-            :disabled="isCrawlingCsqaq"
-            :loading="isCrawlingCsqaq"
-          >
-            {{ isCrawlingCsqaq ? '采集中...' : '全量采集 CSQAQ 商品' }}
-          </el-button>
-        </div>
-        
-        <div v-if="csqaqStatus.message" class="sync-info">
+        <div v-if="csqaqStatus.message" class="sync-info" style="margin-top: 0.5rem;">
           <div class="status-row">
             <span class="status-label">消息:</span>
             <span class="status-value">{{ csqaqStatus.message }}</span>
@@ -112,8 +98,28 @@
           </div>
         </div>
         
-        <div v-if="lastCsqaqTime" class="sync-info">
+        <div v-if="lastCsqaqTime" class="sync-info" style="margin-top: 0.5rem;">
           <span class="sync-time">最后采集时间: {{ lastCsqaqTime }}</span>
+        </div>
+      </div>
+
+      <!-- 爬取已改名饰品工具区域 -->
+      <div class="sync-section">
+        <h2 class="section-title">爬取已改名饰品</h2>
+        
+        <div class="tool-description">
+          <p class="tool-desc-text">从悠悠有品、BUFF、Steam库存等平台爬取已改名的饰品数据，支持全量爬取、增量更新等模式。</p>
+        </div>
+        
+        <div class="sync-controls">
+          <el-button 
+            type="primary" 
+            @click="goToWeaponRename"
+            size="large"
+          >
+            <el-icon :size="18" style="margin-right: 8px;"><Tools /></el-icon>
+            打开爬取工具
+          </el-button>
         </div>
       </div>
       
@@ -123,13 +129,19 @@
 
 <script>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Tools } from '@element-plus/icons-vue'
 import { API_CONFIG, apiUrls } from '@/config/api.js'
 
 export default {
   name: 'DevTool',
+  components: {
+    Tools
+  },
   setup() {
+    const router = useRouter()
     const selectedSteamId = ref('')
     const steamIdList = ref([])
     const isSyncing = ref(false)
@@ -460,6 +472,11 @@ export default {
       }
     }
 
+    // 跳转到饰品重命名工具页面
+    const goToWeaponRename = () => {
+      router.push('/spider-weapon-rename')
+    }
+
     // 组件挂载时加载Steam ID列表
     onMounted(() => {
       loadSteamIdList()
@@ -482,7 +499,9 @@ export default {
       isCrawlingCsqaq,
       csqaqStatus,
       lastCsqaqTime,
-      startCsqaqCrawlAll
+      startCsqaqCrawlAll,
+      // 工具跳转
+      goToWeaponRename
     }
   }
 }
@@ -556,6 +575,21 @@ export default {
 .sync-time {
   color: #4CAF50;
   font-size: 0.875rem;
+}
+
+.tool-description {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: rgba(64, 158, 255, 0.05);
+  border-radius: 0.5rem;
+  border-left: 3px solid #409EFF;
+}
+
+.tool-desc-text {
+  color: #aaa;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
 }
 
 /* Element Plus 组件深色主题适配 */

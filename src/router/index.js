@@ -12,6 +12,7 @@ import SteamMarket from '@/views/SteamMarket.vue'
 import SteamInventoryHistory from '@/views/SteamInventoryHistory.vue'
 import StockComponents from '@/views/StockComponents.vue'
 import DevTool from '@/views/DevTool.vue'
+import SpiderWeaponRename from '@/views/SpiderWeaponRename.vue'
 
 const routes = [
   {
@@ -92,6 +93,12 @@ const routes = [
         meta: { title: '开发工具' }
       }
     ]
+  },
+  {
+    path: '/spider-weapon-rename',
+    name: 'SpiderWeaponRename',
+    component: SpiderWeaponRename,
+    meta: { title: '饰品重命名工具' }
   }
 ]
 
