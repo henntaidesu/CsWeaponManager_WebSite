@@ -62,8 +62,21 @@
       <div class="main-content-area">
 
       <!-- 饰品搜索区域 -->
-      <div class="search-section">
-        <h2 class="section-title">搜索饰品</h2>
+      <!-- 统一的工具区域 -->
+      <div class="unified-tool-section" :class="{ collapsed: isToolSectionCollapsed }">
+        <div class="tool-section-header" @click="toggleToolSection">
+          <h2 class="main-section-title">配置区域</h2>
+          <el-button type="text" class="collapse-btn">
+            <el-icon :size="20">
+              <DArrowUp v-if="!isToolSectionCollapsed" />
+              <DArrowDown v-else />
+            </el-icon>
+          </el-button>
+        </div>
+        
+        <div class="tool-section-content" v-show="!isToolSectionCollapsed">
+        <div class="search-section">
+          <h2 class="section-title">搜索饰品</h2>
         
         <div class="search-container">
           <el-input
@@ -155,9 +168,9 @@
             </el-table-column>
           </el-table>
         </div>
-      </div>
+        </div>
 
-      <div class="tool-section">
+        <div class="tool-section">
         <h2 class="section-title">爬取配置</h2>
         
         <div class="form-container">
@@ -253,10 +266,14 @@
             :disabled="isCrawling || !canStartCrawl"
             :loading="isCrawling"
           >
-            {{ isCrawling ? '爬取中...' : '开始爬取' }}
+            {{ isCrawling ? '搜索中...' : '开始搜索' }}
           </el-button>
         </div>
+        </div>
+        </div>
+        <!-- 结束 tool-section-content -->
       </div>
+      <!-- 结束 unified-tool-section -->
 
       <!-- 查询结果区域 -->
       <div v-if="crawlResult && crawlResult.weapons && crawlResult.weapons.length > 0" class="result-section">
@@ -280,12 +297,6 @@
             style="width: 100%"
             stripe
           >
-            <el-table-column label="改名" min-width="200">
-              <template #default="scope">
-                <span class="name-tag">{{ scope.row.nameTag || '-' }}</span>
-              </template>
-            </el-table-column>
-            
             <el-table-column label="价格" width="100">
               <template #default="scope">
                 <span class="price">¥{{ scope.row.price }}</span>
@@ -300,9 +311,15 @@
               </template>
             </el-table-column>
             
-            <el-table-column label="磨损" width="120">
+            <el-table-column label="磨损" width="240">
               <template #default="scope">
                 {{ scope.row.abrade }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="改名" min-width="200">
+              <template #default="scope">
+                <span class="name-tag">{{ scope.row.nameTag || '-' }}</span>
               </template>
             </el-table-column>
             
@@ -341,7 +358,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Delete, Refresh } from '@element-plus/icons-vue'
+import { Document, Delete, Refresh, DArrowUp, DArrowDown } from '@element-plus/icons-vue'
 import { API_CONFIG } from '@/config/api.js'
 
 export default {
@@ -349,7 +366,9 @@ export default {
   components: {
     Document,
     Delete,
-    Refresh
+    Refresh,
+    DArrowUp,
+    DArrowDown
   },
   setup() {
     const router = useRouter()
@@ -369,6 +388,9 @@ export default {
     
     // 购买相关
     const buyingItems = ref({})
+    
+    // 工具区域折叠状态
+    const isToolSectionCollapsed = ref(false)
 
     const crawlForm = ref({
       configName: '',      // 对应 dataName
@@ -427,8 +449,15 @@ export default {
       }
     }
 
+    // 切换工具区域显示/隐藏
+    const toggleToolSection = () => {
+      isToolSectionCollapsed.value = !isToolSectionCollapsed.value
+    }
+
     // 开始爬取（流式接收）
     const startCrawl = async () => {
+      // 开始搜索时自动折叠工具区域
+      isToolSectionCollapsed.value = true
       // 验证基本配置
       if (!crawlForm.value.configName) {
         ElMessage.warning('请输入配置名称')
@@ -1126,7 +1155,10 @@ export default {
       getRowClassName,
       // 购买相关
       buyingItems,
-      handleBuyWeapon
+      handleBuyWeapon,
+      // 工具区域折叠
+      isToolSectionCollapsed,
+      toggleToolSection
     }
   }
 }
@@ -1264,6 +1296,70 @@ export default {
 .main-content-area {
   flex: 1;
   min-width: 0;
+}
+
+/* 统一工具区域容器 */
+.unified-tool-section {
+  background-color: #1e1e1e;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.unified-tool-section.collapsed {
+  padding: 1rem 2rem;
+}
+
+.tool-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #333;
+  margin-bottom: 1.5rem;
+  user-select: none;
+}
+
+.unified-tool-section.collapsed .tool-section-header {
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.main-section-title {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.collapse-btn {
+  color: #909399;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.collapse-btn:hover {
+  color: #409eff;
+  transform: scale(1.1);
+}
+
+.tool-section-content {
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .content-card {
