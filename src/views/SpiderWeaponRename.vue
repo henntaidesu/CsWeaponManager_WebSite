@@ -173,37 +173,30 @@
         
         <div class="form-container">
           <el-form :model="crawlForm" label-width="120px" ref="crawlFormRef">
-            <el-form-item label="配置名称" required>
-              <el-input 
-                v-model="crawlForm.configName" 
-                placeholder="请输入配置名称"
-                clearable
-              />
-              <span class="form-hint">用于标识此次爬取任务</span>
-            </el-form-item>
-
-            <el-form-item label="Steam ID" required>
-              <el-select 
-                v-model="crawlForm.steamId" 
-                placeholder="选择 Steam ID"
-                style="width: 100%;"
-              >
-                <el-option 
-                  v-for="steamId in steamIdList" 
-                  :key="steamId.steam_id" 
-                  :label="steamId.steam_id" 
-                  :value="steamId.steam_id"
+            <div class="form-row">
+              <el-form-item label="配置名称" required class="form-item-half">
+                <el-input 
+                  v-model="crawlForm.configName" 
+                  placeholder="请输入配置名称"
+                  clearable
                 />
-              </el-select>
-            </el-form-item>
+              </el-form-item>
 
-            <el-form-item label="保存到数据库">
-              <el-switch 
-                v-model="crawlForm.saveToDb" 
-                active-text="自动保存"
-                inactive-text="仅显示"
-              />
-            </el-form-item>
+              <el-form-item label="Steam ID" required class="form-item-half">
+                <el-select 
+                  v-model="crawlForm.steamId" 
+                  placeholder="选择 Steam ID"
+                  style="width: 100%;"
+                >
+                  <el-option 
+                    v-for="steamId in steamIdList" 
+                    :key="steamId.steam_id" 
+                    :label="steamId.steam_id" 
+                    :value="steamId.steam_id"
+                  />
+                </el-select>
+              </el-form-item>
+            </div>
 
             <el-form-item label="饰品ID">
               <el-input 
@@ -211,7 +204,6 @@
                 placeholder="请输入需要爬取的饰品ID，多个ID用逗号分隔"
                 clearable
               />
-              <span class="form-hint">留空则爬取所有饰品，例如: 12345,67890</span>
             </el-form-item>
 
             <el-form-item label="自定义配置">
@@ -229,7 +221,6 @@
 }'
                 clearable
               />
-              <span class="form-hint">JSON格式配置，用于更精细的爬取控制</span>
             </el-form-item>
           </el-form>
         </div>
@@ -397,14 +388,10 @@ export default {
     const isSearchingWeapon = ref(false)
 
     const crawlForm = ref({
-      configName: '',
+      configName: '',      // 对应 dataName
       steamId: '',
-      crawlMode: 'all',
-      dataSource: 'youpin',
-      saveToDb: true,
-      delay: 2,
-      weaponId: '',
-      customConfig: ''
+      weaponId: '',        // 从 customConfig 中提取
+      customConfig: ''     // 对应 value，JSON字符串
     })
 
     // 计算是否可以开始爬取
@@ -567,10 +554,6 @@ export default {
       crawlForm.value = {
         configName: '',
         steamId: steamIdList.value.length > 0 ? steamIdList.value[0].steam_id : '',
-        crawlMode: 'all',
-        dataSource: 'youpin',
-        saveToDb: true,
-        delay: 2,
         weaponId: '',
         customConfig: ''
       }
@@ -608,7 +591,8 @@ export default {
         // TODO: 替换为实际的API端点
         const response = await axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
           params: {
-            type: 'spider_weapon_rename'
+            key1: 'spider_youpin',
+            key2: 'spider'
           }
         })
         
@@ -631,18 +615,28 @@ export default {
 
       try {
         const config = savedConfigs.value.find(c => c.id === configId)
-        if (config && config.config_data) {
-          const configData = typeof config.config_data === 'string' 
-            ? JSON.parse(config.config_data) 
-            : config.config_data
+        if (config && config.value) {
+          // 解析 value 字段（JSON字符串）
+          const valueObj = typeof config.value === 'string' 
+            ? JSON.parse(config.value) 
+            : config.value
+          
+          // 从 value 对象中提取饰品ID
+          const weaponId = valueObj.weapon_id || ''
+          const steamId = valueObj.steam_id || ''
+          
+          // 移除已提取的字段，剩余的作为自定义配置
+          const { weapon_id, steam_id, ...restConfig } = valueObj
           
           // 加载配置数据到表单
           crawlForm.value = {
-            ...crawlForm.value,
-            ...configData
+            configName: config.dataName || '',
+            steamId: steamId,
+            weaponId: weaponId,
+            customConfig: Object.keys(restConfig).length > 0 ? JSON.stringify(restConfig, null, 2) : ''
           }
           
-          ElMessage.success(`已加载配置: ${config.name}`)
+          ElMessage.success(`已加载配置: ${config.dataName}`)
         }
       } catch (error) {
         console.error('加载配置失败:', error)
@@ -667,11 +661,35 @@ export default {
       }
 
       try {
+        // 构建 value 对象
+        let valueObj = {}
+        
+        // 如果有自定义配置，先解析
+        if (crawlForm.value.customConfig) {
+          try {
+            valueObj = JSON.parse(crawlForm.value.customConfig)
+          } catch (e) {
+            ElMessage.error('自定义配置JSON格式错误')
+            return
+          }
+        }
+        
+        // 将饰品ID添加到 value 对象中
+        if (crawlForm.value.weaponId) {
+          valueObj.weapon_id = crawlForm.value.weaponId
+        }
+        
+        // 添加其他必要字段
+        if (crawlForm.value.steamId) {
+          valueObj.steam_id = crawlForm.value.steamId
+        }
+
         const configData = {
-          name: saveConfigForm.value.name,
-          description: saveConfigForm.value.description,
-          type: 'spider_weapon_rename',
-          config_data: JSON.stringify(crawlForm.value)
+          dataName: saveConfigForm.value.name,
+          key1: 'spider_youpin',
+          key2: 'spider',
+          value: JSON.stringify(valueObj),
+          description: saveConfigForm.value.description || ''
         }
 
         // TODO: 替换为实际的API端点
@@ -1078,6 +1096,17 @@ export default {
   margin-bottom: 1.5rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.form-item-half {
+  flex: 1;
+  margin-bottom: 18px;
+}
+
 .form-hint {
   color: #888;
   font-size: 0.75rem;
@@ -1229,6 +1258,15 @@ export default {
 
   .form-container {
     padding: 1rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .form-item-half {
+    width: 100%;
   }
 
   .action-buttons {
