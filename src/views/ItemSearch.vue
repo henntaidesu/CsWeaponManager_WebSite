@@ -932,11 +932,116 @@ export default {
       // TODO: 对接查看详情接口
     }
 
-    // 购买商品（暂未对接）
-    const handleBuyCommodity = (commodity) => {
+    // 购买商品
+    const handleBuyCommodity = async (commodity) => {
       console.log('购买商品:', commodity)
-      ElMessage.info(`购买功能开发中... 商品ID: ${commodity.id}`)
-      // TODO: 对接购买接口
+      
+      // 确认购买
+      try {
+        await ElMessageBox.confirm(
+          `确认购买该商品吗？\n\n商品：${commodity.commodityName}\n价格：¥${commodity.price}\n磨损：${commodity.abrade || '-'}`,
+          '确认购买',
+          {
+            confirmButtonText: '确认购买',
+            cancelButtonText: '取消',
+            type: 'warning',
+            distinguishCancelAndClose: true
+          }
+        )
+      } catch (error) {
+        // 用户取消
+        ElMessage.info('已取消购买')
+        return
+      }
+      
+      // 开始购买流程
+      const loadingMessage = ElMessage({
+        message: '正在创建订单...',
+        type: 'info',
+        duration: 0,
+        customClass: 'buy-loading-message'
+      })
+      
+      try {
+        const requestData = {
+          steamId: selectedSteamId.value,
+          commodityId: commodity.id,
+          buyQuantity: 1,
+          price: commodity.price,  // 添加商品价格
+          autoConfirmPayment: true,  // 自动使用余额支付
+          pollPayment: true  // 轮询支付状态
+        }
+        
+        console.log('购买请求数据:', requestData)
+        
+        // 调用完整购买接口（创建订单+自动支付）
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/buyCommodity`,
+          requestData
+        )
+        
+        console.log('购买响应:', response.data)
+        
+        loadingMessage.close()
+        
+        if (response.data.success) {
+          const orderData = response.data.data?.order || {}
+          const paymentStatus = response.data.data?.payment_status || {}
+          const orderNo = orderData.orderNo || '未知'
+          const paymentAmount = commodity.price || '未知'
+          
+          // 检查支付状态
+          const payStatus = paymentStatus.payStatus
+          let message = ''
+          
+          if (payStatus === 2) {
+            // 支付成功
+            message = `购买成功！\n\n订单号：${orderNo}\n金额：¥${paymentAmount}\n状态：支付成功✅\n\n饰品将发送至您的库存。`
+          } else if (payStatus === 1) {
+            // 支付处理中
+            message = `订单已创建！\n\n订单号：${orderNo}\n金额：¥${paymentAmount}\n状态：支付处理中⏳\n\n请稍后查看订单状态。`
+          } else {
+            // 订单创建成功但支付未完成
+            message = `订单创建成功！\n\n订单号：${orderNo}\n金额：¥${paymentAmount}\n\n已自动使用余额支付，请稍后查看订单状态。`
+          }
+          
+          // 显示购买成功信息
+          ElMessageBox.alert(
+            message,
+            '购买完成',
+            {
+              confirmButtonText: '知道了',
+              type: 'success',
+              callback: () => {
+                ElMessage.success(payStatus === 2 ? '购买成功！' : '订单已创建')
+              }
+            }
+          )
+        } else {
+          ElMessageBox.alert(
+            `购买失败：${response.data.message || '未知错误'}\n\n请检查配置或稍后重试。`,
+            '购买失败',
+            {
+              confirmButtonText: '知道了',
+              type: 'error'
+            }
+          )
+        }
+      } catch (error) {
+        loadingMessage.close()
+        console.error('购买商品失败:', error)
+        
+        const errorMessage = error.response?.data?.message || error.message || '网络错误，请稍后重试'
+        
+        ElMessageBox.alert(
+          `购买失败：${errorMessage}`,
+          '购买失败',
+          {
+            confirmButtonText: '知道了',
+            type: 'error'
+          }
+        )
+      }
     }
 
     // 批量获取改名信息（自动调用，只获取第一条）

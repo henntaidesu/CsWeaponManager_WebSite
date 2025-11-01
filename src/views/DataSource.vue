@@ -241,6 +241,14 @@
                   placeholder="请输入SK"
                 />
               </el-form-item>
+              <el-form-item label="Tracestate" required>
+                <el-input 
+                  v-model="editForm.tracestate" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入Tracestate"
+                />
+              </el-form-item>
             </el-collapse-item>
           </el-collapse>
         </template>
@@ -1501,6 +1509,14 @@
               placeholder="请输入SK"
             />
           </el-form-item>
+          <el-form-item label="Tracestate" required>
+            <el-input 
+              v-model="inputForm.tracestate" 
+              type="textarea"
+              :rows="2"
+              placeholder="请输入Tracestate"
+            />
+          </el-form-item>
           <el-form-item label="Device Info" required>
             <el-input 
               v-model="inputForm.deviceInfo" 
@@ -1611,6 +1627,7 @@ export default {
       deviceuk: '',
       uk: '',
       sk: '',
+      tracestate: '',
       deviceInfo: '',
       // BUFF特有字段
       cookie: '',
@@ -1658,6 +1675,7 @@ export default {
       deviceuk: '',
       uk: '',
       sk: '',
+      tracestate: '',
       deviceInfo: '',
       // BUFF特有字段
       cookie: '',
@@ -1852,6 +1870,10 @@ export default {
           ElMessage.error('请填写SK')
           return
         }
+        if (!inputForm.value.tracestate) {
+          ElMessage.error('请填写Tracestate')
+          return
+        }
         if (!inputForm.value.deviceInfo) {
           ElMessage.error('请填写Device Info')
           return
@@ -1916,6 +1938,7 @@ export default {
             deviceuk: inputForm.value.deviceuk,
             uk: inputForm.value.uk,
             sk: inputForm.value.sk,
+            tracestate: inputForm.value.tracestate,
             device_info: inputForm.value.deviceInfo
           })
         } else if (inputForm.value.type === 'perfectworld') {
@@ -2267,6 +2290,7 @@ export default {
               editForm.value.deviceuk = data.deviceuk
               editForm.value.uk = data.uk
               editForm.value.sk = data.sk
+              editForm.value.tracestate = data.tracestate
               editForm.value.deviceInfo = data.device_info
             } else {
               inputForm.value.sessionid = data.Sessionid
@@ -2282,6 +2306,7 @@ export default {
               inputForm.value.deviceuk = data.deviceuk
               inputForm.value.uk = data.uk
               inputForm.value.sk = data.sk
+              inputForm.value.tracestate = data.tracestate
               inputForm.value.deviceInfo = data.device_info
             }
             
@@ -2448,6 +2473,7 @@ export default {
         deviceuk: '',
         uk: '',
         sk: '',
+        tracestate: '',
         deviceInfo: '',
         // BUFF特有字段
         cookie: '',
@@ -2891,6 +2917,7 @@ export default {
         editForm.value.deviceuk = config.yyyp_deviceuk || ''
         editForm.value.uk = config.yyyp_uk || ''
         editForm.value.sk = config.yyyp_sk || ''
+        editForm.value.tracestate = config.yyyp_tracestate || ''
         editForm.value.deviceInfo = config.yyyp_device_info || ''
         
         console.log('悠悠有品配置解析结果:', {
@@ -3034,6 +3061,7 @@ export default {
         apiKey: '',
         updateFreq: '15min',
         enabled: true,
+        // 悠悠有品特有字段
         phone: '',
         sessionid: '',
         token: '',
@@ -3043,6 +3071,13 @@ export default {
         appType: '',
         userId: '',
         steamId: '',
+        devicetoken: '',
+        deviceid: '',
+        deviceuk: '',
+        uk: '',
+        sk: '',
+        tracestate: '',
+        deviceInfo: '',
         // BUFF特有字段
         cookie: '',
         systemVersion: '',
@@ -3050,6 +3085,12 @@ export default {
         steamID: '',
         // Steam特有字段
         cookies: '',
+        steamCookieMethod: 'manual',
+        steamUsername: '',
+        steamPassword: '',
+        steamTwofactorCode: '',
+        steamLoginMethod: 'password',
+        steamQRSessionId: '',
         // 完美世界APP特有字段
         appversion: '',
         device: '',
@@ -3503,6 +3544,10 @@ export default {
           ElMessage.error('请填写SK')
           return
         }
+        if (!editForm.value.tracestate) {
+          ElMessage.error('请填写Tracestate')
+          return
+        }
         if (!editForm.value.deviceInfo) {
           ElMessage.error('请填写Device Info')
           return
@@ -3568,6 +3613,7 @@ export default {
             deviceuk: editForm.value.deviceuk,
             uk: editForm.value.uk,
             sk: editForm.value.sk,
+            tracestate: editForm.value.tracestate,
             device_info: editForm.value.deviceInfo
           })
         } else if (editForm.value.type === 'perfectworld') {
