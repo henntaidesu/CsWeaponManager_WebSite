@@ -80,6 +80,7 @@ export const API_CONFIG = {
     CSQAQ_TASK_STATUS: '/csqaqSpiderV1/getTaskStatus',  // CSQAQ获取任务状态
     CSQAQ_TASK_RESULT: '/csqaqSpiderV1/getTaskResult',  // CSQAQ获取任务结果
     CSQAQ_EXPORT: '/csqaqSpiderV1/exportGoods',  // CSQAQ导出商品
+    AUTO_BUY_RENAMED_WEAPON: '/youping898SpiderV1/auto_buy_renamed_weapon',  // 自动购买改名饰品
     
     // Steam登录相关
     STEAM_LOGIN: '/steamLoginV1/login',
@@ -193,6 +194,7 @@ export const apiUrls = {
   csqaqTaskStatus: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_TASK_STATUS),
   csqaqTaskResult: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_TASK_RESULT),
   csqaqExport: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.CSQAQ_EXPORT),
+  autoBuyRenamedWeapon: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.AUTO_BUY_RENAMED_WEAPON),
   
   // Steam登录API
   steamLogin: () => getSpiderApiUrl(API_CONFIG.ENDPOINTS.STEAM_LOGIN),

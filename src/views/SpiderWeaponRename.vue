@@ -258,48 +258,66 @@
         </div>
       </div>
 
-      <!-- 爬取结果区域 -->
-      <div v-if="crawlResult" class="result-section">
-        <h2 class="section-title">爬取结果</h2>
+      <!-- 查询结果区域 -->
+      <div v-if="crawlResult && crawlResult.weapons && crawlResult.weapons.length > 0" class="result-section">
+        <h2 class="section-title">查询结果</h2>
         
-        <div class="result-info">
-          <div class="result-item">
-            <span class="result-label">状态:</span>
-            <span 
-              class="result-value"
-              :class="{
-                'success': crawlResult.success,
-                'error': !crawlResult.success
-              }"
-            >
-              {{ crawlResult.success ? '成功' : '失败' }}
-            </span>
+        <!-- 每个饰品的结果 -->
+        <div v-for="weapon in crawlResult.weapons" :key="weapon.yyyp_id" class="weapon-result-card">
+          <div class="weapon-header">
+            <h3 class="weapon-name">{{ weapon.weapon_name }}</h3>
+            <div class="weapon-stats">
+              <el-tag size="small">总在售: {{ weapon.total_count }}</el-tag>
+              <el-tag size="small" type="warning">最低价: ¥{{ weapon.lowest_price }}</el-tag>
+              <el-tag size="small" type="info">改名数: {{ weapon.renamed_count }}</el-tag>
+              <el-tag size="small" type="success">符合条件: {{ weapon.target_count }}</el-tag>
+            </div>
           </div>
           
-          <div v-if="crawlResult.message" class="result-item">
-            <span class="result-label">消息:</span>
-            <span class="result-value">{{ crawlResult.message }}</span>
-          </div>
-          
-          <div v-if="crawlResult.totalCrawled" class="result-item">
-            <span class="result-label">爬取数量:</span>
-            <span class="result-value highlight">{{ crawlResult.totalCrawled }}</span>
-          </div>
-          
-          <div v-if="crawlResult.renamedCount" class="result-item">
-            <span class="result-label">已改名饰品:</span>
-            <span class="result-value success">{{ crawlResult.renamedCount }}</span>
-          </div>
-          
-          <div v-if="crawlResult.savedCount" class="result-item">
-            <span class="result-label">保存数量:</span>
-            <span class="result-value success">{{ crawlResult.savedCount }}</span>
-          </div>
-          
-          <div v-if="crawlResult.duration" class="result-item">
-            <span class="result-label">耗时:</span>
-            <span class="result-value">{{ crawlResult.duration.toFixed(2) }} 秒</span>
-          </div>
+          <!-- 商品列表 -->
+          <el-table 
+            :data="weapon.items" 
+            style="width: 100%"
+            stripe
+          >
+            <el-table-column label="改名" min-width="200">
+              <template #default="scope">
+                <span class="name-tag">{{ scope.row.nameTag || '-' }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="价格" width="100">
+              <template #default="scope">
+                <span class="price">¥{{ scope.row.price }}</span>
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="溢价" width="100">
+              <template #default="scope">
+                <el-tag type="success" size="small">
+                  +¥{{ scope.row.spread.toFixed(2) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="磨损" width="100">
+              <template #default="scope">
+                {{ scope.row.abrade }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="印花种子" width="120">
+              <template #default="scope">
+                {{ scope.row.paintSeed || '-' }}
+              </template>
+            </el-table-column>
+            
+            <el-table-column label="卖家" min-width="150">
+              <template #default="scope">
+                {{ scope.row.userNickName || '未知' }}
+              </template>
+            </el-table-column>
+          </el-table>
         </div>
       </div>
 
@@ -357,9 +375,10 @@ export default {
 
     // 计算是否可以开始爬取
     const canStartCrawl = computed(() => {
+      // 检查必填字段
+      if (!crawlForm.value.configName) return false
       if (!crawlForm.value.steamId) return false
-      if (!crawlForm.value.crawlMode) return false
-      if (!crawlForm.value.dataSource) return false
+      if (!crawlForm.value.weaponId || crawlForm.value.weaponId.length === 0) return false
       return true
     })
 
@@ -400,8 +419,19 @@ export default {
 
     // 开始爬取
     const startCrawl = async () => {
-      if (!canStartCrawl.value) {
-        ElMessage.warning('请完善爬取配置')
+      // 验证基本配置
+      if (!crawlForm.value.configName) {
+        ElMessage.warning('请输入配置名称')
+        return
+      }
+      
+      if (!crawlForm.value.steamId) {
+        ElMessage.warning('请选择 Steam ID')
+        return
+      }
+      
+      if (!crawlForm.value.weaponId || crawlForm.value.weaponId.length === 0) {
+        ElMessage.warning('请至少添加一个饰品ID')
         return
       }
 
@@ -412,24 +442,32 @@ export default {
         return
       }
 
+      // 确认对话框
       try {
-        let confirmMessage = `确定要执行爬取操作吗？\n\nSteam ID: ${crawlForm.value.steamId}\n爬取模式: ${getModeLabel(crawlForm.value.crawlMode)}\n数据来源: ${getSourceLabel(crawlForm.value.dataSource)}`
+        const weaponNames = crawlForm.value.weaponId.map(w => w.name).join('、')
+        let confirmMessage = `确定要开始自动购买改名饰品吗？\n\n`
+        confirmMessage += `配置名称: ${crawlForm.value.configName}\n`
+        confirmMessage += `Steam ID: ${crawlForm.value.steamId}\n`
+        confirmMessage += `平台类型: ${crawlForm.value.platformType === 'buff' ? 'BUFF' : '悠悠有品'}\n`
+        confirmMessage += `监控饰品: ${weaponNames}\n`
+        confirmMessage += `饰品数量: ${crawlForm.value.weaponId.length} 个`
         
-        if (crawlForm.value.saveToDb) {
-          confirmMessage += `\n保存到数据库: 是`
-        }
-
-        if (crawlForm.value.weaponId) {
-          confirmMessage += `\n饰品ID: ${crawlForm.value.weaponId}`
-        }
-
         if (jsonValidation.config) {
-          confirmMessage += `\n自定义配置: 已设置`
+          const config = jsonValidation.config
+          if (config['最大差价']) {
+            confirmMessage += `\n最大溢价: ${config['最大差价']} 元`
+          }
+          if (config['饰品自动查询间隔']) {
+            confirmMessage += `\n查询间隔: ${config['饰品自动查询间隔']} 秒`
+          }
+          if (config.hasOwnProperty('是否自动购买')) {
+            confirmMessage += `\n自动购买: ${config['是否自动购买'] ? '是' : '否（仅监控）'}`
+          }
         }
 
         await ElMessageBox.confirm(
           confirmMessage,
-          '确认爬取',
+          '确认执行',
           {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
@@ -442,55 +480,47 @@ export default {
 
       isCrawling.value = true
       crawlResult.value = null
-      ElMessage.info('开始执行爬取操作...')
+      ElMessage.info('正在启动自动购买任务...')
 
       try {
-        // 这里需要根据实际的后端API进行调整
+        // 构建爬虫配置
+        const spiderConfig = {
+          weapon_id: crawlForm.value.weaponId,  // [{"id": "61490", "name": "..."}]
+          steam_id: crawlForm.value.steamId,
+          最大差价: 5,
+          饰品自动查询间隔: 3,
+          是否自动购买: true,
+          ...jsonValidation.config  // 合并自定义配置
+        }
+        
         const requestData = {
           steamId: crawlForm.value.steamId,
-          crawlMode: crawlForm.value.crawlMode,
-          dataSource: crawlForm.value.dataSource,
-          saveToDb: crawlForm.value.saveToDb,
-          delay: crawlForm.value.delay,
-          weaponId: crawlForm.value.weaponId,
-          customConfig: jsonValidation.config
+          spider_config: spiderConfig
         }
+        
+        console.log('发送请求到后端:', requestData)
 
-        // TODO: 替换为实际的API端点
-        // const response = await axios.post(`${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/getRenamedWeapons`, requestData)
-        
-        // 模拟API调用（需要替换为实际的API）
-        console.log('爬取请求数据:', requestData)
-        
-        // 临时模拟响应
-        await new Promise(resolve => setTimeout(resolve, 2000))
-        
-        const mockResponse = {
-          data: {
-            success: true,
-            message: '爬取操作完成',
-            data: {
-              totalCrawled: 50,
-              renamedCount: 35,
-              savedCount: 35,
-              duration: 2.5
-            }
-          }
-        }
+        // 调用实际的API
+        const response = await axios.post(
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/auto_buy_renamed_weapon`,
+          requestData
+        )
 
-        if (mockResponse.data.success) {
-          crawlResult.value = {
-            success: true,
-            message: mockResponse.data.message,
-            ...mockResponse.data.data
-          }
-          ElMessage.success('爬取操作完成！')
+        console.log('后端响应:', response.data)
+
+        if (response.data.success && response.data.data) {
+          crawlResult.value = response.data.data  // 直接使用返回的数据结构
+          
+          const totalRenamed = response.data.data.weapons.reduce((sum, w) => sum + w.renamed_count, 0)
+          const totalTarget = response.data.data.weapons.reduce((sum, w) => sum + w.target_count, 0)
+          
+          ElMessage.success(`查询完成！找到 ${totalRenamed} 个改名饰品，其中 ${totalTarget} 个符合条件`)
         } else {
           crawlResult.value = {
             success: false,
-            message: mockResponse.data.message
+            weapons: []
           }
-          ElMessage.error(`爬取失败: ${mockResponse.data.message}`)
+          ElMessage.error(`查询失败: ${response.data.message || '未知错误'}`)
         }
       } catch (error) {
         console.error('爬取操作失败:', error)
@@ -1179,6 +1209,44 @@ export default {
   padding: 1.5rem;
   border-radius: 0.75rem;
   margin-bottom: 1.5rem;
+}
+
+.weapon-result-card {
+  background-color: #1e1e1e;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.weapon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.weapon-name {
+  color: #fff;
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.weapon-stats {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.price {
+  font-weight: 600;
+  color: #ffa500;
+}
+
+.name-tag {
+  color: #67c23a;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 
 .result-info {
