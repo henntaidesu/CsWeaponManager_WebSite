@@ -58,36 +58,36 @@ const toggleSidebar = () => {
 .automation-container {
   display: flex;
   min-height: 100vh;
+  width: 100%;
   background: transparent;
   position: relative;
 }
 
 /* 二级左侧栏 */
 .secondary-sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
+  position: relative;
   width: 240px;
-  background: linear-gradient(90deg, rgba(30, 30, 30, 0.98) 0%, rgba(30, 30, 30, 0.95) 100%);
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(35, 35, 35, 0.95) 100%);
   backdrop-filter: blur(10px);
-  border-right: 1px solid #3a3a3a;
+  -webkit-backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(58, 58, 58, 0.8);
   overflow: hidden;
   display: flex;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  transform: translateX(0);
-  z-index: 100;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.5);
 }
 
 .secondary-sidebar.collapsed {
-  transform: translateX(-240px);
+  width: 0;
+  margin-left: -1px;
+  border-right: none;
 }
 
 /* 折叠/展开按钮 */
 .toggle-button {
-  position: absolute;
-  right: -36px;
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
   width: 36px;
@@ -104,14 +104,19 @@ const toggleSidebar = () => {
   color: #b0b0b0;
   z-index: 101;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  left: calc(max(15rem, min(18vw, 20rem)) + 240px - 36px);
+}
+
+.secondary-sidebar.collapsed .toggle-button {
+  left: max(15rem, min(18vw, 20rem));
 }
 
 .toggle-button:hover {
   background: linear-gradient(90deg, rgba(64, 158, 255, 0.2) 0%, rgba(64, 158, 255, 0.3) 100%);
   color: #409eff;
   border-color: #409eff;
-  right: -38px;
   box-shadow: 2px 0 12px rgba(64, 158, 255, 0.4);
+  transform: translateY(-50%) translateX(2px);
 }
 
 .toggle-button .el-icon {
@@ -123,16 +128,16 @@ const toggleSidebar = () => {
 /* 侧边栏内容 */
 .sidebar-content {
   flex: 1;
-  padding: 1.5rem 0;
+  padding: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
 
 .sidebar-header {
-  padding: 0 1.5rem 1rem 1.5rem;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #3a3a3a;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .sidebar-header h2 {
@@ -153,7 +158,7 @@ const toggleSidebar = () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.875rem 1.5rem;
+  padding: 1rem 1.5rem;
   color: #b0b0b0;
   cursor: pointer;
   transition: all 0.3s;
@@ -188,22 +193,21 @@ const toggleSidebar = () => {
 /* 主内容区域包装器 */
 .main-wrapper {
   flex: 1;
-  margin-left: 240px;
   overflow-y: auto;
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.main-wrapper.expanded {
-  margin-left: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .secondary-sidebar {
-    width: 180px;
+    width: 200px;
   }
 
-  .secondary-sidebar .sidebar-header h2 {
+  .secondary-sidebar.collapsed {
+    width: 0;
+  }
+
+  .sidebar-header h2 {
     font-size: 1rem;
   }
 
@@ -211,24 +215,53 @@ const toggleSidebar = () => {
     padding: 0.75rem 1rem;
     font-size: 0.875rem;
   }
+
+  .toggle-button {
+    left: calc(3rem + 200px - 36px);
+  }
+
+  .secondary-sidebar.collapsed .toggle-button {
+    left: 3rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .toggle-button {
+    left: calc(max(18rem, 16vw) + 240px - 36px);
+  }
+
+  .secondary-sidebar.collapsed .toggle-button {
+    left: max(18rem, 16vw);
+  }
+}
+
+@media (min-width: 1600px) {
+  .toggle-button {
+    left: calc(max(20rem, 14vw) + 240px - 36px);
+  }
+
+  .secondary-sidebar.collapsed .toggle-button {
+    left: max(20rem, 14vw);
+  }
 }
 
 /* 深色主题滚动条 */
-.secondary-sidebar::-webkit-scrollbar {
+.sidebar-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.secondary-sidebar::-webkit-scrollbar-track {
+.sidebar-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.secondary-sidebar::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
+.sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(74, 74, 74, 0.6);
   border-radius: 3px;
+  transition: background 0.2s;
 }
 
-.secondary-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 90, 90, 0.8);
 }
 
 .main-wrapper::-webkit-scrollbar {
@@ -240,12 +273,13 @@ const toggleSidebar = () => {
 }
 
 .main-wrapper::-webkit-scrollbar-thumb {
-  background: #4a4a4a;
+  background: rgba(74, 74, 74, 0.6);
   border-radius: 4px;
+  transition: background 0.2s;
 }
 
 .main-wrapper::-webkit-scrollbar-thumb:hover {
-  background: #5a5a5a;
+  background: rgba(90, 90, 90, 0.8);
 }
 </style>
 
