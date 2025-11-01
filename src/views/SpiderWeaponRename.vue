@@ -530,28 +530,46 @@ export default {
         const reader = response.body.getReader()
         const decoder = new TextDecoder()
         let buffer = ''
+        let chunkCount = 0
 
         while (true) {
           const { done, value } = await reader.read()
 
           if (done) {
-            console.log('流式数据接收完成')
+            console.log('✅ 流式数据接收完成')
             break
           }
 
+          chunkCount++
+          const chunk = decoder.decode(value, { stream: true })
+          console.log(`[前端] 📦 收到第 ${chunkCount} 个数据块，大小: ${chunk.length} 字节`)
+          console.log(`[前端] 📦 数据块内容预览:`, chunk.substring(0, 200))
+          
           // 解码数据
-          buffer += decoder.decode(value, { stream: true })
+          buffer += chunk
 
           // 按行分割（SSE格式）
           const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
+          buffer = lines.pop() || '' // 保留最后一个不完整的行
 
-          for (const line of lines) {
-            if (!line.trim() || !line.startsWith('data: ')) continue
+          console.log(`[前端] 📋 本次解析出 ${lines.length} 行`)
+
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i]
+            if (!line.trim()) {
+              continue // 跳过空行
+            }
+            
+            if (!line.startsWith('data: ')) {
+              console.warn(`[前端] ⚠️ 第 ${i+1} 行不是有效的 SSE 数据:`, line)
+              continue
+            }
 
             try {
-              const eventData = JSON.parse(line.substring(6))
-              console.log('收到事件:', eventData)
+              const jsonStr = line.substring(6)
+              console.log(`[前端] 🔍 第 ${i+1} 行解析 JSON:`, jsonStr)
+              const eventData = JSON.parse(jsonStr)
+              console.log(`[前端] ✅ 第 ${i+1} 行解析成功:`, eventData)
 
               switch (eventData.type) {
                 case 'start':
@@ -587,12 +605,17 @@ export default {
                   weaponData.items.push(eventData.item)
                   weaponData.target_count = weaponData.items.length
 
-                  // 实时更新显示
+                  // 实时更新显示 - 创建新对象以触发 Vue 响应式更新
                   crawlResult.value = {
-                    weapons: Array.from(weaponsMap.values())
+                    weapons: Array.from(weaponsMap.values()).map(w => ({
+                      ...w,
+                      items: [...w.items] // 创建新数组引用
+                    }))
                   }
-
+                  
+                  console.log(`[前端] 🔄 触发响应式更新`)
                   console.log(`[前端] ✅ 新增商品: ${eventData.item.nameTag}，${eventData.weapon_name} 当前共 ${weaponData.items.length} 个`)
+                  console.log(`[前端] 📊 当前 crawlResult.value:`, crawlResult.value)
                   break
 
                 case 'weapon_complete':
@@ -616,9 +639,12 @@ export default {
                     weaponData.renamed_count = eventData.renamed_count || 0
                   }
 
-                  // 更新显示
+                  // 更新显示 - 创建新对象引用
                   crawlResult.value = {
-                    weapons: Array.from(weaponsMap.values())
+                    weapons: Array.from(weaponsMap.values()).map(w => ({
+                      ...w,
+                      items: [...w.items]
+                    }))
                   }
 
                   console.log(`饰品 ${eventData.weapon_name} 查询完成`)
@@ -635,10 +661,17 @@ export default {
                   break
               }
             } catch (e) {
-              console.error('解析事件数据失败:', e, line)
+              console.error(`[前端] ❌ 第 ${i+1} 行解析失败:`, e)
+              console.error(`[前端] ❌ 失败的行内容:`, line)
             }
           }
         }
+        
+        console.log(`[前端] 📊 最终统计: 共收到 ${chunkCount} 个数据块`)
+        console.log(`[前端] 📊 最终饰品数量:`, weaponsMap.size)
+        weaponsMap.forEach((weapon, id) => {
+          console.log(`[前端] 📊   - ${weapon.weapon_name}: ${weapon.items.length} 个商品`)
+        })
 
       } catch (error) {
         console.error('流式查询失败:', error)
