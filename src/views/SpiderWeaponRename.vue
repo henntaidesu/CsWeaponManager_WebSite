@@ -1,12 +1,5 @@
 <template>
   <div class="spider-weapon-rename-container">
-    <div class="page-header">
-      <el-button type="info" @click="goBack" class="back-button">
-        <el-icon><ArrowLeft /></el-icon>
-        返回开发工具
-      </el-button>
-    </div>
-
     <div class="page-layout">
       <!-- 左侧配置管理栏 -->
       <aside class="config-sidebar">
