@@ -369,13 +369,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Document, Delete, Refresh } from '@element-plus/icons-vue'
+import { Document, Delete, Refresh } from '@element-plus/icons-vue'
 import { API_CONFIG } from '@/config/api.js'
 
 export default {
   name: 'SpiderWeaponRename',
   components: {
-    ArrowLeft,
     Document,
     Delete,
     Refresh
@@ -586,11 +585,6 @@ export default {
         customConfig: ''
       }
       crawlResult.value = null
-    }
-
-    // 返回开发工具页面
-    const goBack = () => {
-      router.push('/devTool')
     }
 
     // 获取模式标签
@@ -950,7 +944,6 @@ export default {
       canStartCrawl,
       startCrawl,
       resetForm,
-      goBack,
       getModeLabel,
       getSourceLabel,
       // 配置管理
