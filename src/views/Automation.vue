@@ -2,34 +2,35 @@
   <div class="automation-container">
     <!-- 二级左侧栏 -->
     <aside class="secondary-sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <div class="sidebar-header">
-        <h2 v-show="!sidebarCollapsed">自动化工具</h2>
-        <el-button 
-          class="collapse-btn" 
-          type="text" 
-          @click="toggleSidebar"
-          :icon="sidebarCollapsed ? 'DArrowRight' : 'DArrowLeft'"
-        >
-          <el-icon v-if="sidebarCollapsed"><DArrowRight /></el-icon>
-          <el-icon v-else><DArrowLeft /></el-icon>
-        </el-button>
+      <!-- 折叠/展开按钮 -->
+      <div class="toggle-button" @click="toggleSidebar">
+        <el-icon :size="20">
+          <DArrowLeft v-if="!sidebarCollapsed" />
+          <DArrowRight v-else />
+        </el-icon>
       </div>
-      
-      <ul class="category-list" v-show="!sidebarCollapsed">
-        <li 
-          :class="{ active: selectedCategory === 'spider_rename' }"
-          @click="selectCategory('spider_rename')"
-        >
-          <el-icon :size="18">
-            <EditPen />
-          </el-icon>
-          <span>爬取改名</span>
-        </li>
-      </ul>
+
+      <div class="sidebar-content">
+        <div class="sidebar-header">
+          <h2>自动化工具</h2>
+        </div>
+        
+        <ul class="category-list">
+          <li 
+            :class="{ active: selectedCategory === 'spider_rename' }"
+            @click="selectCategory('spider_rename')"
+          >
+            <el-icon :size="18">
+              <EditPen />
+            </el-icon>
+            <span>爬取改名</span>
+          </li>
+        </ul>
+      </div>
     </aside>
 
     <!-- 主内容区域 -->
-    <div class="main-wrapper">
+    <div class="main-wrapper" :class="{ expanded: sidebarCollapsed }">
       <!-- 爬取改名页面 -->
       <SpiderWeaponRenameContent v-if="selectedCategory === 'spider_rename'" />
     </div>
@@ -58,59 +59,87 @@ const toggleSidebar = () => {
   display: flex;
   min-height: 100vh;
   background: transparent;
+  position: relative;
 }
 
 /* 二级左侧栏 */
 .secondary-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 240px;
-  background: transparent;
+  background: linear-gradient(90deg, rgba(30, 30, 30, 0.98) 0%, rgba(30, 30, 30, 0.95) 100%);
+  backdrop-filter: blur(10px);
   border-right: 1px solid #3a3a3a;
+  overflow: hidden;
+  display: flex;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(0);
+  z-index: 100;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.secondary-sidebar.collapsed {
+  transform: translateX(-240px);
+}
+
+/* 折叠/展开按钮 */
+.toggle-button {
+  position: absolute;
+  right: -36px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 80px;
+  background: linear-gradient(90deg, rgba(30, 30, 30, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%);
+  border: 1px solid #3a3a3a;
+  border-left: none;
+  border-radius: 0 12px 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #b0b0b0;
+  z-index: 101;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-button:hover {
+  background: linear-gradient(90deg, rgba(64, 158, 255, 0.2) 0%, rgba(64, 158, 255, 0.3) 100%);
+  color: #409eff;
+  border-color: #409eff;
+  right: -38px;
+  box-shadow: 2px 0 12px rgba(64, 158, 255, 0.4);
+}
+
+.toggle-button .el-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 侧边栏内容 */
+.sidebar-content {
+  flex: 1;
   padding: 1.5rem 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease;
 }
 
-.secondary-sidebar.collapsed {
-  width: 60px;
-}
-
-.secondary-sidebar .sidebar-header {
+.sidebar-header {
   padding: 0 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #3a3a3a;
   margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
 }
 
-.secondary-sidebar.collapsed .sidebar-header {
-  padding: 0 0.5rem 1rem 0.5rem;
-  justify-content: center;
-}
-
-.secondary-sidebar .sidebar-header h2 {
+.sidebar-header h2 {
   font-size: 1.125rem;
   color: #ffffff;
   margin: 0;
   font-weight: 600;
-}
-
-.collapse-btn {
-  color: #b0b0b0 !important;
-  padding: 4px !important;
-  min-height: auto !important;
-}
-
-.collapse-btn:hover {
-  color: #ffffff !important;
-  background-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-.secondary-sidebar.collapsed .collapse-btn {
-  margin: 0 auto;
 }
 
 .category-list {
@@ -159,7 +188,13 @@ const toggleSidebar = () => {
 /* 主内容区域包装器 */
 .main-wrapper {
   flex: 1;
+  margin-left: 240px;
   overflow-y: auto;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-wrapper.expanded {
+  margin-left: 0;
 }
 
 /* 响应式设计 */
