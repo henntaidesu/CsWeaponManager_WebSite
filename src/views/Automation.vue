@@ -1,12 +1,21 @@
 <template>
   <div class="automation-container">
     <!-- 二级左侧栏 -->
-    <aside class="secondary-sidebar">
+    <aside class="secondary-sidebar" :class="{ collapsed: sidebarCollapsed }">
       <div class="sidebar-header">
-        <h2>自动化工具</h2>
+        <h2 v-show="!sidebarCollapsed">自动化工具</h2>
+        <el-button 
+          class="collapse-btn" 
+          type="text" 
+          @click="toggleSidebar"
+          :icon="sidebarCollapsed ? 'DArrowRight' : 'DArrowLeft'"
+        >
+          <el-icon v-if="sidebarCollapsed"><DArrowRight /></el-icon>
+          <el-icon v-else><DArrowLeft /></el-icon>
+        </el-button>
       </div>
       
-      <ul class="category-list">
+      <ul class="category-list" v-show="!sidebarCollapsed">
         <li 
           :class="{ active: selectedCategory === 'spider_rename' }"
           @click="selectCategory('spider_rename')"
@@ -29,13 +38,18 @@
 
 <script setup>
 import { ref } from 'vue'
-import { EditPen } from '@element-plus/icons-vue'
+import { EditPen, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import SpiderWeaponRenameContent from './SpiderWeaponRename.vue'
 
 const selectedCategory = ref('spider_rename')
+const sidebarCollapsed = ref(false)
 
 const selectCategory = (categoryId) => {
   selectedCategory.value = categoryId
+}
+
+const toggleSidebar = () => {
+  sidebarCollapsed.value = !sidebarCollapsed.value
 }
 </script>
 
@@ -55,12 +69,26 @@ const selectCategory = (categoryId) => {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.secondary-sidebar.collapsed {
+  width: 60px;
 }
 
 .secondary-sidebar .sidebar-header {
   padding: 0 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #3a3a3a;
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.secondary-sidebar.collapsed .sidebar-header {
+  padding: 0 0.5rem 1rem 0.5rem;
+  justify-content: center;
 }
 
 .secondary-sidebar .sidebar-header h2 {
@@ -68,6 +96,21 @@ const selectCategory = (categoryId) => {
   color: #ffffff;
   margin: 0;
   font-weight: 600;
+}
+
+.collapse-btn {
+  color: #b0b0b0 !important;
+  padding: 4px !important;
+  min-height: auto !important;
+}
+
+.collapse-btn:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.secondary-sidebar.collapsed .collapse-btn {
+  margin: 0 auto;
 }
 
 .category-list {
