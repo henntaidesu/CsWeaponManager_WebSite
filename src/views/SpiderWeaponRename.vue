@@ -22,15 +22,6 @@
                   {{ config.platformType === 'buff' ? 'BUFF' : '悠悠有品' }}
                 </el-tag>
               </div>
-              <el-button 
-                type="danger" 
-                size="small"
-                circle
-                @click.stop="deleteConfig(config.id)"
-                :disabled="isCrawling"
-              >
-                <el-icon><Delete /></el-icon>
-              </el-button>
             </div>
             <div class="config-item-meta">
               <span class="config-time">{{ formatTime(config.updated_at) }}</span>
@@ -207,27 +198,19 @@
                 </el-select>
               </el-form-item>
             </div>
-            
-            <div v-if="selectedConfigId" style="color: #888; font-size: 0.875rem; margin-top: -12px; margin-bottom: 18px; padding-left: 120px;">
-              提示：平台类型创建后不可修改
-            </div>
 
-            <el-form-item label="饰品ID">
+            <el-form-item label="饰品列表">
               <div class="weapon-id-tags">
                 <el-tag
-                  v-for="id in weaponIdList"
-                  :key="id"
+                  v-for="weapon in weaponIdList"
+                  :key="weapon.id"
                   closable
-                  @close="removeWeaponId(id)"
+                  @close="removeWeaponId(weapon.id)"
                   type="primary"
                   size="large"
-                  style="margin-right: 8px; margin-bottom: 8px;"
                 >
-                  {{ id }}
+                  {{ weapon.name }} (ID: {{ weapon.id }})
                 </el-tag>
-                <span v-if="weaponIdList.length === 0" style="color: #909399; font-size: 14px;">
-                  暂无饰品ID，请从下方搜索添加
-                </span>
               </div>
             </el-form-item>
 
@@ -235,15 +218,7 @@
               <el-input 
                 v-model="crawlForm.customConfig" 
                 type="textarea"
-                :rows="6"
-                placeholder='请输入JSON格式的配置，例如:
-{
-  "filter": {
-    "minPrice": 10,
-    "maxPrice": 1000
-  },
-  "sort": "price_asc"
-}'
+                :autosize="{ minRows: 3, maxRows: 20 }"
                 clearable
               />
             </el-form-item>
@@ -254,11 +229,21 @@
           <el-button 
             type="success" 
             size="large"
-            @click="showSaveConfigDialog"
+            @click="saveConfig"
             :disabled="isCrawling"
           >
             <el-icon><Document /></el-icon>
             保存当前配置
+          </el-button>
+
+          <el-button 
+            type="danger" 
+            size="large"
+            @click="deleteCurrentConfig"
+            :disabled="isCrawling || !selectedConfigId"
+          >
+            <el-icon><Delete /></el-icon>
+            删除当前配置
           </el-button>
 
           <el-button 
@@ -269,15 +254,6 @@
             :loading="isCrawling"
           >
             {{ isCrawling ? '爬取中...' : '开始爬取' }}
-          </el-button>
-          
-          <el-button 
-            type="default" 
-            size="large"
-            @click="resetForm"
-            :disabled="isCrawling"
-          >
-            重置
           </el-button>
         </div>
       </div>
@@ -332,35 +308,6 @@
     </div>
     <!-- 结束 page-layout -->
 
-    <!-- 保存配置对话框 -->
-    <el-dialog
-      v-model="saveConfigDialogVisible"
-      title="保存配置"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="saveConfigForm" label-width="100px">
-        <el-form-item label="配置名称" required>
-          <el-input 
-            v-model="saveConfigForm.name" 
-            placeholder="请输入配置名称"
-            maxlength="50"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="saveConfigDialogVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="saveConfig"
-          :disabled="!saveConfigForm.name"
-        >
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -389,10 +336,6 @@ export default {
     // 配置管理相关
     const savedConfigs = ref([])
     const selectedConfigId = ref(null)
-    const saveConfigDialogVisible = ref(false)
-    const saveConfigForm = ref({
-      name: ''
-    })
 
     // 饰品搜索相关
     const weaponSearchKeyword = ref('')
@@ -403,17 +346,13 @@ export default {
       configName: '',      // 对应 dataName
       steamId: '',
       platformType: 'youpin',  // 平台类型：youpin 或 buff
-      weaponId: '',        // 从 customConfig 中提取
+      weaponId: [],        // 改为数组，存储 {id, name} 对象
       customConfig: ''     // 对应 value，JSON字符串
     })
 
-    // 计算属性：将 weaponId 字符串转换为数组
+    // 计算属性：获取饰品列表
     const weaponIdList = computed(() => {
-      if (!crawlForm.value.weaponId) return []
-      return crawlForm.value.weaponId
-        .split(',')
-        .map(id => id.trim())
-        .filter(id => id)
+      return crawlForm.value.weaponId || []
     })
 
     // 计算是否可以开始爬取
@@ -581,7 +520,7 @@ export default {
         configName: '',
         steamId: steamIdList.value.length > 0 ? steamIdList.value[0].steam_id : '',
         platformType: 'youpin',
-        weaponId: '',
+        weaponId: [],
         customConfig: ''
       }
       crawlResult.value = null
@@ -666,8 +605,8 @@ export default {
             return
           }
           
-          // 从 value 对象中提取饰品ID
-          const weaponId = valueObj.weapon_id || ''
+          // 从 value 对象中提取饰品列表和Steam ID
+          const weaponId = valueObj.weapon_id || []
           const steamId = valueObj.steam_id || ''
           
           console.log('提取的数据:')
@@ -675,13 +614,16 @@ export default {
           console.log('  - steamId:', steamId)
           console.log('  - platformType:', config.platformType)
           
+          // 移除 weapon_id 和 steam_id，剩余的作为自定义配置
+          const { weapon_id, steam_id, ...restConfig } = valueObj
+          
           // 构建新的表单数据
           const newFormData = {
             configName: config.dataName || '',
             steamId: steamId,
             platformType: config.platformType || 'youpin',
-            weaponId: weaponId,
-            customConfig: JSON.stringify(valueObj, null, 2) // 显示完整的原始配置
+            weaponId: Array.isArray(weaponId) ? weaponId : [],
+            customConfig: Object.keys(restConfig).length > 0 ? JSON.stringify(restConfig, null, 2) : ''
           }
           
           console.log('准备填充的表单数据:', newFormData)
@@ -719,17 +661,9 @@ export default {
       ElMessage.info('已清空表单，可以创建新配置')
     }
 
-    // 显示保存配置对话框
-    const showSaveConfigDialog = () => {
-      saveConfigForm.value = {
-        name: crawlForm.value.configName || ''
-      }
-      saveConfigDialogVisible.value = true
-    }
-
-    // 保存配置
+    // 保存配置（直接保存，不弹窗）
     const saveConfig = async () => {
-      if (!saveConfigForm.value.name) {
+      if (!crawlForm.value.configName) {
         ElMessage.warning('请输入配置名称')
         return
       }
@@ -748,8 +682,8 @@ export default {
           }
         }
         
-        // 将饰品ID添加到 value 对象中
-        if (crawlForm.value.weaponId) {
+        // 将饰品列表添加到 value 对象中
+        if (crawlForm.value.weaponId && crawlForm.value.weaponId.length > 0) {
           valueObj.weapon_id = crawlForm.value.weaponId
         }
         
@@ -762,18 +696,16 @@ export default {
         const key1 = crawlForm.value.platformType === 'buff' ? 'spider_buff' : 'spider_youpin'
 
         const configData = {
-          dataName: saveConfigForm.value.name,
+          dataName: crawlForm.value.configName,
           key1: key1,
           key2: 'spider',
           value: JSON.stringify(valueObj)
         }
 
-        // TODO: 替换为实际的API端点
         const response = await axios.post(`${API_CONFIG.BASE_URL}/configV1/save`, configData)
         
         if (response.data.success) {
           ElMessage.success('保存配置成功')
-          saveConfigDialogVisible.value = false
           
           // 重新加载配置列表
           await loadConfigList()
@@ -788,6 +720,15 @@ export default {
     }
 
     // 删除配置
+    // 删除当前配置
+    const deleteCurrentConfig = async () => {
+      if (!selectedConfigId.value) {
+        ElMessage.warning('请先选择一个配置')
+        return
+      }
+      await deleteConfig(selectedConfigId.value)
+    }
+
     const deleteConfig = async (configId) => {
       if (!configId) {
         return
@@ -797,7 +738,7 @@ export default {
         const config = savedConfigs.value.find(c => c.id === configId)
         
         await ElMessageBox.confirm(
-          `确定要删除配置 "${config.name}" 吗？此操作不可恢复。`,
+          `确定要删除配置 "${config.dataName}" 吗？此操作不可恢复。`,
           '确认删除',
           {
             confirmButtonText: '确定',
@@ -905,30 +846,26 @@ export default {
         return
       }
 
-      const currentIds = crawlForm.value.weaponId ? crawlForm.value.weaponId.split(',').map(id => id.trim()).filter(id => id) : []
-      
-      if (currentIds.includes(weaponId.toString())) {
-        ElMessage.warning('该饰品ID已存在')
+      // 检查是否已存在
+      if (crawlForm.value.weaponId.some(w => w.id === weaponId.toString())) {
+        ElMessage.warning('该饰品已存在')
         return
       }
       
-      currentIds.push(weaponId.toString())
-      crawlForm.value.weaponId = currentIds.join(',')
+      // 添加饰品对象（包含ID和名称）
+      crawlForm.value.weaponId.push({
+        id: weaponId.toString(),
+        name: row.market_listing_item_name || row.name || '未知饰品'
+      })
       
       const platformName = crawlForm.value.platformType === 'buff' ? 'BUFF' : '悠悠有品'
-      ElMessage.success(`已添加${platformName}饰品ID: ${weaponId}`)
+      ElMessage.success(`已添加${platformName}饰品: ${row.market_listing_item_name || row.name}`)
     }
 
     // 删除饰品ID
     const removeWeaponId = (idToRemove) => {
-      const currentIds = crawlForm.value.weaponId 
-        ? crawlForm.value.weaponId.split(',').map(id => id.trim()).filter(id => id) 
-        : []
-      
-      const filteredIds = currentIds.filter(id => id !== idToRemove.toString())
-      crawlForm.value.weaponId = filteredIds.join(',')
-      
-      ElMessage.success(`已删除饰品ID: ${idToRemove}`)
+      crawlForm.value.weaponId = crawlForm.value.weaponId.filter(w => w.id !== idToRemove)
+      ElMessage.success('已删除饰品')
     }
 
     // 表格行样式
@@ -956,14 +893,12 @@ export default {
       // 配置管理
       savedConfigs,
       selectedConfigId,
-      saveConfigDialogVisible,
-      saveConfigForm,
       loadConfigList,
       selectConfig,
       createNewConfig,
-      showSaveConfigDialog,
       saveConfig,
       deleteConfig,
+      deleteCurrentConfig,
       formatTime,
       // 饰品搜索
       weaponSearchKeyword,
@@ -1226,14 +1161,10 @@ export default {
 }
 
 .weapon-id-tags {
-  min-height: 40px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  padding: 8px;
-  background-color: #1e1e1e;
-  border-radius: 4px;
-  border: 1px solid #3a3a3a;
+  gap: 8px;
 }
 
 .action-buttons {
