@@ -13,6 +13,7 @@ import SteamInventoryHistory from '@/views/SteamInventoryHistory.vue'
 import StockComponents from '@/views/StockComponents.vue'
 import DevTool from '@/views/DevTool.vue'
 import SpiderWeaponRename from '@/views/SpiderWeaponRename.vue'
+import Automation from '@/views/Automation.vue'
 
 const routes = [
   {
@@ -91,6 +92,12 @@ const routes = [
         name: 'DevTool',
         component: DevTool,
         meta: { title: '开发工具' }
+      },
+      {
+        path: '/automation',
+        name: 'Automation',
+        component: Automation,
+        meta: { title: '自动化' }
       }
     ]
   },

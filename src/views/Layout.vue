@@ -99,6 +99,11 @@ export default {
           path: '/data-source',
           title: '数据来源',
           icon: '/icons/data_from.png'
+        },
+        {
+          path: '/automation',
+          title: '自动化',
+          icon: '/icons/setting.png'
         }
         // {
         //   path: '/setting',

@@ -23,7 +23,12 @@
             @click="selectConfig(config.id)"
           >
             <div class="config-item-header">
-              <span class="config-name">{{ config.name }}</span>
+              <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <span class="config-name">{{ config.dataName }}</span>
+                <el-tag :type="config.platformType === 'buff' ? 'warning' : 'success'" size="small">
+                  {{ config.platformType === 'buff' ? 'BUFF' : '悠悠有品' }}
+                </el-tag>
+              </div>
               <el-button 
                 type="danger" 
                 size="small"
@@ -50,7 +55,7 @@
         <div class="sidebar-actions">
           <el-button 
             type="success" 
-            @click="showSaveConfigDialog"
+            @click="createNewConfig"
             :disabled="isCrawling"
             style="width: 100%;"
           >
@@ -157,8 +162,8 @@
                 <el-button 
                   type="primary" 
                   size="small"
-                  @click="addWeaponId(row.yyyp_id)"
-                  :disabled="!row.yyyp_id"
+                  @click="addWeaponId(row)"
+                  :disabled="!getWeaponIdByPlatform(row)"
                 >
                   添加ID
                 </el-button>
@@ -174,7 +179,7 @@
         <div class="form-container">
           <el-form :model="crawlForm" label-width="120px" ref="crawlFormRef">
             <div class="form-row">
-              <el-form-item label="配置名称" required class="form-item-half">
+              <el-form-item label="配置名称" required class="form-item-third">
                 <el-input 
                   v-model="crawlForm.configName" 
                   placeholder="请输入配置名称"
@@ -182,7 +187,7 @@
                 />
               </el-form-item>
 
-              <el-form-item label="Steam ID" required class="form-item-half">
+              <el-form-item label="Steam ID" required class="form-item-third">
                 <el-select 
                   v-model="crawlForm.steamId" 
                   placeholder="选择 Steam ID"
@@ -196,14 +201,41 @@
                   />
                 </el-select>
               </el-form-item>
+
+              <el-form-item label="平台类型" required class="form-item-third">
+                <el-select 
+                  v-model="crawlForm.platformType" 
+                  placeholder="选择平台类型"
+                  style="width: 100%;"
+                  :disabled="!!selectedConfigId"
+                >
+                  <el-option label="悠悠有品" value="youpin" />
+                  <el-option label="BUFF" value="buff" />
+                </el-select>
+              </el-form-item>
+            </div>
+            
+            <div v-if="selectedConfigId" style="color: #888; font-size: 0.875rem; margin-top: -12px; margin-bottom: 18px; padding-left: 120px;">
+              提示：平台类型创建后不可修改
             </div>
 
             <el-form-item label="饰品ID">
-              <el-input 
-                v-model="crawlForm.weaponId" 
-                placeholder="请输入需要爬取的饰品ID，多个ID用逗号分隔"
-                clearable
-              />
+              <div class="weapon-id-tags">
+                <el-tag
+                  v-for="id in weaponIdList"
+                  :key="id"
+                  closable
+                  @close="removeWeaponId(id)"
+                  type="primary"
+                  size="large"
+                  style="margin-right: 8px; margin-bottom: 8px;"
+                >
+                  {{ id }}
+                </el-tag>
+                <span v-if="weaponIdList.length === 0" style="color: #909399; font-size: 14px;">
+                  暂无饰品ID，请从下方搜索添加
+                </span>
+              </div>
             </el-form-item>
 
             <el-form-item label="自定义配置">
@@ -323,17 +355,6 @@
             show-word-limit
           />
         </el-form-item>
-        
-        <el-form-item label="配置描述">
-          <el-input 
-            v-model="saveConfigForm.description" 
-            type="textarea"
-            :rows="3"
-            placeholder="请输入配置描述（可选）"
-            maxlength="200"
-            show-word-limit
-          />
-        </el-form-item>
       </el-form>
       
       <template #footer>
@@ -378,8 +399,7 @@ export default {
     const selectedConfigId = ref(null)
     const saveConfigDialogVisible = ref(false)
     const saveConfigForm = ref({
-      name: '',
-      description: ''
+      name: ''
     })
 
     // 饰品搜索相关
@@ -390,8 +410,18 @@ export default {
     const crawlForm = ref({
       configName: '',      // 对应 dataName
       steamId: '',
+      platformType: 'youpin',  // 平台类型：youpin 或 buff
       weaponId: '',        // 从 customConfig 中提取
       customConfig: ''     // 对应 value，JSON字符串
+    })
+
+    // 计算属性：将 weaponId 字符串转换为数组
+    const weaponIdList = computed(() => {
+      if (!crawlForm.value.weaponId) return []
+      return crawlForm.value.weaponId
+        .split(',')
+        .map(id => id.trim())
+        .filter(id => id)
     })
 
     // 计算是否可以开始爬取
@@ -406,8 +436,10 @@ export default {
     const loadSteamIdList = async () => {
       try {
         const response = await axios.get(`${API_CONFIG.BASE_URL}/webInventoryV1/steam_ids`)
+        console.log('Steam ID API 响应:', response.data)
         if (response.data.success && response.data.data.length > 0) {
           steamIdList.value = response.data.data
+          console.log('已加载 Steam ID 列表:', steamIdList.value)
           // 默认选择第一个
           if (!crawlForm.value.steamId && steamIdList.value.length > 0) {
             crawlForm.value.steamId = steamIdList.value[0].steam_id
@@ -415,7 +447,9 @@ export default {
         }
       } catch (error) {
         console.error('加载Steam ID列表失败:', error)
-        ElMessage.error('加载Steam ID列表失败')
+        console.error('错误详情:', error.response)
+        // 暂时不显示错误提示，避免干扰用户
+        // ElMessage.error('加载Steam ID列表失败')
       }
     }
 
@@ -554,6 +588,7 @@ export default {
       crawlForm.value = {
         configName: '',
         steamId: steamIdList.value.length > 0 ? steamIdList.value[0].steam_id : '',
+        platformType: 'youpin',
         weaponId: '',
         customConfig: ''
       }
@@ -588,17 +623,40 @@ export default {
     // 加载配置列表
     const loadConfigList = async () => {
       try {
-        // TODO: 替换为实际的API端点
-        const response = await axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
-          params: {
-            key1: 'spider_youpin',
-            key2: 'spider'
-          }
-        })
+        // 同时加载悠悠有品和BUFF的配置
+        const [youpinResponse, buffResponse] = await Promise.all([
+          axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
+            params: {
+              key1: 'spider_youpin',
+              key2: 'spider'
+            }
+          }),
+          axios.get(`${API_CONFIG.BASE_URL}/configV1/list`, {
+            params: {
+              key1: 'spider_buff',
+              key2: 'spider'
+            }
+          })
+        ])
         
-        if (response.data.success) {
-          savedConfigs.value = response.data.data || []
-        }
+        console.log('悠悠有品配置响应:', youpinResponse.data)
+        console.log('BUFF配置响应:', buffResponse.data)
+        
+        // 合并两个列表，并添加平台类型标识
+        const youpinConfigs = (youpinResponse.data.data || []).map(config => ({
+          ...config,
+          platformType: 'youpin'
+        }))
+        const buffConfigs = (buffResponse.data.data || []).map(config => ({
+          ...config,
+          platformType: 'buff'
+        }))
+        
+        savedConfigs.value = [...youpinConfigs, ...buffConfigs]
+        // 按ID降序排序
+        savedConfigs.value.sort((a, b) => b.id - a.id)
+        
+        console.log('合并后的配置列表:', savedConfigs.value)
       } catch (error) {
         console.error('加载配置列表失败:', error)
         // ElMessage.error('加载配置列表失败')
@@ -615,15 +673,21 @@ export default {
 
       try {
         const config = savedConfigs.value.find(c => c.id === configId)
+        console.log('选中的配置:', config)
+        
         if (config && config.value) {
           // 解析 value 字段（JSON字符串）
           const valueObj = typeof config.value === 'string' 
             ? JSON.parse(config.value) 
             : config.value
           
+          console.log('解析后的配置值:', valueObj)
+          
           // 从 value 对象中提取饰品ID
           const weaponId = valueObj.weapon_id || ''
           const steamId = valueObj.steam_id || ''
+          
+          console.log('提取的数据 - weaponId:', weaponId, 'steamId:', steamId)
           
           // 移除已提取的字段，剩余的作为自定义配置
           const { weapon_id, steam_id, ...restConfig } = valueObj
@@ -632,23 +696,39 @@ export default {
           crawlForm.value = {
             configName: config.dataName || '',
             steamId: steamId,
+            platformType: config.platformType || 'youpin', // 从配置中获取平台类型
             weaponId: weaponId,
             customConfig: Object.keys(restConfig).length > 0 ? JSON.stringify(restConfig, null, 2) : ''
           }
           
+          console.log('填充后的表单数据:', crawlForm.value)
+          console.log('当前Steam ID列表:', steamIdList.value)
+          console.log('表单中的Steam ID:', crawlForm.value.steamId)
+          console.log('表单中的饰品ID:', crawlForm.value.weaponId)
+          console.log('表单中的平台类型:', crawlForm.value.platformType)
+          
           ElMessage.success(`已加载配置: ${config.dataName}`)
+        } else {
+          console.warn('配置没有value字段:', config)
+          ElMessage.warning('配置数据为空')
         }
       } catch (error) {
         console.error('加载配置失败:', error)
-        ElMessage.error('加载配置失败')
+        ElMessage.error(`加载配置失败: ${error.message}`)
       }
+    }
+
+    // 创建新配置（清空表单）
+    const createNewConfig = () => {
+      selectedConfigId.value = null
+      resetForm()
+      ElMessage.info('已清空表单，可以创建新配置')
     }
 
     // 显示保存配置对话框
     const showSaveConfigDialog = () => {
       saveConfigForm.value = {
-        name: crawlForm.value.configName || '',
-        description: ''
+        name: crawlForm.value.configName || ''
       }
       saveConfigDialogVisible.value = true
     }
@@ -684,12 +764,14 @@ export default {
           valueObj.steam_id = crawlForm.value.steamId
         }
 
+        // 根据平台类型设置 key1
+        const key1 = crawlForm.value.platformType === 'buff' ? 'spider_buff' : 'spider_youpin'
+
         const configData = {
           dataName: saveConfigForm.value.name,
-          key1: 'spider_youpin',
+          key1: key1,
           key2: 'spider',
-          value: JSON.stringify(valueObj),
-          description: saveConfigForm.value.description || ''
+          value: JSON.stringify(valueObj)
         }
 
         // TODO: 替换为实际的API端点
@@ -810,9 +892,24 @@ export default {
       weaponSearchKeyword.value = ''
     }
 
+    // 根据平台类型获取对应的饰品ID
+    const getWeaponIdByPlatform = (row) => {
+      if (crawlForm.value.platformType === 'buff') {
+        return row.buff_id
+      } else {
+        return row.yyyp_id
+      }
+    }
+
     // 添加饰品ID到表单
-    const addWeaponId = (weaponId) => {
-      if (!weaponId) return
+    const addWeaponId = (row) => {
+      const weaponId = getWeaponIdByPlatform(row)
+      
+      if (!weaponId) {
+        const platformName = crawlForm.value.platformType === 'buff' ? 'BUFF' : '悠悠有品'
+        ElMessage.warning(`该饰品没有${platformName}ID`)
+        return
+      }
 
       const currentIds = crawlForm.value.weaponId ? crawlForm.value.weaponId.split(',').map(id => id.trim()).filter(id => id) : []
       
@@ -824,7 +921,20 @@ export default {
       currentIds.push(weaponId.toString())
       crawlForm.value.weaponId = currentIds.join(',')
       
-      ElMessage.success(`已添加饰品ID: ${weaponId}`)
+      const platformName = crawlForm.value.platformType === 'buff' ? 'BUFF' : '悠悠有品'
+      ElMessage.success(`已添加${platformName}饰品ID: ${weaponId}`)
+    }
+
+    // 删除饰品ID
+    const removeWeaponId = (idToRemove) => {
+      const currentIds = crawlForm.value.weaponId 
+        ? crawlForm.value.weaponId.split(',').map(id => id.trim()).filter(id => id) 
+        : []
+      
+      const filteredIds = currentIds.filter(id => id !== idToRemove.toString())
+      crawlForm.value.weaponId = filteredIds.join(',')
+      
+      ElMessage.success(`已删除饰品ID: ${idToRemove}`)
     }
 
     // 表格行样式
@@ -857,6 +967,7 @@ export default {
       saveConfigForm,
       loadConfigList,
       selectConfig,
+      createNewConfig,
       showSaveConfigDialog,
       saveConfig,
       deleteConfig,
@@ -867,7 +978,10 @@ export default {
       isSearchingWeapon,
       handleSearchWeapon,
       clearWeaponSearch,
+      getWeaponIdByPlatform,
       addWeaponId,
+      removeWeaponId,
+      weaponIdList,
       getRowClassName
     }
   }
@@ -1107,10 +1221,26 @@ export default {
   margin-bottom: 18px;
 }
 
+.form-item-third {
+  flex: 1;
+  margin-bottom: 18px;
+}
+
 .form-hint {
   color: #888;
   font-size: 0.75rem;
   margin-left: 0.5rem;
+}
+
+.weapon-id-tags {
+  min-height: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 8px;
+  background-color: #1e1e1e;
+  border-radius: 4px;
+  border: 1px solid #3a3a3a;
 }
 
 .action-buttons {
@@ -1266,6 +1396,10 @@ export default {
   }
 
   .form-item-half {
+    width: 100%;
+  }
+
+  .form-item-third {
     width: 100%;
   }
 
