@@ -716,7 +716,6 @@ export default {
         const response = await axios.delete(`${API_CONFIG.BASE_URL}/configV1/delete/${configId}`)
         
         if (response.data.success) {
-          addLog('success', `删除配置成功: ${config.name}`)
           ElMessage.success('删除配置成功')
           
           // 如果删除的是当前选中的配置，清空选中状态
@@ -733,7 +732,6 @@ export default {
         if (error !== 'cancel') {
           console.error('删除配置失败:', error)
           const errorMessage = error.response?.data?.message || error.message || '删除配置失败'
-          addLog('error', errorMessage)
           ElMessage.error(errorMessage)
         }
       }
@@ -760,7 +758,6 @@ export default {
       }
 
       isSearchingWeapon.value = true
-      addLog('info', `搜索饰品: ${weaponSearchKeyword.value}`)
       
       try {
         const response = await axios.get(`${API_CONFIG.BASE_URL}/webSelectWeaponV1/searchWeaponDetail`, {
@@ -774,19 +771,15 @@ export default {
           
           if (weaponSearchResults.value.length === 0) {
             ElMessage.info('未找到匹配的饰品')
-            addLog('info', '搜索无结果')
           } else {
             ElMessage.success(`找到 ${weaponSearchResults.value.length} 件饰品`)
-            addLog('success', `找到 ${weaponSearchResults.value.length} 件饰品`)
           }
         } else {
           ElMessage.error(response.data.message || '搜索失败')
-          addLog('error', response.data.message || '搜索失败')
         }
       } catch (error) {
         console.error('搜索饰品失败:', error)
         const errorMessage = error.response?.data?.message || error.message || '搜索饰品失败'
-        addLog('error', errorMessage)
         ElMessage.error(errorMessage)
       } finally {
         isSearchingWeapon.value = false
@@ -797,7 +790,6 @@ export default {
     const clearWeaponSearch = () => {
       weaponSearchResults.value = []
       weaponSearchKeyword.value = ''
-      addLog('info', '已清除搜索结果')
     }
 
     // 添加饰品ID到表单
@@ -808,7 +800,6 @@ export default {
       
       if (currentIds.includes(weaponId.toString())) {
         ElMessage.warning('该饰品ID已存在')
-        addLog('warning', `饰品ID ${weaponId} 已存在`)
         return
       }
       
@@ -816,7 +807,6 @@ export default {
       crawlForm.value.weaponId = currentIds.join(',')
       
       ElMessage.success(`已添加饰品ID: ${weaponId}`)
-      addLog('success', `已添加饰品ID: ${weaponId}`)
     }
 
     // 表格行样式
@@ -828,7 +818,6 @@ export default {
     onMounted(() => {
       loadSteamIdList()
       loadConfigList()
-      addLog('info', '页面加载完成')
     })
 
     return {
@@ -837,12 +826,10 @@ export default {
       isCrawling,
       crawlForm,
       crawlResult,
-      operationLogs,
       canStartCrawl,
       startCrawl,
       resetForm,
       goBack,
-      clearLogs,
       getModeLabel,
       getSourceLabel,
       // 配置管理
@@ -1150,56 +1137,6 @@ export default {
   font-size: 1.1rem;
 }
 
-/* 日志区域 */
-.logs-section {
-  background-color: #2a2a2a;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-}
-
-.logs-container {
-  max-height: 300px;
-  overflow-y: auto;
-  background-color: #1a1a1a;
-  border-radius: 0.5rem;
-  padding: 1rem;
-}
-
-.log-item {
-  display: flex;
-  gap: 1rem;
-  padding: 0.5rem;
-  margin-bottom: 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-}
-
-.log-item.info {
-  background-color: rgba(64, 158, 255, 0.1);
-  border-left: 3px solid #409EFF;
-}
-
-.log-item.success {
-  background-color: rgba(103, 194, 58, 0.1);
-  border-left: 3px solid #67C23A;
-}
-
-.log-item.error {
-  background-color: rgba(245, 108, 108, 0.1);
-  border-left: 3px solid #F56C6C;
-}
-
-.log-time {
-  color: #888;
-  font-family: monospace;
-  min-width: 70px;
-}
-
-.log-message {
-  color: #fff;
-  flex: 1;
-}
-
 /* Element Plus 组件深色主题适配 */
 :deep(.el-input__wrapper) {
   background-color: #1e1e1e;
@@ -1304,24 +1241,20 @@ export default {
 }
 
 /* 滚动条样式 */
-.logs-container::-webkit-scrollbar,
 .config-list::-webkit-scrollbar {
   width: 8px;
 }
 
-.logs-container::-webkit-scrollbar-track,
 .config-list::-webkit-scrollbar-track {
   background: #1a1a1a;
   border-radius: 4px;
 }
 
-.logs-container::-webkit-scrollbar-thumb,
 .config-list::-webkit-scrollbar-thumb {
   background: #444;
   border-radius: 4px;
 }
 
-.logs-container::-webkit-scrollbar-thumb:hover,
 .config-list::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
