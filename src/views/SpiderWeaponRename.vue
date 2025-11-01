@@ -427,7 +427,7 @@ export default {
       }
     }
 
-    // 开始爬取
+    // 开始爬取（流式接收）
     const startCrawl = async () => {
       // 验证基本配置
       if (!crawlForm.value.configName) {
@@ -455,7 +455,7 @@ export default {
       // 确认对话框
       try {
         const weaponNames = crawlForm.value.weaponId.map(w => w.name).join('、')
-        let confirmMessage = `确定要开始自动购买改名饰品吗？\n\n`
+        let confirmMessage = `确定要开始查询改名饰品吗？\n\n`
         confirmMessage += `配置名称: ${crawlForm.value.configName}\n`
         confirmMessage += `Steam ID: ${crawlForm.value.steamId}\n`
         confirmMessage += `平台类型: ${crawlForm.value.platformType === 'buff' ? 'BUFF' : '悠悠有品'}\n`
@@ -469,9 +469,6 @@ export default {
           }
           if (config['饰品自动查询间隔']) {
             confirmMessage += `\n查询间隔: ${config['饰品自动查询间隔']} 秒`
-          }
-          if (config.hasOwnProperty('是否自动购买')) {
-            confirmMessage += `\n自动购买: ${config['是否自动购买'] ? '是' : '否（仅监控）'}`
           }
         }
 
@@ -490,7 +487,7 @@ export default {
 
       isCrawling.value = true
       crawlResult.value = null
-      ElMessage.info('正在启动自动购买任务...')
+      ElMessage.info('正在启动查询任务...')
 
       try {
         // 构建爬虫配置
@@ -499,7 +496,6 @@ export default {
           steam_id: crawlForm.value.steamId,
           最大差价: 5,
           饰品自动查询间隔: 3,
-          是否自动购买: true,
           ...jsonValidation.config  // 合并自定义配置
         }
         
@@ -508,42 +504,146 @@ export default {
           spider_config: spiderConfig
         }
         
-        console.log('发送请求到后端:', requestData)
+        console.log('发送流式请求到后端:', requestData)
 
-        // 调用实际的API
-        const response = await axios.post(
+        // 使用 fetch 进行流式请求
+        const response = await fetch(
           `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/auto_buy_renamed_weapon`,
-          requestData
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+          }
         )
 
-        console.log('后端响应:', response.data)
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
 
-        if (response.data.success && response.data.data) {
-          crawlResult.value = response.data.data  // 直接使用返回的数据结构
-          
-          const totalRenamed = response.data.data.weapons.reduce((sum, w) => sum + w.renamed_count, 0)
-          const totalTarget = response.data.data.weapons.reduce((sum, w) => sum + w.target_count, 0)
-          
-          ElMessage.success(`查询完成！找到 ${totalRenamed} 个改名饰品，其中 ${totalTarget} 个符合条件`)
-        } else {
-          crawlResult.value = {
-            success: false,
-            weapons: []
+        // 初始化结果数据结构
+        const weaponsMap = new Map()
+        let totalWeapons = 0
+
+        // 读取流式数据
+        const reader = response.body.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+          const { done, value } = await reader.read()
+
+          if (done) {
+            console.log('流式数据接收完成')
+            break
           }
-          ElMessage.error(`查询失败: ${response.data.message || '未知错误'}`)
+
+          // 解码数据
+          buffer += decoder.decode(value, { stream: true })
+
+          // 按行分割（SSE格式）
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            if (!line.trim() || !line.startsWith('data: ')) continue
+
+            try {
+              const eventData = JSON.parse(line.substring(6))
+              console.log('收到事件:', eventData)
+
+              switch (eventData.type) {
+                case 'start':
+                  totalWeapons = eventData.total
+                  ElMessage.info(`开始查询 ${totalWeapons} 个饰品...`)
+                  break
+
+                case 'processing':
+                  console.log(`正在处理 ${eventData.current}/${eventData.total}: ${eventData.weapon_name}`)
+                  break
+
+                case 'item':
+                  // 收到一个新商品，立即添加到结果中
+                  const yyypId = eventData.yyyp_id
+
+                  if (!weaponsMap.has(yyypId)) {
+                    weaponsMap.set(yyypId, {
+                      yyyp_id: yyypId,
+                      weapon_name: eventData.weapon_name,
+                      total_count: eventData.total_count,
+                      lowest_price: eventData.lowest_price,
+                      renamed_count: 0,
+                      target_count: 0,
+                      items: []
+                    })
+                  }
+
+                  const weaponData = weaponsMap.get(yyypId)
+                  weaponData.items.push(eventData.item)
+                  weaponData.target_count = weaponData.items.length
+
+                  // 实时更新显示
+                  crawlResult.value = {
+                    weapons: Array.from(weaponsMap.values())
+                  }
+
+                  console.log(`新增商品: ${eventData.item.nameTag}，当前共 ${weaponData.items.length} 个`)
+                  break
+
+                case 'weapon_complete':
+                  // 某个饰品查询完成，更新统计信息
+                  const completeYyypId = eventData.yyyp_id
+
+                  if (!weaponsMap.has(completeYyypId)) {
+                    weaponsMap.set(completeYyypId, {
+                      yyyp_id: completeYyypId,
+                      weapon_name: eventData.weapon_name,
+                      total_count: eventData.total_count,
+                      lowest_price: eventData.lowest_price,
+                      renamed_count: eventData.renamed_count || 0,
+                      target_count: eventData.target_count || 0,
+                      items: []
+                    })
+                  } else {
+                    const weaponData = weaponsMap.get(completeYyypId)
+                    weaponData.total_count = eventData.total_count
+                    weaponData.lowest_price = eventData.lowest_price
+                    weaponData.renamed_count = eventData.renamed_count || 0
+                  }
+
+                  // 更新显示
+                  crawlResult.value = {
+                    weapons: Array.from(weaponsMap.values())
+                  }
+
+                  console.log(`饰品 ${eventData.weapon_name} 查询完成`)
+                  break
+
+                case 'complete':
+                  const totalRenamed = Array.from(weaponsMap.values()).reduce((sum, w) => sum + w.renamed_count, 0)
+                  const totalTarget = Array.from(weaponsMap.values()).reduce((sum, w) => sum + w.target_count, 0)
+                  ElMessage.success(`查询完成！共找到 ${totalRenamed} 个改名饰品，其中 ${totalTarget} 个符合条件`)
+                  break
+
+                case 'error':
+                  ElMessage.error(eventData.message || '查询出错')
+                  break
+              }
+            } catch (e) {
+              console.error('解析事件数据失败:', e, line)
+            }
+          }
         }
+
       } catch (error) {
-        console.error('爬取操作失败:', error)
-        let errorMessage = '爬取操作失败'
-        
-        if (error.response) {
-          errorMessage = error.response.data?.message || `操作失败 (${error.response.status})`
-        } else if (error.request) {
-          errorMessage = '无法连接到服务器，请检查服务是否运行'
-        } else {
-          errorMessage = error.message || '爬取操作失败'
+        console.error('流式查询失败:', error)
+        let errorMessage = '查询失败'
+
+        if (error.message) {
+          errorMessage = error.message
         }
-        
+
         crawlResult.value = {
           success: false,
           message: errorMessage
