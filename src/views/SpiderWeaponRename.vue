@@ -566,8 +566,11 @@ export default {
                 case 'item':
                   // 收到一个新商品，立即添加到结果中
                   const yyypId = eventData.yyyp_id
+                  
+                  console.log(`[前端] 收到 item 事件:`, eventData)
 
                   if (!weaponsMap.has(yyypId)) {
+                    console.log(`[前端] 创建新饰品条目: ${eventData.weapon_name} (${yyypId})`)
                     weaponsMap.set(yyypId, {
                       yyyp_id: yyypId,
                       weapon_name: eventData.weapon_name,
@@ -580,6 +583,7 @@ export default {
                   }
 
                   const weaponData = weaponsMap.get(yyypId)
+                  console.log(`[前端] 添加商品到 ${eventData.weapon_name}，当前已有 ${weaponData.items.length} 个`)
                   weaponData.items.push(eventData.item)
                   weaponData.target_count = weaponData.items.length
 
@@ -588,7 +592,7 @@ export default {
                     weapons: Array.from(weaponsMap.values())
                   }
 
-                  console.log(`新增商品: ${eventData.item.nameTag}，当前共 ${weaponData.items.length} 个`)
+                  console.log(`[前端] ✅ 新增商品: ${eventData.item.nameTag}，${eventData.weapon_name} 当前共 ${weaponData.items.length} 个`)
                   break
 
                 case 'weapon_complete':
