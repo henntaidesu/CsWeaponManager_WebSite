@@ -12,7 +12,7 @@
 
       <div class="sidebar-content">
         <div class="sidebar-header">
-          <h2>自动化工具</h2>
+          <!-- 保留标题空位，用于间距 -->
         </div>
         
         <ul class="category-list">
