@@ -1770,22 +1770,13 @@ export default {
         return
       }
 
-      // BUFF类型的字段校验
+      // BUFF类型的字段校验 - 简化验证，只检查必要字段
       if (inputForm.value.type === 'buff') {
-        if (!inputForm.value.cookie) {
-          ElMessage.error('请填写Cookie')
-          return
-        }
-        if (!inputForm.value.systemVersion) {
-          ElMessage.error('请填写system_version')
-          return
-        }
-        if (!inputForm.value.systemType) {
-          ElMessage.error('请填写system_type')
-          return
-        }
-        if (!inputForm.value.steamID) {
-          ElMessage.error('请填写SteamID')
+        console.log('[BUFF验证] cookie:', inputForm.value.cookie)
+        console.log('[BUFF验证] buffAppVersion:', inputForm.value.buffAppVersion)
+        
+        if (!inputForm.value.cookie && !inputForm.value.buffAppVersion) {
+          ElMessage.error('请先获取BUFF令牌或填写必要信息')
           return
         }
       }
@@ -2113,6 +2104,10 @@ export default {
         try {
           const url = apiUrls.getAppTokenGetBuffData()
           const response = await axios.get(url)
+          
+          console.log('[BUFF轮询] API响应:', response.data)
+          console.log('[BUFF轮询] code:', response.data.code)
+          console.log('[BUFF轮询] data:', response.data.data)
           
           if (response.data.code === 200) {
             // 数据收集完成
@@ -3444,22 +3439,13 @@ export default {
         return
       }
 
-      // BUFF类型的字段校验
+      // BUFF类型的字段校验 - 简化验证，只检查必要字段
       if (editForm.value.type === 'buff') {
-        if (!editForm.value.cookie) {
-          ElMessage.error('请填写Cookie')
-          return
-        }
-        if (!editForm.value.systemVersion) {
-          ElMessage.error('请填写system_version')
-          return
-        }
-        if (!editForm.value.systemType) {
-          ElMessage.error('请填写system_type')
-          return
-        }
-        if (!editForm.value.steamID) {
-          ElMessage.error('请填写SteamID')
+        console.log('[BUFF编辑验证] cookie:', editForm.value.cookie)
+        console.log('[BUFF编辑验证] buffAppVersion:', editForm.value.buffAppVersion)
+        
+        if (!editForm.value.cookie && !editForm.value.buffAppVersion) {
+          ElMessage.error('请先获取BUFF令牌或填写必要信息')
           return
         }
       }
