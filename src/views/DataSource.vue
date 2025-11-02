@@ -3939,8 +3939,7 @@ export default {
           console.log('处理后的数据源:', dataSources.value)
           console.log('分组数据:', groupedDataSources.value)
           
-          // 初始化自动采集定时器
-          initAutoCollectionTimers()
+          // 注意：全局定时器已在 main.js 中初始化，无需在组件中调用
         } else {
           console.error('API返回失败:', result.message)
           ElMessage.error(result.message || '获取数据源失败')
