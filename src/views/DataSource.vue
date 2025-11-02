@@ -41,7 +41,6 @@
                   v-for="source in group" 
                   :key="source.dataID" 
                   class="source-card"
-                  :class="{ disabled: !source.enabled }"
                 >
                   <div class="source-header">
                     <div class="source-info">
@@ -65,7 +64,6 @@
                       type="warning" 
                       size="small" 
                       @click="startCollection(source)" 
-                      :disabled="!source.enabled"
                       :loading="collectingSourceIds.has(source.dataID)"
                     >
                       {{ collectingSourceIds.has(source.dataID) ? '采集中...' : '采集' }}
@@ -774,7 +772,7 @@
           </el-form-item>
         </template>
 
-        <el-form-item label="启用状态">
+        <el-form-item v-if="editForm.type === 'youpin' || editForm.type === 'buff'" label="是否自动采集">
           <el-switch v-model="editForm.enabled" />
         </el-form-item>
 
@@ -788,7 +786,6 @@
               type="warning" 
               @click="handleEditCollectAll"
               :loading="collectingSourceIds.has(editingSourceId)"
-              :disabled="!editForm.enabled"
             >
               全部采集
             </el-button>
@@ -797,7 +794,6 @@
               type="warning" 
               @click="handleEditBuffCollectAll"
               :loading="collectingSourceIds.has(editingSourceId)"
-              :disabled="!editForm.enabled"
             >
               全部获取
             </el-button>
@@ -806,7 +802,6 @@
               type="warning" 
               @click="handleEditSteamCollectAll"
               :loading="collectingSourceIds.has(editingSourceId)"
-              :disabled="!editForm.enabled"
             >
               全部采集
             </el-button>
@@ -1534,7 +1529,7 @@
           </el-form-item>
         </template>
         
-        <el-form-item label="启用状态">
+        <el-form-item v-if="inputForm.type === 'youpin' || inputForm.type === 'buff'" label="是否自动采集">
           <el-switch v-model="inputForm.enabled" />
         </el-form-item>
       </el-form>
@@ -1852,6 +1847,37 @@ export default {
           startAutoCollectionTimer(source)
         }
       })
+    }
+
+    // 更新数据库中的 lastUpdate 时间
+    const updateLastUpdateInDatabase = async (dataID, lastUpdateTime) => {
+      try {
+        // 获取当前数据源的完整配置
+        const updateUrl = apiUrls.updateDataSource(dataID)
+        const getUrl = `${apiUrls.API_BASE_URL}${apiUrls.ENDPOINTS.DATA_SOURCE_BY_ID(dataID)}`
+        
+        // 先获取当前配置
+        const getResponse = await axios.get(getUrl)
+        if (getResponse.data.success) {
+          const currentConfig = getResponse.data.data.config || {}
+          
+          // 更新 lastUpdate 字段
+          currentConfig.lastUpdate = lastUpdateTime
+          
+          // 发送更新请求
+          const response = await axios.put(updateUrl, {
+            config: currentConfig
+          })
+          
+          if (response.data.success) {
+            console.log(`lastUpdate 更新成功: dataID=${dataID}, time=${lastUpdateTime}`)
+          } else {
+            console.error('lastUpdate 更新失败:', response.data.message)
+          }
+        }
+      } catch (error) {
+        console.error('更新 lastUpdate 失败:', error)
+      }
     }
 
     const handleSubmit = async () => {
@@ -2705,8 +2731,12 @@ export default {
           ElMessage.success(`${source.dataName} 悠悠有品爬虫采集完成！`)
           console.log('悠悠有品爬虫采集响应:', response.data)
           
-          // 更新数据源的最后更新时间（前端显示）
-          source.lastUpdate = new Date()
+          // 更新数据源的最后更新时间
+          const now = new Date()
+          source.lastUpdate = now
+          
+          // 更新数据库中的 lastUpdate
+          await updateLastUpdateInDatabase(source.dataID, now.toISOString())
         } else {
           ElMessage.error(`悠悠有品爬虫采集失败: ${response.data}`)
         }
@@ -2773,7 +2803,11 @@ export default {
           console.log('BUFF爬虫采集响应:', response.data)
           
           // 更新数据源的最后更新时间
-          source.lastUpdate = new Date()
+          const now = new Date()
+          source.lastUpdate = now
+          
+          // 更新数据库中的 lastUpdate
+          await updateLastUpdateInDatabase(source.dataID, now.toISOString())
         } else {
           ElMessage.error(`BUFF爬虫采集失败: ${response.data}`)
         }
