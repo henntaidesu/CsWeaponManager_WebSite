@@ -4377,7 +4377,7 @@ export default {
   padding: clamp(1rem, 2.5vw, 1.25rem);
   border: 1px solid #333;
   transition: all 0.3s;
-  width: 100%;
+  width: 250px;
   height: fit-content;
   box-sizing: border-box;
 }
@@ -4463,33 +4463,16 @@ export default {
   flex-wrap: wrap;
 }
 
-/* 数据源网格布局 - 固定4列 */
+/* 数据源网格布局 - 固定宽度，左对齐 */
 .grid-datasource {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  justify-items: stretch;
+  justify-content: flex-start;
   align-items: start;
 }
 
-/* 响应式调整 - 保持固定列数概念 */
-@media (max-width: 1200px) {
-  .grid-datasource {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .grid-datasource {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .grid-datasource {
-    grid-template-columns: 1fr;
-  }
-}
+/* 响应式调整 - flexbox布局无需额外设置 */
 
 /* 确保卡片内容自适应 */
 .source-card .source-header,
