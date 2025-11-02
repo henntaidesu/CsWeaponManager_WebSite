@@ -1863,14 +1863,18 @@ export default {
         // 先获取当前配置
         const getResponse = await axios.get(getUrl)
         if (getResponse.data.success) {
-          const currentConfig = getResponse.data.data.config || {}
+          const currentData = getResponse.data.data
+          const currentConfig = currentData.config || {}
           
           // 更新 lastUpdate 字段
           currentConfig.lastUpdate = lastUpdateTime
           
-          // 发送更新请求
+          // 发送更新请求（需要传递 configJson 字符串）
           const response = await axios.put(updateUrl, {
-            config: currentConfig
+            dataName: currentData.dataName,
+            type: currentData.type,
+            enabled: currentData.enabled,
+            configJson: JSON.stringify(currentConfig)
           })
           
           if (response.data.success) {
@@ -2879,7 +2883,11 @@ export default {
           console.log('Steam增量采集响应:', response.data)
           
           // 更新数据源的最后更新时间
-          source.lastUpdate = new Date()
+          const now = new Date()
+          source.lastUpdate = now
+          
+          // 更新数据库中的 lastUpdate
+          await updateLastUpdateInDatabase(source.dataID, now.toISOString())
         } else {
           ElMessage.error(`Steam增量采集失败: ${response.data}`)
         }
@@ -2948,7 +2956,11 @@ export default {
           ElMessage.success(`${source.dataName} 采集完成！采集到 ${result.data?.count || 0} 条数据`)
           
           // 更新数据源的最后更新时间
-          source.lastUpdate = new Date()
+          const now = new Date()
+          source.lastUpdate = now
+          
+          // 更新数据库中的 lastUpdate
+          await updateLastUpdateInDatabase(source.dataID, now.toISOString())
         } else {
           ElMessage.error(`采集失败: ${result.message}`)
         }
