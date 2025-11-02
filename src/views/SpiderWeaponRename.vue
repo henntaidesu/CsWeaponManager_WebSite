@@ -1074,34 +1074,115 @@ export default {
 
     // 购买饰品
     const handleBuyWeapon = async (item) => {
+      console.log('购买商品:', item)
+      
+      // 确认购买
       try {
-        // 设置当前商品为购买中状态
-        buyingItems.value[item.id] = true
-        
-        // 构造购买请求数据
-        const buyData = {
+        await ElMessageBox.confirm(
+          `确认购买该商品吗？\n\n改名：${item.nameTag || '无'}\n价格：¥${item.price}\n磨损：${item.abrade || '-'}\n溢价：+¥${item.spread.toFixed(2)}`,
+          '确认购买',
+          {
+            confirmButtonText: '确认购买',
+            cancelButtonText: '取消',
+            type: 'warning',
+            distinguishCancelAndClose: true
+          }
+        )
+      } catch (error) {
+        // 用户取消
+        ElMessage.info('已取消购买')
+        return
+      }
+      
+      // 设置购买中状态
+      buyingItems.value[item.id] = true
+      
+      // 开始购买流程
+      const loadingMessage = ElMessage({
+        message: '正在创建订单...',
+        type: 'info',
+        duration: 0
+      })
+      
+      try {
+        const requestData = {
           steamId: crawlForm.value.steamId,
           commodityId: item.id,
-          commodityNo: item.commodityNo,
-          price: item.price
+          buyQuantity: 1,
+          price: item.price,
+          autoConfirmPayment: true,  // 自动使用余额支付
+          pollPayment: true  // 轮询支付状态
         }
         
-        // 调用购买API
+        console.log('购买请求数据:', requestData)
+        
+        // 调用完整购买接口（创建订单+自动支付）
         const response = await axios.post(
-          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/buy_weapon`,
-          buyData
+          `${API_CONFIG.SPIDER_BASE_URL}/youping898SpiderV1/buyCommodity`,
+          requestData
         )
         
+        console.log('购买响应:', response.data)
+        
+        loadingMessage.close()
+        
         if (response.data.success) {
-          ElMessage.success(`购买成功！商品: ${item.nameTag || '改名饰品'}`)
-          // TODO: 可以刷新列表或更新UI状态
+          const orderData = response.data.data?.order || {}
+          const paymentStatus = response.data.data?.payment_status || {}
+          const orderNo = orderData.orderNo || '未知'
+          const paymentAmount = item.price || '未知'
+          
+          // 检查支付状态
+          const payStatus = paymentStatus.payStatus
+          let message = ''
+          
+          if (payStatus === 2) {
+            // 支付成功
+            message = `购买成功！\n\n商品：${item.nameTag || '改名饰品'}\n订单号：${orderNo}\n金额：¥${paymentAmount}\n状态：支付成功✅\n\n饰品将发送至您的库存。`
+          } else if (payStatus === 1) {
+            // 支付处理中
+            message = `订单已创建！\n\n订单号：${orderNo}\n金额：¥${paymentAmount}\n状态：支付处理中⏳\n\n请稍后查看订单状态。`
+          } else {
+            // 订单创建成功但支付未完成
+            message = `订单创建成功！\n\n订单号：${orderNo}\n金额：¥${paymentAmount}\n\n已自动使用余额支付，请稍后查看订单状态。`
+          }
+          
+          // 显示购买成功信息
+          ElMessageBox.alert(
+            message,
+            '购买完成',
+            {
+              confirmButtonText: '知道了',
+              type: 'success',
+              callback: () => {
+                ElMessage.success(payStatus === 2 ? '购买成功！' : '订单已创建')
+              }
+            }
+          )
         } else {
-          throw new Error(response.data.message || '购买失败')
+          ElMessageBox.alert(
+            `购买失败：${response.data.message || '未知错误'}\n\n请检查配置或稍后重试。`,
+            '购买失败',
+            {
+              confirmButtonText: '知道了',
+              type: 'error'
+            }
+          )
         }
       } catch (error) {
-        console.error('购买饰品失败:', error)
-        const errorMessage = error.response?.data?.message || error.message || '购买失败'
-        ElMessage.error(errorMessage)
+        loadingMessage.close()
+        console.error('购买商品失败:', error)
+        
+        const errorMessage = error.response?.data?.message || error.message || '网络错误，请稍后重试'
+        
+        ElMessageBox.alert(
+          `购买失败：${errorMessage}`,
+          '购买失败',
+          {
+            confirmButtonText: '知道了',
+            type: 'error'
+          }
+        )
       } finally {
         // 移除购买中状态
         buyingItems.value[item.id] = false
