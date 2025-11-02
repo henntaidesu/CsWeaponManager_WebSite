@@ -3,13 +3,16 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
-// 全局定时器存储（在模块级别，不会因为组件卸载而清除）
-const autoCollectionTimers = {}
+// 全局定时器（每30秒检查一次）
+let globalCheckTimer = null
 const isInitialized = ref(false)
 
 // 爬虫服务器地址
 const SPIDER_BASE_URL = 'http://127.0.0.1:9002'
 const API_BASE_URL = '/api'
+
+// 检查间隔：30秒
+const CHECK_INTERVAL = 30 * 1000
 
 /**
  * 将更新频率转换为毫秒数
@@ -25,6 +28,38 @@ function getUpdateFreqMs(freq) {
     '24hours': 24 * 60 * 60 * 1000
   }
   return freqMap[freq] || 15 * 60 * 1000 // 默认15分钟
+}
+
+/**
+ * 检查是否需要执行采集
+ * @param {string} lastUpdate - 最后更新时间 ISO字符串
+ * @param {string} updateFreq - 更新频率
+ * @returns {boolean} 是否需要执行采集
+ */
+function shouldCollect(lastUpdate, updateFreq) {
+  if (!lastUpdate) {
+    // 如果从未更新过，需要采集
+    return true
+  }
+  
+  try {
+    const lastUpdateTime = new Date(lastUpdate).getTime()
+    const now = Date.now()
+    const interval = getUpdateFreqMs(updateFreq)
+    const timeSinceLastUpdate = now - lastUpdateTime
+    
+    // 如果距离上次更新的时间超过了设定的更新频率，则需要采集
+    const needCollect = timeSinceLastUpdate >= interval
+    
+    if (needCollect) {
+      console.log(`[全局自动采集] 需要采集: lastUpdate=${lastUpdate}, timeSince=${Math.floor(timeSinceLastUpdate/1000)}秒, interval=${Math.floor(interval/1000)}秒`)
+    }
+    
+    return needCollect
+  } catch (error) {
+    console.error('[全局自动采集] 时间解析错误:', error)
+    return false
+  }
 }
 
 /**
@@ -131,74 +166,104 @@ async function executeCollection(source) {
 }
 
 /**
- * 启动自动采集定时器
+ * 检查所有数据源并执行需要采集的任务
  */
-export function startAutoCollectionTimer(source) {
-  const { dataID, dataName, config } = source
-  
-  // 如果已经存在定时器，先停止
-  if (autoCollectionTimers[dataID]) {
-    stopAutoCollectionTimer(dataID)
+async function checkAndCollect() {
+  try {
+    console.log('[全局自动采集] 开始检查数据源...')
+    
+    // 获取所有数据源
+    const response = await axios.get(`${API_BASE_URL}/dataSourcePageV1/api/datasource`)
+    
+    if (!response.data.success) {
+      console.error('[全局自动采集] 获取数据源失败:', response.data.message)
+      return
+    }
+    
+    const dataSources = response.data.data || []
+    const tasksToCollect = []
+    
+    // 检查每个数据源
+    for (const source of dataSources) {
+      const config = source.config || {}
+      const autoCollect = config.autoCollect || false
+      const updateFreq = config.updateFreq || '15min'
+      const lastUpdate = config.lastUpdate || null
+      
+      // 只处理启用的、支持自动采集的数据源
+      if (!autoCollect || !source.enabled || !['youpin', 'buff', 'steam'].includes(source.type)) {
+        continue
+      }
+      
+      // 检查是否需要采集
+      if (shouldCollect(lastUpdate, updateFreq)) {
+        console.log(`[全局自动采集] 数据源需要采集: ${source.dataName} (dataID=${source.dataID})`)
+        tasksToCollect.push(source)
+      }
+    }
+    
+    // 执行需要采集的任务
+    if (tasksToCollect.length > 0) {
+      // 按照 dataID 排序，确保按顺序执行
+      tasksToCollect.sort((a, b) => a.dataID - b.dataID)
+      
+      console.log(`[全局自动采集] 共有 ${tasksToCollect.length} 个数据源需要采集，执行顺序: ${tasksToCollect.map(s => `${s.dataName}(ID:${s.dataID})`).join(', ')}`)
+      
+      for (const source of tasksToCollect) {
+        console.log(`[全局自动采集] 开始执行采集: ${source.dataName} (dataID=${source.dataID})`)
+        await executeCollection(source)
+        // 每个采集之间间隔2秒，避免同时发起过多请求
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+      
+      console.log('[全局自动采集] 本轮采集任务全部完成')
+    } else {
+      console.log('[全局自动采集] 无需采集的数据源')
+    }
+    
+  } catch (error) {
+    console.error('[全局自动采集] 检查失败:', error)
   }
-  
-  const autoCollect = config.autoCollect || false
-  const updateFreq = config.updateFreq || '15min'
-  
-  if (!autoCollect) {
-    console.log(`[全局自动采集] 数据源未启用自动采集: ${dataName}`)
-    return
-  }
-  
-  const intervalMs = getUpdateFreqMs(updateFreq)
-  
-  console.log(`[全局自动采集] 启动定时器: ${dataName} (dataID=${dataID}), 频率=${updateFreq} (${intervalMs}ms)`)
-  
-  // 创建定时器
-  const timerId = setInterval(async () => {
-    console.log(`[全局自动采集] 定时器触发: ${dataName} (dataID=${dataID})`)
-    await executeCollection(source)
-  }, intervalMs)
-  
-  // 保存定时器信息
-  autoCollectionTimers[dataID] = {
-    timerId,
-    dataName,
-    updateFreq,
-    startTime: new Date().toISOString()
-  }
-  
-  console.log(`[全局自动采集] 定时器已启动: ${dataName}, 下次采集时间: ${new Date(Date.now() + intervalMs).toLocaleString()}`)
 }
 
 /**
- * 停止自动采集定时器
+ * 启动全局定时器（每30秒检查一次）
  */
-export function stopAutoCollectionTimer(dataID) {
-  if (autoCollectionTimers[dataID]) {
-    clearInterval(autoCollectionTimers[dataID].timerId)
-    const dataName = autoCollectionTimers[dataID].dataName
-    delete autoCollectionTimers[dataID]
-    console.log(`[全局自动采集] 停止定时器: ${dataName} (dataID=${dataID})`)
+export function startGlobalTimer() {
+  if (globalCheckTimer) {
+    console.log('[全局自动采集] 定时器已在运行中')
+    return
+  }
+  
+  console.log(`[全局自动采集] 启动全局定时器，检查间隔: ${CHECK_INTERVAL/1000}秒`)
+  
+  // 创建定时器，每30秒检查一次
+  globalCheckTimer = setInterval(async () => {
+    await checkAndCollect()
+  }, CHECK_INTERVAL)
+  
+  console.log('[全局自动采集] 全局定时器已启动')
+}
+
+/**
+ * 停止全局定时器
+ */
+export function stopGlobalTimer() {
+  if (globalCheckTimer) {
+    clearInterval(globalCheckTimer)
+    globalCheckTimer = null
+    console.log('[全局自动采集] 全局定时器已停止')
     return true
   }
   return false
 }
 
 /**
- * 停止所有定时器
+ * 手动触发一次检查
  */
-export function stopAllTimers() {
-  Object.keys(autoCollectionTimers).forEach(dataID => {
-    stopAutoCollectionTimer(parseInt(dataID))
-  })
-  console.log('[全局自动采集] 所有定时器已停止')
-}
-
-/**
- * 获取所有运行中的定时器
- */
-export function getRunningTimers() {
-  return { ...autoCollectionTimers }
+export async function triggerCheck() {
+  console.log('[全局自动采集] 手动触发检查')
+  await checkAndCollect()
 }
 
 /**
@@ -211,83 +276,47 @@ export async function initAutoCollectionTimers() {
   }
   
   try {
-    console.log('[全局自动采集] 开始初始化定时器...')
+    console.log('[全局自动采集] 开始初始化全局定时器...')
     
-    // 获取所有数据源
-    const response = await axios.get(`${API_BASE_URL}/dataSourcePageV1/api/datasource`)
+    // 启动全局定时器（每30秒检查一次）
+    startGlobalTimer()
     
-    if (response.data.success) {
-      const dataSources = response.data.data || []
-      let count = 0
-      
-      dataSources.forEach(source => {
-        const config = source.config || {}
-        const autoCollect = config.autoCollect || false
-        
-        if (autoCollect && source.enabled && ['youpin', 'buff', 'steam'].includes(source.type)) {
-          startAutoCollectionTimer(source)
-          count++
-        }
-      })
-      
-      isInitialized.value = true
-      console.log(`[全局自动采集] 定时器初始化完成，共启动 ${count} 个定时器`)
-      
-      if (count > 0) {
-        ElMessage.success(`自动采集已启动，共 ${count} 个数据源`)
-      }
-    } else {
-      console.error('[全局自动采集] 获取数据源失败:', response.data.message)
-    }
+    // 立即执行一次检查
+    await checkAndCollect()
+    
+    isInitialized.value = true
+    console.log('[全局自动采集] 初始化完成')
+    
   } catch (error) {
-    console.error('[全局自动采集] 初始化定时器失败:', error)
+    console.error('[全局自动采集] 初始化失败:', error)
   }
 }
 
 /**
- * 重新加载所有定时器（用于配置更新后）
+ * 重新初始化定时器
  */
 export async function reloadAutoCollectionTimers() {
-  console.log('[全局自动采集] 重新加载所有定时器...')
+  console.log('[全局自动采集] 重新初始化...')
   
-  // 先停止所有定时器
-  stopAllTimers()
+  // 停止定时器
+  stopGlobalTimer()
   
-  // 重置初始化标志
+  // 重置标志
   isInitialized.value = false
   
   // 重新初始化
   await initAutoCollectionTimers()
 }
 
-/**
- * 更新单个数据源的定时器
- */
-export function updateTimer(source) {
-  const { dataID, config } = source
-  const autoCollect = config.autoCollect || false
-  
-  if (autoCollect && source.enabled) {
-    // 启动或重启定时器
-    startAutoCollectionTimer(source)
-  } else {
-    // 停止定时器
-    stopAutoCollectionTimer(dataID)
-  }
-}
-
-// 导出定时器状态
+// 导出功能
 export function useAutoCollection() {
   return {
-    autoCollectionTimers,
     isInitialized,
-    startAutoCollectionTimer,
-    stopAutoCollectionTimer,
-    stopAllTimers,
-    getRunningTimers,
+    startGlobalTimer,
+    stopGlobalTimer,
+    triggerCheck,
     initAutoCollectionTimers,
-    reloadAutoCollectionTimers,
-    updateTimer
+    reloadAutoCollectionTimers
   }
 }
 

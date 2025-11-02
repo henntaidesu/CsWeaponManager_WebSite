@@ -1582,7 +1582,8 @@ export default {
     const steamQRStatus = ref('') // 二维码状态: waiting, success, expired
     const steamQRCheckTimer = ref(null) // 二维码状态检查定时器
     const autoRefreshTimer = ref(null) // 数据源列表自动刷新定时器
-    const autoCollectionTimers = ref({}) // 自动采集定时器 { dataID: timerId }
+    
+    // 注意：全局自动采集定时器在 main.js 中初始化，无需在组件中管理
     
     // GetAppToken 相关状态
     const buffTokenLoading = ref(false)  // BUFF Token 获取loading
@@ -1786,72 +1787,8 @@ export default {
       return freqMap[updateFreq] || 15 * 60 * 1000 // 默认15分钟
     }
 
-    // 启动自动采集定时器
-    const startAutoCollectionTimer = (source) => {
-      // 清除已存在的定时器
-      if (autoCollectionTimers.value[source.dataID]) {
-        clearInterval(autoCollectionTimers.value[source.dataID])
-      }
-
-      const interval = getUpdateFreqMs(source.updateFreq)
-      console.log(`启动自动采集定时器: ${source.dataName}, 间隔: ${interval}ms (${source.updateFreq})`)
-
-      // 创建新的定时器
-      autoCollectionTimers.value[source.dataID] = setInterval(() => {
-        console.log(`自动采集触发: ${source.dataName}`)
-        startCollection(source)
-      }, interval)
-    }
-
-    // 停止自动采集定时器
-    const stopAutoCollectionTimer = (dataID) => {
-      if (autoCollectionTimers.value[dataID]) {
-        clearInterval(autoCollectionTimers.value[dataID])
-        delete autoCollectionTimers.value[dataID]
-        console.log(`停止自动采集定时器: dataID=${dataID}`)
-      }
-    }
-
-    // 切换自动采集状态
-    const toggleAutoCollection = async (source) => {
-      try {
-        // 更新数据库中的 enabled 状态
-        const updateUrl = apiUrls.updateDataSource(source.dataID)
-        const response = await axios.put(updateUrl, {
-          enabled: source.enabled
-        })
-
-        if (response.data.success) {
-          if (source.enabled) {
-            // 开启自动采集
-            ElMessage.success(`已开启 ${source.dataName} 的自动采集`)
-            startAutoCollectionTimer(source)
-          } else {
-            // 关闭自动采集
-            ElMessage.info(`已关闭 ${source.dataName} 的自动采集`)
-            stopAutoCollectionTimer(source.dataID)
-          }
-        } else {
-          // 更新失败，恢复原状态
-          source.enabled = !source.enabled
-          ElMessage.error('更新自动采集状态失败')
-        }
-      } catch (error) {
-        console.error('切换自动采集状态失败:', error)
-        // 恢复原状态
-        source.enabled = !source.enabled
-        ElMessage.error('切换自动采集状态失败')
-      }
-    }
-
-    // 初始化自动采集定时器（页面加载时）
-    const initAutoCollectionTimers = () => {
-      dataSources.value.forEach(source => {
-        if ((source.type === 'youpin' || source.type === 'buff') && source.enabled) {
-          startAutoCollectionTimer(source)
-        }
-      })
-    }
+    // 注意：自动采集定时器已移至全局管理（useAutoCollection.js）
+    // 前端组件不再需要管理单独的定时器
 
     // 更新数据库中的 lastUpdate 时间
     const updateLastUpdateInDatabase = async (dataID, lastUpdateTime) => {
@@ -4339,10 +4276,7 @@ export default {
       if (tokenCheckTimer.value) {
         clearInterval(tokenCheckTimer.value)
       }
-      // 清理所有自动采集定时器
-      Object.keys(autoCollectionTimers.value).forEach(dataID => {
-        stopAutoCollectionTimer(dataID)
-      })
+      // 注意：全局定时器不需要在组件卸载时清理，它会持续运行
     })
 
     return {
@@ -4366,7 +4300,6 @@ export default {
       getSourceTypeColor,
       getUpdateFreqLabel,
       formatTime,
-      toggleAutoCollection,
       handleSubmit,
       resetForm,
       testConnection,
