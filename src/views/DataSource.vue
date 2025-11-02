@@ -49,11 +49,6 @@
                     </div>
                   </div>
                   
-                  <div class="source-details">
-                    <p><strong>SteamID:</strong> {{ source.steamID || '未设置' }}</p>
-                    <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
-                    <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
-                  </div>
                   
                   <div class="source-actions">
                     <el-button type="primary" size="small" @click="editSource(source)">
@@ -142,16 +137,6 @@
             </div>
           </el-form-item>
           
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
           
           <!-- 基础配置 -->
           <el-collapse v-model="editYyypBasicCollapse" style="margin-bottom: 20px;">
@@ -283,16 +268,6 @@
             </div>
           </el-form-item>
           
-          <el-form-item label="更新频率">
-            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
           
           <!-- 基础配置 -->
           <el-collapse v-model="editBuffBasicCollapse" style="margin-bottom: 20px;">
@@ -1125,16 +1100,6 @@
             />
           </el-form-item>
           
-          <el-form-item label="更新频率">
-            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
           
           <!-- 登录状态提示 -->
           <el-alert
@@ -1244,16 +1209,6 @@
             />
           </el-form-item>
           
-          <el-form-item label="更新频率">
-            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
           
           <!-- 登录状态提示 -->
           <el-alert
@@ -1375,16 +1330,6 @@
               placeholder="请输入API密钥"
             />
           </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
         </template>
         
         <!-- 悠悠有品特有配置 -->
@@ -1447,16 +1392,6 @@
               v-model="inputForm.appVersion" 
               placeholder="请输入应用版本"
             />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
           </el-form-item>
           <el-form-item label="应用类型" required>
             <el-input 
@@ -1617,7 +1552,6 @@ export default {
       type: '',
       apiUrl: '',
       apiKey: '',
-      updateFreq: '15min',
       enabled: true,
       // 悠悠有品特有字段
       phone: '',
@@ -1665,7 +1599,6 @@ export default {
       type: '',
       apiUrl: '',
       apiKey: '',
-      updateFreq: '15min',
       enabled: false,
       // 悠悠有品特有字段
       phone: '',
@@ -2016,8 +1949,7 @@ export default {
             uk: inputForm.value.uk,
             sk: inputForm.value.sk,
             tracestate: inputForm.value.tracestate,
-            device_info: inputForm.value.deviceInfo,
-            lastUpdate: now
+            device_info: inputForm.value.deviceInfo
           })
         } else if (inputForm.value.type === 'perfectworld') {
           // 完美世界APP特殊配置
@@ -2029,9 +1961,7 @@ export default {
             token: inputForm.value.pwToken,
             tdSign: inputForm.value.tdSign,
             steamID: inputForm.value.pwSteamID,
-            updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000',
-            lastUpdate: now
+            sleep_time: '6000'
           })
         } else if (inputForm.value.type === 'buff') {
           // BUFF特殊配置
@@ -2065,9 +1995,7 @@ export default {
             devicename: inputForm.value.buffDevicename,
             cookie: inputForm.value.cookie,
             steamID: inputForm.value.steamID,
-            updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000',
-            lastUpdate: now
+            sleep_time: '6000'
           })
         } else if (inputForm.value.type === 'steam') {
           // Steam特殊配置（支持三种Cookie获取方式）
@@ -2077,9 +2005,7 @@ export default {
             steamCookieMethod: inputForm.value.steamCookieMethod, // 记录获取方式
             steamUsername: inputForm.value.steamUsername || '',
             steamPassword: inputForm.value.steamPassword || '',
-            updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000',
-            lastUpdate: now
+            sleep_time: '6000'
           })
         } else if (inputForm.value.type === 'steam_login') {
           // Steam登录特殊配置
@@ -2088,17 +2014,13 @@ export default {
             steamID: inputForm.value.steamID,
             steamUsername: inputForm.value.steamUsername,
             steamPassword: inputForm.value.steamPassword,
-            updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000',
-            lastUpdate: now
+            sleep_time: '6000'
           })
         } else {
           requestData.configJson = JSON.stringify({
             apiUrl: inputForm.value.apiUrl,
             apiKey: inputForm.value.apiKey,
-            updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000',
-            lastUpdate: now
+            sleep_time: '6000'
           })
         }
 
@@ -2543,7 +2465,6 @@ export default {
         type: '',
         apiUrl: '',
         apiKey: '',
-        updateFreq: '15min',
         enabled: false,
         // 悠悠有品特有字段
         phone: '',
@@ -3074,8 +2995,7 @@ export default {
         console.log('Steam配置解析:', {
           cookies: config.cookies,
           steamID: config.steamID,
-          steamCookieMethod: config.steamCookieMethod,
-          updateFreq: config.updateFreq
+          steamCookieMethod: config.steamCookieMethod
         })
         editForm.value.cookies = config.cookies || ''
         editForm.value.steamID = config.steamID || ''
@@ -3168,7 +3088,6 @@ export default {
         type: '',
         apiUrl: '',
         apiKey: '',
-        updateFreq: '15min',
         enabled: true,
         // 悠悠有品特有字段
         phone: '',

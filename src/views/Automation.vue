@@ -9,6 +9,15 @@
         
         <ul class="category-list">
           <li 
+            :class="{ active: selectedCategory === 'auto_manager' }"
+            @click="selectCategory('auto_manager')"
+          >
+            <el-icon :size="18">
+              <Timer />
+            </el-icon>
+            <span>自动化管理</span>
+          </li>
+          <li 
             :class="{ active: selectedCategory === 'spider_rename' }"
             @click="selectCategory('spider_rename')"
           >
@@ -58,6 +67,12 @@
 
     <!-- 主内容区域 -->
     <div class="main-wrapper" :class="{ expanded: sidebarCollapsed }" @click="handleContentClick">
+      <!-- 自动化管理页面 -->
+      <div v-if="selectedCategory === 'auto_manager'" class="auto-manager-placeholder">
+        <h2>自动化管理</h2>
+        <p>此页面用于集中管理所有自动化采集任务</p>
+      </div>
+      
       <!-- 爬取改名页面 -->
       <SpiderWeaponRenameContent v-if="selectedCategory === 'spider_rename'" />
       
@@ -75,13 +90,13 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { EditPen, Tools, ShoppingCart, Box, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
+import { EditPen, Tools, ShoppingCart, Box, Timer, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import SpiderWeaponRenameContent from './SpiderWeaponRename.vue'
 import SteamMarketContent from './SteamMarket.vue'
 import SteamInventoryHistoryContent from './SteamInventoryHistory.vue'
 import DevToolContent from './DevTool.vue'
 
-const selectedCategory = ref('spider_rename')
+const selectedCategory = ref('auto_manager')
 const sidebarCollapsed = ref(false)
 const isMainSidebarCollapsed = ref(false)
 
@@ -382,6 +397,23 @@ onUnmounted(() => {
 
 .main-wrapper::-webkit-scrollbar-thumb:hover {
   background: rgba(90, 90, 90, 0.8);
+}
+
+/* 自动化管理占位样式 */
+.auto-manager-placeholder {
+  padding: 40px;
+  text-align: center;
+  color: #909399;
+}
+
+.auto-manager-placeholder h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #e8e8e8;
+}
+
+.auto-manager-placeholder p {
+  font-size: 16px;
 }
 </style>
 
