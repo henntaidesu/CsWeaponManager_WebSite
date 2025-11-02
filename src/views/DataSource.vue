@@ -1669,7 +1669,7 @@ export default {
       apiUrl: '',
       apiKey: '',
       updateFreq: '15min',
-      enabled: true,
+      enabled: false,
       // 悠悠有品特有字段
       phone: '',
       sessionid: '',
@@ -2542,7 +2542,7 @@ export default {
         apiUrl: '',
         apiKey: '',
         updateFreq: '15min',
-        enabled: true,
+        enabled: false,
         // 悠悠有品特有字段
         phone: '',
         sessionid: '',
