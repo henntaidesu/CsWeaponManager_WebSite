@@ -2029,6 +2029,9 @@ export default {
 
       submitting.value = true
       try {
+        // 获取当前时间作为创建时间
+        const now = new Date().toISOString()
+        
         let requestData = {
           dataName: inputForm.value.name,
           type: inputForm.value.type,
@@ -2054,7 +2057,8 @@ export default {
             uk: inputForm.value.uk,
             sk: inputForm.value.sk,
             tracestate: inputForm.value.tracestate,
-            device_info: inputForm.value.deviceInfo
+            device_info: inputForm.value.deviceInfo,
+            lastUpdate: now
           })
         } else if (inputForm.value.type === 'perfectworld') {
           // 完美世界APP特殊配置
@@ -2067,7 +2071,8 @@ export default {
             tdSign: inputForm.value.tdSign,
             steamID: inputForm.value.pwSteamID,
             updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000'
+            sleep_time: '6000',
+            lastUpdate: now
           })
         } else if (inputForm.value.type === 'buff') {
           // BUFF特殊配置
@@ -2102,7 +2107,8 @@ export default {
             cookie: inputForm.value.cookie,
             steamID: inputForm.value.steamID,
             updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000'
+            sleep_time: '6000',
+            lastUpdate: now
           })
         } else if (inputForm.value.type === 'steam') {
           // Steam特殊配置（支持三种Cookie获取方式）
@@ -2113,7 +2119,8 @@ export default {
             steamUsername: inputForm.value.steamUsername || '',
             steamPassword: inputForm.value.steamPassword || '',
             updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000'
+            sleep_time: '6000',
+            lastUpdate: now
           })
         } else if (inputForm.value.type === 'steam_login') {
           // Steam登录特殊配置
@@ -2123,14 +2130,16 @@ export default {
             steamUsername: inputForm.value.steamUsername,
             steamPassword: inputForm.value.steamPassword,
             updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000'
+            sleep_time: '6000',
+            lastUpdate: now
           })
         } else {
           requestData.configJson = JSON.stringify({
             apiUrl: inputForm.value.apiUrl,
             apiKey: inputForm.value.apiKey,
             updateFreq: inputForm.value.updateFreq,
-            sleep_time: '6000'
+            sleep_time: '6000',
+            lastUpdate: now
           })
         }
 
