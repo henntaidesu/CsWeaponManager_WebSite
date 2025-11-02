@@ -63,11 +63,14 @@ function shouldCollect(lastUpdate, updateFreq) {
 }
 
 /**
- * 更新数据库中的 lastUpdate 时间
+ * 更新数据库中的时间字段
+ * @param {number} dataID - 数据源ID
+ * @param {string} time - 时间字符串
+ * @param {string} field - 要更新的字段名，默认为 'lastUpdate'
  */
-async function updateLastUpdateInDatabase(dataID, lastUpdateTime) {
+async function updateLastUpdateInDatabase(dataID, time, field = 'lastUpdate') {
   try {
-    console.log(`[全局自动采集] 更新 lastUpdate: dataID=${dataID}, time=${lastUpdateTime}`)
+    console.log(`[全局自动采集] 更新 ${field}: dataID=${dataID}, time=${time}`)
     
     const updateUrl = `${API_BASE_URL}/dataSourcePageV1/api/datasource/${dataID}`
     const getUrl = `${API_BASE_URL}/dataSourcePageV1/api/datasource/${dataID}`
@@ -79,8 +82,8 @@ async function updateLastUpdateInDatabase(dataID, lastUpdateTime) {
       const currentData = getResponse.data.data
       const currentConfig = currentData.config || {}
       
-      // 更新 lastUpdate 字段
-      currentConfig.lastUpdate = lastUpdateTime
+      // 更新指定的时间字段
+      currentConfig[field] = time
       
       // 发送更新请求
       const response = await axios.put(updateUrl, {
@@ -91,15 +94,15 @@ async function updateLastUpdateInDatabase(dataID, lastUpdateTime) {
       })
       
       if (response.data.success) {
-        console.log(`[全局自动采集] ✅ lastUpdate 更新成功: dataID=${dataID}`)
+        console.log(`[全局自动采集] ✅ ${field} 更新成功: dataID=${dataID}`)
         return true
       } else {
-        console.error('[全局自动采集] ❌ lastUpdate 更新失败:', response.data.message)
+        console.error(`[全局自动采集] ❌ ${field} 更新失败:`, response.data.message)
         return false
       }
     }
   } catch (error) {
-    console.error('[全局自动采集] ❌ 更新 lastUpdate 失败:', error)
+    console.error(`[全局自动采集] ❌ 更新 ${field} 失败:`, error)
     return false
   }
 }
@@ -108,14 +111,31 @@ async function updateLastUpdateInDatabase(dataID, lastUpdateTime) {
  * 执行采集任务
  */
 async function executeCollection(source) {
-  const { dataID, dataName, type, config } = source
+  const { dataID, dataName, type, config, taskType, taskName } = source
   
-  console.log(`[全局自动采集] 开始采集: ${dataName} (dataID=${dataID})`)
+  const displayName = taskName || dataName
+  console.log(`[全局自动采集] 开始采集: ${displayName} (dataID=${dataID})`)
   
   try {
-    let url, payload
+    let url, payload, updateField = 'lastUpdate'
     
-    if (type === 'youpin') {
+    // 如果有特殊任务类型（库存相关），使用对应的API
+    if (taskType === 'inventory') {
+      // Steam库存更新
+      url = `${SPIDER_BASE_URL}/steamSpiderV1/getInventory`
+      payload = { steamId: config.steamId || '' }
+      updateField = 'lastInventoryUpdate'
+    } else if (taskType === 'yyyp_price') {
+      // 悠悠有品价格
+      url = `${SPIDER_BASE_URL}/youping898SpiderV1/getYYYPPrice`
+      payload = { steamId: config.steamId || '' }
+      updateField = 'lastYYYPPriceUpdate'
+    } else if (taskType === 'buff_price') {
+      // BUFF价格
+      url = `${SPIDER_BASE_URL}/buffSpiderV1/getBUFFPrice`
+      payload = { steamId: config.steamId || '' }
+      updateField = 'lastBuffPriceUpdate'
+    } else if (type === 'youpin') {
       // 悠悠有品采集
       url = `${SPIDER_BASE_URL}/youping898SpiderV1/newData`
       payload = {
@@ -148,19 +168,19 @@ async function executeCollection(source) {
     const response = await axios.post(url, payload, { timeout: 300000 })
     
     if (response.data.success) {
-      console.log(`[全局自动采集] ✅ 采集成功: ${dataName}`)
+      console.log(`[全局自动采集] ✅ 采集成功: ${displayName}`)
       
-      // 更新 lastUpdate 时间
+      // 更新对应的时间字段
       const now = new Date().toISOString()
-      await updateLastUpdateInDatabase(dataID, now)
+      await updateLastUpdateInDatabase(dataID, now, updateField)
       
       return true
     } else {
-      console.error(`[全局自动采集] ❌ 采集失败: ${dataName}, 错误:`, response.data.message)
+      console.error(`[全局自动采集] ❌ 采集失败: ${displayName}, 错误:`, response.data.message)
       return false
     }
   } catch (error) {
-    console.error(`[全局自动采集] ❌ 采集异常: ${dataName}, 错误:`, error.message)
+    console.error(`[全局自动采集] ❌ 采集异常: ${displayName}, 错误:`, error.message)
     return false
   }
 }
@@ -193,6 +213,41 @@ async function checkAndCollect() {
       // 只处理启用的、支持自动采集的数据源
       if (!autoCollect || !source.enabled || !['youpin', 'buff', 'steam'].includes(source.type)) {
         continue
+      }
+      
+      // 对于Steam类型，需要额外执行库存相关任务
+      if (source.type === 'steam') {
+        // 检查是否启用库存更新
+        if (config.autoUpdateInventory && shouldCollect(config.lastInventoryUpdate, updateFreq)) {
+          console.log(`[全局自动采集] Steam库存需要更新: ${source.dataName} (dataID=${source.dataID})`)
+          tasksToCollect.push({
+            ...source,
+            taskType: 'inventory',
+            taskName: 'Steam库存更新'
+          })
+        }
+        
+        // 检查是否启用悠悠有品价格
+        if (config.autoUpdateYYYPPrice && shouldCollect(config.lastYYYPPriceUpdate, updateFreq)) {
+          console.log(`[全局自动采集] 悠悠有品价格需要更新: ${source.dataName} (dataID=${source.dataID})`)
+          tasksToCollect.push({
+            ...source,
+            taskType: 'yyyp_price',
+            taskName: '悠悠有品价格'
+          })
+        }
+        
+        // 检查是否启用BUFF价格
+        if (config.autoUpdateBuffPrice && shouldCollect(config.lastBuffPriceUpdate, updateFreq)) {
+          console.log(`[全局自动采集] BUFF价格需要更新: ${source.dataName} (dataID=${source.dataID})`)
+          tasksToCollect.push({
+            ...source,
+            taskType: 'buff_price',
+            taskName: 'BUFF价格'
+          })
+        }
+        
+        // 继续检查Steam市场数据采集
       }
       
       // 检查是否需要采集
