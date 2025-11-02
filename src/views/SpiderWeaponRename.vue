@@ -41,19 +41,17 @@
             type="success" 
             @click="createNewConfig"
             :disabled="isCrawling"
-            style="width: 100%;"
           >
             <el-icon><Document /></el-icon>
-            新建配置
+            新建
           </el-button>
           
           <el-button 
             type="info" 
             @click="loadConfigList"
-            style="width: 100%; margin-top: 0.5rem;"
           >
             <el-icon><Refresh /></el-icon>
-            刷新列表
+            刷新
           </el-button>
         </div>
       </aside>
@@ -1288,8 +1286,14 @@ export default {
 }
 
 .sidebar-actions {
+  display: flex;
+  gap: 0.5rem;
   padding-top: 1rem;
   border-top: 1px solid #333;
+}
+
+.sidebar-actions .el-button {
+  flex: 1;
 }
 
 /* 右侧主内容区域 */
@@ -1483,6 +1487,11 @@ export default {
   display: flex;
   justify-content: center;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-buttons .el-button {
+  min-width: 140px;
 }
 
 /* 结果区域 */

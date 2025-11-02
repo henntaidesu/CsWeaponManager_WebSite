@@ -1,5 +1,5 @@
 <template>
-  <div class="automation-container">
+  <div class="automation-container" :class="{ 'main-sidebar-collapsed': isMainSidebarCollapsed }">
     <!-- 二级左侧栏 -->
     <aside class="secondary-sidebar" :class="{ collapsed: sidebarCollapsed }">
       <!-- 折叠/展开按钮 -->
@@ -38,12 +38,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { EditPen, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import SpiderWeaponRenameContent from './SpiderWeaponRename.vue'
 
 const selectedCategory = ref('spider_rename')
 const sidebarCollapsed = ref(false)
+const isMainSidebarCollapsed = ref(false)
 
 const selectCategory = (categoryId) => {
   selectedCategory.value = categoryId
@@ -52,6 +53,39 @@ const selectCategory = (categoryId) => {
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
 }
+
+// 监听主侧边栏的状态变化
+const checkMainSidebarState = () => {
+  const mainSidebar = document.querySelector('.sidebar')
+  if (mainSidebar) {
+    isMainSidebarCollapsed.value = mainSidebar.classList.contains('collapsed')
+  }
+}
+
+// 使用 MutationObserver 监听主侧边栏的 class 变化
+let observer = null
+
+onMounted(() => {
+  checkMainSidebarState()
+  
+  const mainSidebar = document.querySelector('.sidebar')
+  if (mainSidebar) {
+    observer = new MutationObserver(() => {
+      checkMainSidebarState()
+    })
+    
+    observer.observe(mainSidebar, {
+      attributes: true,
+      attributeFilter: ['class']
+    })
+  }
+})
+
+onUnmounted(() => {
+  if (observer) {
+    observer.disconnect()
+  }
+})
 </script>
 
 <style scoped>
@@ -65,29 +99,38 @@ const toggleSidebar = () => {
 
 /* 二级左侧栏 */
 .secondary-sidebar {
-  position: relative;
+  position: fixed;
+  left: var(--main-sidebar-width, max(15rem, min(18vw, 20rem)));
+  top: 0;
+  bottom: 0;
   width: 240px;
-  min-height: 100vh;
   background: linear-gradient(135deg, rgba(26, 26, 26, 0.98) 0%, rgba(35, 35, 35, 0.95) 100%);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border-right: 1px solid rgba(58, 58, 58, 0.8);
-  overflow: hidden;
+  border-left: none;
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
-  flex-shrink: 0;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-direction: column;
+  z-index: 100;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 2px 0 16px rgba(0, 0, 0, 0.5);
 }
 
+/* 当主侧边栏收缩时，二级侧边栏也跟随调整 */
+.automation-container.main-sidebar-collapsed .secondary-sidebar {
+  left: 4rem;
+}
+
 .secondary-sidebar.collapsed {
-  width: 0;
-  margin-left: -1px;
-  border-right: none;
+  transform: translateX(-100%);
 }
 
 /* 折叠/展开按钮 */
 .toggle-button {
   position: fixed;
+  left: calc(var(--main-sidebar-width, max(15rem, min(18vw, 20rem))) + 240px - 36px);
   top: 50%;
   transform: translateY(-50%);
   width: 36px;
@@ -108,7 +151,15 @@ const toggleSidebar = () => {
 }
 
 .secondary-sidebar.collapsed .toggle-button {
-  left: max(15rem, min(18vw, 20rem));
+  left: var(--main-sidebar-width, max(15rem, min(18vw, 20rem)));
+}
+
+.automation-container.main-sidebar-collapsed .toggle-button {
+  left: calc(4rem + 240px - 36px);
+}
+
+.automation-container.main-sidebar-collapsed .secondary-sidebar.collapsed .toggle-button {
+  left: 4rem;
 }
 
 .toggle-button:hover {
@@ -193,8 +244,13 @@ const toggleSidebar = () => {
 /* 主内容区域包装器 */
 .main-wrapper {
   flex: 1;
+  margin-left: 240px;
   overflow-y: auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-wrapper.expanded {
+  margin-left: 0;
 }
 
 /* 响应式设计 */
