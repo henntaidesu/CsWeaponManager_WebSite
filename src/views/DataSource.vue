@@ -54,18 +54,6 @@
                     <p><strong>SteamID:</strong> {{ source.steamID || '未设置' }}</p>
                     <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
                     <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
-                    <p v-if="source.type === 'youpin' || source.type === 'buff'">
-                      <strong>自动获取:</strong> 
-                      <el-switch 
-                        v-model="source.enabled" 
-                        @change="toggleAutoCollection(source)"
-                        size="small"
-                        :disabled="collectingSourceIds.has(source.dataID)"
-                      />
-                      <span style="margin-left: 8px; color: #909399; font-size: 12px;">
-                        {{ source.enabled ? '已开启' : '已关闭' }}
-                      </span>
-                    </p>
                   </div>
                   
                   <div class="source-actions">
