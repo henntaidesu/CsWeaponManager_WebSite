@@ -66,8 +66,8 @@
           <h2 class="main-section-title">配置区域</h2>
           <el-button type="text" class="collapse-btn">
             <el-icon :size="20">
-              <DArrowUp v-if="!isToolSectionCollapsed" />
-              <DArrowDown v-else />
+              <ArrowUp v-if="!isToolSectionCollapsed" />
+              <ArrowDown v-else />
             </el-icon>
           </el-button>
         </div>
@@ -356,7 +356,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Document, Delete, Refresh, DArrowUp, DArrowDown } from '@element-plus/icons-vue'
+import { Document, Delete, Refresh, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import { API_CONFIG } from '@/config/api.js'
 
 export default {
@@ -365,8 +365,8 @@ export default {
     Document,
     Delete,
     Refresh,
-    DArrowUp,
-    DArrowDown
+    ArrowUp,
+    ArrowDown
   },
   setup() {
     const router = useRouter()
