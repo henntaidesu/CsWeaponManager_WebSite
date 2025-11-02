@@ -18,6 +18,24 @@
             <span>爬取改名</span>
           </li>
           <li 
+            :class="{ active: selectedCategory === 'steam_market' }"
+            @click="selectCategory('steam_market')"
+          >
+            <el-icon :size="18">
+              <ShoppingCart />
+            </el-icon>
+            <span>Steam市场历史</span>
+          </li>
+          <li 
+            :class="{ active: selectedCategory === 'steam_inventory_history' }"
+            @click="selectCategory('steam_inventory_history')"
+          >
+            <el-icon :size="18">
+              <Box />
+            </el-icon>
+            <span>Steam交易历史</span>
+          </li>
+          <li 
             :class="{ active: selectedCategory === 'dev_tools' }"
             @click="selectCategory('dev_tools')"
           >
@@ -43,6 +61,12 @@
       <!-- 爬取改名页面 -->
       <SpiderWeaponRenameContent v-if="selectedCategory === 'spider_rename'" />
       
+      <!-- Steam市场历史页面 -->
+      <SteamMarketContent v-if="selectedCategory === 'steam_market'" />
+      
+      <!-- Steam交易历史页面 -->
+      <SteamInventoryHistoryContent v-if="selectedCategory === 'steam_inventory_history'" />
+      
       <!-- 开发工具页面 -->
       <DevToolContent v-if="selectedCategory === 'dev_tools'" />
     </div>
@@ -51,8 +75,10 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { EditPen, Tools, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
+import { EditPen, Tools, ShoppingCart, Box, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import SpiderWeaponRenameContent from './SpiderWeaponRename.vue'
+import SteamMarketContent from './SteamMarket.vue'
+import SteamInventoryHistoryContent from './SteamInventoryHistory.vue'
 import DevToolContent from './DevTool.vue'
 
 const selectedCategory = ref('spider_rename')

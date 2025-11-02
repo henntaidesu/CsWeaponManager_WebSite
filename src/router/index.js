@@ -97,7 +97,7 @@ const routes = [
         path: '/automation',
         name: 'Automation',
         component: Automation,
-        meta: { title: '自动化' }
+        meta: { title: '其他工具' }
       }
     ]
   },

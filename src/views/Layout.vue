@@ -70,16 +70,6 @@ export default {
           title: 'Steam库存',
           icon: '/icons/In _library.png'
         },
-        {
-          path: '/steam-market',
-          title: 'Steam市场记录',
-          icon: '/icons/sell.png'
-        },
-        {
-          path: '/steam-inventory-history',
-          title: 'Steam交易历史',
-          icon: '/icons/Rental_records.png'
-        },
         // {
         //   path: '/sublet',
         //   title: '正在转租',
@@ -102,7 +92,7 @@ export default {
         },
         {
           path: '/automation',
-          title: '自动化',
+          title: '其他工具',
           icon: '/icons/setting.png'
         }
         // {

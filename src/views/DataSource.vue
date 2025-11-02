@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="data-source-container">
-      <div class="data-sources-list">
+      <div class="data-sources-list" :class="{ collapsed: isListCollapsed }">
         <!-- 空状态提示 -->
         <div v-if="dataSources.length === 0" class="card">
           <div class="empty-state">
@@ -54,6 +54,18 @@
                     <p><strong>SteamID:</strong> {{ source.steamID || '未设置' }}</p>
                     <p><strong>更新频率:</strong> {{ getUpdateFreqLabel(source.updateFreq) }}</p>
                     <p><strong>最后更新:</strong> {{ formatTime(source.lastUpdate) }}</p>
+                    <p v-if="source.type === 'youpin' || source.type === 'buff'">
+                      <strong>自动获取:</strong> 
+                      <el-switch 
+                        v-model="source.enabled" 
+                        @change="toggleAutoCollection(source)"
+                        size="small"
+                        :disabled="collectingSourceIds.has(source.dataID)"
+                      />
+                      <span style="margin-left: 8px; color: #909399; font-size: 12px;">
+                        {{ source.enabled ? '已开启' : '已关闭' }}
+                      </span>
+                    </p>
                   </div>
                   
                   <div class="source-actions">
@@ -61,6 +73,7 @@
                       编辑
                     </el-button>
                     <el-button 
+                      v-if="source.type !== 'perfectworld'"
                       type="warning" 
                       size="small" 
                       @click="startCollection(source)" 
@@ -1298,62 +1311,68 @@
               </div>
             </div>
           </el-form-item>
-          <el-form-item label="appversion" required>
-            <el-input 
-              v-model="inputForm.appversion" 
-              placeholder="请输入appversion"
-            />
-          </el-form-item>
-          <el-form-item label="device" required>
-            <el-input 
-              v-model="inputForm.device" 
-              placeholder="请输入device"
-            />
-          </el-form-item>
-          <el-form-item label="gameType" required>
-            <el-input 
-              v-model="inputForm.gameType" 
-              placeholder="请输入gameType"
-            />
-          </el-form-item>
-          <el-form-item label="platform" required>
-            <el-input 
-              v-model="inputForm.platform" 
-              placeholder="请输入platform"
-            />
-          </el-form-item>
-          <el-form-item label="token" required>
-            <el-input 
-              v-model="inputForm.pwToken" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入token"
-            />
-          </el-form-item>
-          <el-form-item label="tdSign" required>
-            <el-input 
-              v-model="inputForm.tdSign" 
-              type="textarea"
-              :rows="2"
-              placeholder="请输入tdSign"
-            />
-          </el-form-item>
-          <el-form-item label="SteamID" required>
-            <el-input 
-              v-model="inputForm.pwSteamID" 
-              placeholder="请输入SteamID"
-            />
-          </el-form-item>
-          <el-form-item label="更新频率">
-            <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-              <el-option label="每15分钟" value="15min" />
-              <el-option label="每小时" value="1hour" />
-              <el-option label="每3小时" value="3hour" />
-              <el-option label="每6小时" value="6hour" />
-              <el-option label="每12小时" value="12hour" />
-              <el-option label="每天" value="daily" />
-            </el-select>
-          </el-form-item>
+          
+          <!-- 完美世界配置 -->
+          <el-collapse v-model="inputPerfectWorldCollapse">
+            <el-collapse-item title="完美世界APP配置" name="config">
+              <el-form-item label="appversion" required>
+                <el-input 
+                  v-model="inputForm.appversion" 
+                  placeholder="请输入appversion"
+                />
+              </el-form-item>
+              <el-form-item label="device" required>
+                <el-input 
+                  v-model="inputForm.device" 
+                  placeholder="请输入device"
+                />
+              </el-form-item>
+              <el-form-item label="gameType" required>
+                <el-input 
+                  v-model="inputForm.gameType" 
+                  placeholder="请输入gameType"
+                />
+              </el-form-item>
+              <el-form-item label="platform" required>
+                <el-input 
+                  v-model="inputForm.platform" 
+                  placeholder="请输入platform"
+                />
+              </el-form-item>
+              <el-form-item label="token" required>
+                <el-input 
+                  v-model="inputForm.pwToken" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入token"
+                />
+              </el-form-item>
+              <el-form-item label="tdSign" required>
+                <el-input 
+                  v-model="inputForm.tdSign" 
+                  type="textarea"
+                  :rows="2"
+                  placeholder="请输入tdSign"
+                />
+              </el-form-item>
+              <el-form-item label="SteamID" required>
+                <el-input 
+                  v-model="inputForm.pwSteamID" 
+                  placeholder="请输入SteamID"
+                />
+              </el-form-item>
+              <el-form-item label="更新频率">
+                <el-select v-model="inputForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+                  <el-option label="每15分钟" value="15min" />
+                  <el-option label="每小时" value="1hour" />
+                  <el-option label="每3小时" value="3hour" />
+                  <el-option label="每6小时" value="6hour" />
+                  <el-option label="每12小时" value="12hour" />
+                  <el-option label="每天" value="daily" />
+                </el-select>
+              </el-form-item>
+            </el-collapse-item>
+          </el-collapse>
         </template>
         
         <!-- 通用配置 -->
@@ -1570,6 +1589,7 @@ export default {
     const refreshing = ref(false)
     const editingSourceId = ref(null)
     const editDialogVisible = ref(false)
+    const isListCollapsed = ref(false) // 列表收起状态
     const editSubmitting = ref(false)
     const addDialogVisible = ref(false)
     const steamLoginLoading = ref(false)
@@ -1578,6 +1598,7 @@ export default {
     const steamQRStatus = ref('') // 二维码状态: waiting, success, expired
     const steamQRCheckTimer = ref(null) // 二维码状态检查定时器
     const autoRefreshTimer = ref(null) // 数据源列表自动刷新定时器
+    const autoCollectionTimers = ref({}) // 自动采集定时器 { dataID: timerId }
     
     // GetAppToken 相关状态
     const buffTokenLoading = ref(false)  // BUFF Token 获取loading
@@ -1601,9 +1622,10 @@ export default {
     const editBuffDisplayCollapse = ref([])
     const editBuffLocaleCollapse = ref([])
     const inputBuffCollapse = ref(['config'])
+    const inputPerfectWorldCollapse = ref([])
     const editSteamCollapse = ref(['config'])
     const editSteamLoginCollapse = ref(['config'])
-    const editPerfectWorldCollapse = ref(['config'])
+    const editPerfectWorldCollapse = ref([])
     
     const editForm = ref({
       name: '',
@@ -1762,6 +1784,86 @@ export default {
 
     const formatTime = (time) => {
       return new Date(time).toLocaleString('zh-CN')
+    }
+
+    // 将更新频率转换为毫秒
+    const getUpdateFreqMs = (updateFreq) => {
+      const freqMap = {
+        '15min': 15 * 60 * 1000,
+        '1hour': 60 * 60 * 1000,
+        '3hour': 3 * 60 * 60 * 1000,
+        '6hour': 6 * 60 * 60 * 1000,
+        '12hour': 12 * 60 * 60 * 1000,
+        'daily': 24 * 60 * 60 * 1000
+      }
+      return freqMap[updateFreq] || 15 * 60 * 1000 // 默认15分钟
+    }
+
+    // 启动自动采集定时器
+    const startAutoCollectionTimer = (source) => {
+      // 清除已存在的定时器
+      if (autoCollectionTimers.value[source.dataID]) {
+        clearInterval(autoCollectionTimers.value[source.dataID])
+      }
+
+      const interval = getUpdateFreqMs(source.updateFreq)
+      console.log(`启动自动采集定时器: ${source.dataName}, 间隔: ${interval}ms (${source.updateFreq})`)
+
+      // 创建新的定时器
+      autoCollectionTimers.value[source.dataID] = setInterval(() => {
+        console.log(`自动采集触发: ${source.dataName}`)
+        startCollection(source)
+      }, interval)
+    }
+
+    // 停止自动采集定时器
+    const stopAutoCollectionTimer = (dataID) => {
+      if (autoCollectionTimers.value[dataID]) {
+        clearInterval(autoCollectionTimers.value[dataID])
+        delete autoCollectionTimers.value[dataID]
+        console.log(`停止自动采集定时器: dataID=${dataID}`)
+      }
+    }
+
+    // 切换自动采集状态
+    const toggleAutoCollection = async (source) => {
+      try {
+        // 更新数据库中的 enabled 状态
+        const updateUrl = apiUrls.updateDataSource(source.dataID)
+        const response = await axios.put(updateUrl, {
+          enabled: source.enabled
+        })
+
+        if (response.data.success) {
+          if (source.enabled) {
+            // 开启自动采集
+            ElMessage.success(`已开启 ${source.dataName} 的自动采集`)
+            startAutoCollectionTimer(source)
+          } else {
+            // 关闭自动采集
+            ElMessage.info(`已关闭 ${source.dataName} 的自动采集`)
+            stopAutoCollectionTimer(source.dataID)
+          }
+        } else {
+          // 更新失败，恢复原状态
+          source.enabled = !source.enabled
+          ElMessage.error('更新自动采集状态失败')
+        }
+      } catch (error) {
+        console.error('切换自动采集状态失败:', error)
+        // 恢复原状态
+        source.enabled = !source.enabled
+        ElMessage.error('切换自动采集状态失败')
+      }
+    }
+
+    // 初始化自动采集定时器（页面加载时）
+    const initAutoCollectionTimers = () => {
+      dataSources.value.forEach(source => {
+        if ((source.type === 'youpin' || source.type === 'buff') && source.enabled) {
+          startAutoCollectionTimer(source)
+        }
+      })
     }
 
     const handleSubmit = async () => {
@@ -2615,8 +2717,11 @@ export default {
           ElMessage.success(`${source.dataName} 悠悠有品爬虫采集完成！`)
           console.log('悠悠有品爬虫采集响应:', response.data)
           
-          // 更新数据源的最后更新时间
+          // 更新数据源的最后更新时间（前端显示）
           source.lastUpdate = new Date()
+          
+          // 更新数据库中的 lastUpdate
+          await updateLastUpdateTime(source.dataID)
         } else {
           ElMessage.error(`悠悠有品爬虫采集失败: ${response.data}`)
         }
@@ -2879,6 +2984,9 @@ export default {
       // 记录当前编辑的数据源ID
       editingSourceId.value = source.dataID
       
+      // 自动收起列表
+      isListCollapsed.value = true
+      
       // 填充编辑表单，显示所有现有配置
       const config = source.config || {}
       
@@ -3046,6 +3154,9 @@ export default {
       buffTokenLoading.value = false
       yyypTokenLoading.value = false
       perfectWorldTokenLoading.value = false
+      
+      // 展开列表
+      isListCollapsed.value = false
       
       // 对话框关闭时清理状态
       editingSourceId.value = null
@@ -3824,6 +3935,9 @@ export default {
           })
           console.log('处理后的数据源:', dataSources.value)
           console.log('分组数据:', groupedDataSources.value)
+          
+          // 初始化自动采集定时器
+          initAutoCollectionTimers()
         } else {
           console.error('API返回失败:', result.message)
           ElMessage.error(result.message || '获取数据源失败')
@@ -4159,6 +4273,10 @@ export default {
       if (tokenCheckTimer.value) {
         clearInterval(tokenCheckTimer.value)
       }
+      // 清理所有自动采集定时器
+      Object.keys(autoCollectionTimers.value).forEach(dataID => {
+        stopAutoCollectionTimer(dataID)
+      })
     })
 
     return {
@@ -4170,6 +4288,7 @@ export default {
       editDialogVisible,
       editSubmitting,
       addDialogVisible,
+      isListCollapsed,
       editForm,
       inputForm,
       dataSources,
@@ -4181,6 +4300,7 @@ export default {
       getSourceTypeColor,
       getUpdateFreqLabel,
       formatTime,
+      toggleAutoCollection,
       handleSubmit,
       resetForm,
       testConnection,
@@ -4213,6 +4333,7 @@ export default {
       editBuffDisplayCollapse,
       editBuffLocaleCollapse,
       inputBuffCollapse,
+      inputPerfectWorldCollapse,
       editSteamCollapse,
       editSteamLoginCollapse,
       editPerfectWorldCollapse,
