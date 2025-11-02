@@ -23,17 +23,19 @@
           <el-button 
             type="success" 
             @click="syncWeaponTemplates"
-            disabled
+            :disabled="!selectedSteamId || isSyncing || isSyncingBuff"
+            :loading="isSyncing"
           >
-            获取悠悠有品饰品映射
+            {{ isSyncing ? '同步中...' : '获取悠悠有品饰品映射' }}
           </el-button>
           
           <el-button 
             type="success" 
             @click="syncBuffTemplates"
-            disabled
+            :disabled="!selectedSteamId || isSyncing || isSyncingBuff"
+            :loading="isSyncingBuff"
           >
-            获取BUFF饰品映射
+            {{ isSyncingBuff ? '同步中...' : '获取BUFF饰品映射' }}
           </el-button>
 
           <el-button 

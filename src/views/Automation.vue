@@ -2,14 +2,6 @@
   <div class="automation-container" :class="{ 'main-sidebar-collapsed': isMainSidebarCollapsed }">
     <!-- 二级左侧栏 -->
     <aside class="secondary-sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <!-- 折叠/展开按钮 -->
-      <div class="toggle-button" @click="toggleSidebar">
-        <el-icon :size="20">
-          <DArrowLeft v-if="!sidebarCollapsed" />
-          <DArrowRight v-else />
-        </el-icon>
-      </div>
-
       <div class="sidebar-content">
         <div class="sidebar-header">
           <!-- 保留标题空位，用于间距 -->
@@ -38,8 +30,16 @@
       </div>
     </aside>
 
+    <!-- 折叠/展开按钮 -->
+    <div class="toggle-button" :class="{ collapsed: sidebarCollapsed }" @click="toggleSidebar">
+      <el-icon :size="20">
+        <DArrowLeft v-if="!sidebarCollapsed" />
+        <DArrowRight v-else />
+      </el-icon>
+    </div>
+
     <!-- 主内容区域 -->
-    <div class="main-wrapper" :class="{ expanded: sidebarCollapsed }">
+    <div class="main-wrapper" :class="{ expanded: sidebarCollapsed }" @click="handleContentClick">
       <!-- 爬取改名页面 -->
       <SpiderWeaponRenameContent v-if="selectedCategory === 'spider_rename'" />
       
@@ -65,6 +65,13 @@ const selectCategory = (categoryId) => {
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value
+}
+
+// 点击内容区域时收缩侧边栏
+const handleContentClick = () => {
+  if (!sidebarCollapsed.value) {
+    sidebarCollapsed.value = true
+  }
 }
 
 // 监听主侧边栏的状态变化
@@ -143,35 +150,35 @@ onUnmounted(() => {
 /* 折叠/展开按钮 */
 .toggle-button {
   position: fixed;
-  left: calc(var(--main-sidebar-width, max(15rem, min(18vw, 20rem))) + 240px - 36px);
+  left: calc(var(--main-sidebar-width, max(15rem, min(18vw, 20rem))) + 240px + 2px);
   top: 50%;
   transform: translateY(-50%);
   width: 36px;
   height: 80px;
   background: linear-gradient(90deg, rgba(30, 30, 30, 0.95) 0%, rgba(30, 30, 30, 0.98) 100%);
-  border: 1px solid #3a3a3a;
-  border-left: none;
+  border: 1px solid rgba(58, 58, 58, 0.8);
   border-radius: 0 12px 12px 0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #b0b0b0;
   z-index: 101;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
-  left: calc(max(15rem, min(18vw, 20rem)) + 240px - 36px);
 }
 
-.secondary-sidebar.collapsed .toggle-button {
+/* 当二级侧边栏收缩时，按钮移到主侧边栏右侧（紧贴，无间隙） */
+.toggle-button.collapsed {
   left: var(--main-sidebar-width, max(15rem, min(18vw, 20rem)));
 }
 
+/* 当主侧边栏收缩时 */
 .automation-container.main-sidebar-collapsed .toggle-button {
-  left: calc(4rem + 240px - 36px);
+  left: calc(4rem + 240px + 2px);
 }
 
-.automation-container.main-sidebar-collapsed .secondary-sidebar.collapsed .toggle-button {
+.automation-container.main-sidebar-collapsed .toggle-button.collapsed {
   left: 4rem;
 }
 
