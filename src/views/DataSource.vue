@@ -1860,7 +1860,7 @@ export default {
         
         // 获取当前数据源的完整配置
         const updateUrl = apiUrls.updateDataSource(dataID)
-        const getUrl = `${apiUrls.API_BASE_URL}${apiUrls.ENDPOINTS.DATA_SOURCE_BY_ID(dataID)}`
+        const getUrl = apiUrls.dataSourceById(dataID)
         
         console.log(`[updateLastUpdate] GET URL: ${getUrl}`)
         
