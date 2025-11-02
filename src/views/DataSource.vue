@@ -2719,9 +2719,6 @@ export default {
           
           // 更新数据源的最后更新时间（前端显示）
           source.lastUpdate = new Date()
-          
-          // 更新数据库中的 lastUpdate
-          await updateLastUpdateTime(source.dataID)
         } else {
           ElMessage.error(`悠悠有品爬虫采集失败: ${response.data}`)
         }
