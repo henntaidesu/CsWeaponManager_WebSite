@@ -25,6 +25,15 @@
             </el-icon>
             <span>爬取改名</span>
           </li>
+          <li 
+            :class="{ active: selectedCategory === 'dev_tools' }"
+            @click="selectCategory('dev_tools')"
+          >
+            <el-icon :size="18">
+              <Tools />
+            </el-icon>
+            <span>开发工具</span>
+          </li>
         </ul>
       </div>
     </aside>
@@ -33,14 +42,18 @@
     <div class="main-wrapper" :class="{ expanded: sidebarCollapsed }">
       <!-- 爬取改名页面 -->
       <SpiderWeaponRenameContent v-if="selectedCategory === 'spider_rename'" />
+      
+      <!-- 开发工具页面 -->
+      <DevToolContent v-if="selectedCategory === 'dev_tools'" />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { EditPen, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
+import { EditPen, Tools, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import SpiderWeaponRenameContent from './SpiderWeaponRename.vue'
+import DevToolContent from './DevTool.vue'
 
 const selectedCategory = ref('spider_rename')
 const sidebarCollapsed = ref(false)

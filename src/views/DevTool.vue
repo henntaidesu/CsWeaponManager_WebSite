@@ -1,9 +1,6 @@
 <template>
   <div class="dev-tool-container">
     <div class="card dev-card">
-      <h1 class="dev-title">开发工具</h1>
-      <p class="dev-subtitle">Developer Tools - 仅供开发调试使用</p>
-      
       <!-- 饰品映射同步区域 -->
       <div class="sync-section">
         <h2 class="section-title">平台饰品映射</h2>
@@ -26,37 +23,33 @@
           <el-button 
             type="success" 
             @click="syncWeaponTemplates"
-            :disabled="!selectedSteamId || isSyncing || isSyncingBuff"
-            :loading="isSyncing"
+            disabled
           >
-            {{ isSyncing ? '同步中...' : '获取悠悠有品饰品映射' }}
+            获取悠悠有品饰品映射
           </el-button>
           
           <el-button 
             type="success" 
             @click="syncBuffTemplates"
-            :disabled="!selectedSteamId || isSyncing || isSyncingBuff"
-            :loading="isSyncingBuff"
+            disabled
           >
-            {{ isSyncingBuff ? '同步中...' : '获取BUFF饰品映射' }}
+            获取BUFF饰品映射
           </el-button>
 
           <el-button 
             type="primary" 
             @click="collectHashNamesFull"
-            :disabled="isCollectingHashNames"
-            :loading="isCollectingHashNames"
+            disabled
           >
-            {{ isCollectingHashNames ? '采集中...' : '获取Steam饰品哈希' }}
+            获取Steam饰品哈希
           </el-button>
 
           <el-button 
             type="warning" 
             @click="startCsqaqCrawlAll"
-            :disabled="isCrawlingCsqaq"
-            :loading="isCrawlingCsqaq"
+            disabled
           >
-            {{ isCrawlingCsqaq ? '采集中...' : '全量采集 CSQAQ 商品' }}
+            全量采集 CSQAQ 商品
           </el-button>
         </div>
         
@@ -102,26 +95,6 @@
           <span class="sync-time">最后采集时间: {{ lastCsqaqTime }}</span>
         </div>
       </div>
-
-      <!-- 爬取已改名饰品工具区域 -->
-      <div class="sync-section">
-        <h2 class="section-title">爬取已改名饰品</h2>
-        
-        <div class="tool-description">
-          <p class="tool-desc-text">从悠悠有品、BUFF、Steam库存等平台爬取已改名的饰品数据，支持全量爬取、增量更新等模式。</p>
-        </div>
-        
-        <div class="sync-controls">
-          <el-button 
-            type="primary" 
-            @click="goToWeaponRename"
-            size="large"
-          >
-            <el-icon :size="18" style="margin-right: 8px;"><Tools /></el-icon>
-            打开爬取工具
-          </el-button>
-        </div>
-      </div>
       
     </div>
   </div>
@@ -129,19 +102,13 @@
 
 <script>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Tools } from '@element-plus/icons-vue'
 import { API_CONFIG, apiUrls } from '@/config/api.js'
 
 export default {
   name: 'DevTool',
-  components: {
-    Tools
-  },
   setup() {
-    const router = useRouter()
     const selectedSteamId = ref('')
     const steamIdList = ref([])
     const isSyncing = ref(false)
@@ -472,11 +439,6 @@ export default {
       }
     }
 
-    // 跳转到饰品重命名工具页面
-    const goToWeaponRename = () => {
-      router.push('/spider-weapon-rename')
-    }
-
     // 组件挂载时加载Steam ID列表
     onMounted(() => {
       loadSteamIdList()
@@ -499,9 +461,7 @@ export default {
       isCrawlingCsqaq,
       csqaqStatus,
       lastCsqaqTime,
-      startCsqaqCrawlAll,
-      // 工具跳转
-      goToWeaponRename
+      startCsqaqCrawlAll
     }
   }
 }
