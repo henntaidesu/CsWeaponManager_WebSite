@@ -1856,35 +1856,57 @@ export default {
     // 更新数据库中的 lastUpdate 时间
     const updateLastUpdateInDatabase = async (dataID, lastUpdateTime) => {
       try {
+        console.log(`[updateLastUpdate] 开始更新 dataID=${dataID}, time=${lastUpdateTime}`)
+        
         // 获取当前数据源的完整配置
         const updateUrl = apiUrls.updateDataSource(dataID)
         const getUrl = `${apiUrls.API_BASE_URL}${apiUrls.ENDPOINTS.DATA_SOURCE_BY_ID(dataID)}`
         
+        console.log(`[updateLastUpdate] GET URL: ${getUrl}`)
+        
         // 先获取当前配置
         const getResponse = await axios.get(getUrl)
+        console.log(`[updateLastUpdate] GET 响应:`, getResponse.data)
+        
         if (getResponse.data.success) {
           const currentData = getResponse.data.data
           const currentConfig = currentData.config || {}
           
+          console.log(`[updateLastUpdate] 当前配置:`, currentConfig)
+          
           // 更新 lastUpdate 字段
           currentConfig.lastUpdate = lastUpdateTime
           
+          console.log(`[updateLastUpdate] 更新后配置:`, currentConfig)
+          
           // 发送更新请求（需要传递 configJson 字符串）
-          const response = await axios.put(updateUrl, {
+          const updateData = {
             dataName: currentData.dataName,
             type: currentData.type,
             enabled: currentData.enabled,
             configJson: JSON.stringify(currentConfig)
-          })
+          }
+          
+          console.log(`[updateLastUpdate] PUT URL: ${updateUrl}`)
+          console.log(`[updateLastUpdate] PUT 数据:`, updateData)
+          
+          const response = await axios.put(updateUrl, updateData)
+          
+          console.log(`[updateLastUpdate] PUT 响应:`, response.data)
           
           if (response.data.success) {
-            console.log(`lastUpdate 更新成功: dataID=${dataID}, time=${lastUpdateTime}`)
+            console.log(`✅ lastUpdate 更新成功: dataID=${dataID}, time=${lastUpdateTime}`)
           } else {
-            console.error('lastUpdate 更新失败:', response.data.message)
+            console.error('❌ lastUpdate 更新失败:', response.data.message)
           }
+        } else {
+          console.error('❌ 获取数据源失败:', getResponse.data.message)
         }
       } catch (error) {
-        console.error('更新 lastUpdate 失败:', error)
+        console.error('❌ 更新 lastUpdate 失败:', error)
+        if (error.response) {
+          console.error('错误响应:', error.response.data)
+        }
       }
     }
 
