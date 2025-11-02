@@ -142,6 +142,17 @@
             </div>
           </el-form-item>
           
+          <el-form-item label="更新频率">
+            <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
+              <el-option label="每15分钟" value="15min" />
+              <el-option label="每小时" value="1hour" />
+              <el-option label="每3小时" value="3hour" />
+              <el-option label="每6小时" value="6hour" />
+              <el-option label="每12小时" value="12hour" />
+              <el-option label="每天" value="daily" />
+            </el-select>
+          </el-form-item>
+          
           <!-- 基础配置 -->
           <el-collapse v-model="editYyypBasicCollapse" style="margin-bottom: 20px;">
             <el-collapse-item title="基础配置" name="basic">
@@ -150,16 +161,6 @@
               </el-form-item>
               <el-form-item label="应用版本" required>
                 <el-input v-model="editForm.appVersion" placeholder="请输入应用版本" />
-              </el-form-item>
-              <el-form-item label="更新频率">
-                <el-select v-model="editForm.updateFreq" placeholder="选择更新频率" style="width: 100%;">
-                  <el-option label="每15分钟" value="15min" />
-                  <el-option label="每小时" value="1hour" />
-                  <el-option label="每3小时" value="3hour" />
-                  <el-option label="每6小时" value="6hour" />
-                  <el-option label="每12小时" value="12hour" />
-                  <el-option label="每天" value="daily" />
-                </el-select>
               </el-form-item>
               <el-form-item label="应用类型" required>
                 <el-input v-model="editForm.appType" placeholder="请输入应用类型" />
@@ -1766,6 +1767,9 @@ export default {
     }
 
     const formatTime = (time) => {
+      if (!time) {
+        return '从未更新'
+      }
       return new Date(time).toLocaleString('zh-CN')
     }
 
@@ -3947,7 +3951,7 @@ export default {
               updateFreq: item.updateFreq || '15min',
               enabled: item.enabled,
               status: item.enabled ? 'online' : 'offline',
-              lastUpdate: item.lastUpdate ? new Date(item.lastUpdate) : new Date(),
+              lastUpdate: item.lastUpdate ? new Date(item.lastUpdate) : null,
               config: item.config || {},
               steamID: item.steamID || ''  // 直接使用config表的steamID字段
             }
