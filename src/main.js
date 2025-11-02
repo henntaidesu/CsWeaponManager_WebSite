@@ -4,7 +4,6 @@ import router from './router'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import './assets/css/global.css'
-import { initAutoCollectionTimers } from './composables/useAutoCollection'
 
 // 忽略 ResizeObserver 错误
 const debounce = (fn, delay) => {
@@ -45,15 +44,3 @@ app.use(router)
 app.use(ElementPlus)
 
 app.mount('#app')
-
-// 应用挂载后初始化全局自动采集定时器
-// 延迟初始化，确保应用完全启动
-setTimeout(() => {
-  initAutoCollectionTimers()
-    .then(() => {
-      console.log('[全局] 自动采集定时器已初始化')
-    })
-    .catch(err => {
-      console.error('[全局] 自动采集定时器初始化失败:', err)
-    })
-}, 1000)
