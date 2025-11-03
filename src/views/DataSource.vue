@@ -51,8 +51,8 @@
                   
                   
                   <div class="source-actions">
-                    <el-button type="primary" size="small" @click="editSource(source)" disabled>
-                      编辑(已禁用)
+                    <el-button type="primary" size="small" @click="editSource(source)">
+                      编辑
                     </el-button>
                     <el-button 
                       v-if="source.type !== 'perfectworld'"
@@ -1976,9 +1976,8 @@ export default {
 
         let response
         if (editingSourceId.value) {
-          // 更新功能已禁用
-          ElMessage.error('数据源更新功能已禁用，请删除后重新添加')
-          return
+          const url = apiUrls.dataSourceById(editingSourceId.value)
+          response = await axios.put(url, requestData)
         } else {
           const url = apiUrls.dataSource()
           response = await axios.post(url, requestData)
@@ -3665,10 +3664,20 @@ export default {
           })
         }
 
-        // 更新功能已禁用
-        ElMessage.error('数据源更新功能已禁用，请删除后重新添加')
-        editDialogVisible.value = false
-        return
+        const response = await axios.put(
+          apiUrls.dataSourceById(editingSourceId.value), 
+          requestData
+        )
+
+        const result = response.data
+        
+        if (result.success) {
+          ElMessage.success('数据源更新成功')
+          editDialogVisible.value = false
+          loadDataSources() // 重新加载数据源列表
+        } else {
+          ElMessage.error(result.message || '更新数据源失败')
+        }
       } catch (error) {
         console.error('更新数据源失败:', error)
         let errorMessage = '更新失败'
