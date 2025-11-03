@@ -2624,19 +2624,10 @@ export default {
         
         ElMessage.info(`开始使用爬虫采集BUFF数据: ${source.dataName}`)
 
-        // 准备发送给爬虫的数据 - 按照后端API期望的字段名
+        // 准备发送给爬虫的数据 - 只需要发送steamID即可
+        // 后端会根据steamID自动从数据库获取完整配置
         const spiderData = {
-          // 后端API需要的字段
-          cookie: source.config?.cookie || '',
-          system_version: source.config?.system_version || '',
-          system_type: source.config?.system_type || '',
-          steamID: source.config?.steamID || '',
-          
-          // 额外的数据源信息（可选）
-          dataID: source.dataID,
-          dataName: source.dataName,
-          type: source.type,
-          enabled: source.enabled
+          steamID: source.steamID || ''
         }
         
         console.log('发送给BUFF爬虫的数据:', spiderData)
