@@ -51,8 +51,8 @@
                   
                   
                   <div class="source-actions">
-                    <el-button type="primary" size="small" @click="editSource(source)">
-                      编辑
+                    <el-button type="primary" size="small" @click="editSource(source)" disabled>
+                      编辑(已禁用)
                     </el-button>
                     <el-button 
                       v-if="source.type !== 'perfectworld'"
@@ -1724,60 +1724,10 @@ export default {
     // 前端组件不再需要管理单独的定时器
 
     // 更新数据库中的 lastUpdate 时间
+    // 注意: 此功能已被禁用，因为后端更新接口已删除
     const updateLastUpdateInDatabase = async (dataID, lastUpdateTime) => {
-      try {
-        console.log(`[updateLastUpdate] 开始更新 dataID=${dataID}, time=${lastUpdateTime}`)
-        
-        // 获取当前数据源的完整配置
-        const updateUrl = apiUrls.updateDataSource(dataID)
-        const getUrl = apiUrls.dataSourceById(dataID)
-        
-        console.log(`[updateLastUpdate] GET URL: ${getUrl}`)
-        
-        // 先获取当前配置
-        const getResponse = await axios.get(getUrl)
-        console.log(`[updateLastUpdate] GET 响应:`, getResponse.data)
-        
-        if (getResponse.data.success) {
-          const currentData = getResponse.data.data
-          const currentConfig = currentData.config || {}
-          
-          console.log(`[updateLastUpdate] 当前配置:`, currentConfig)
-          
-          // 更新 lastUpdate 字段
-          currentConfig.lastUpdate = lastUpdateTime
-          
-          console.log(`[updateLastUpdate] 更新后配置:`, currentConfig)
-          
-          // 发送更新请求（需要传递 configJson 字符串）
-          const updateData = {
-            dataName: currentData.dataName,
-            type: currentData.type,
-            enabled: currentData.enabled,
-            configJson: JSON.stringify(currentConfig)
-          }
-          
-          console.log(`[updateLastUpdate] PUT URL: ${updateUrl}`)
-          console.log(`[updateLastUpdate] PUT 数据:`, updateData)
-          
-          const response = await axios.put(updateUrl, updateData)
-          
-          console.log(`[updateLastUpdate] PUT 响应:`, response.data)
-          
-          if (response.data.success) {
-            console.log(`✅ lastUpdate 更新成功: dataID=${dataID}, time=${lastUpdateTime}`)
-          } else {
-            console.error('❌ lastUpdate 更新失败:', response.data.message)
-          }
-        } else {
-          console.error('❌ 获取数据源失败:', getResponse.data.message)
-        }
-      } catch (error) {
-        console.error('❌ 更新 lastUpdate 失败:', error)
-        if (error.response) {
-          console.error('错误响应:', error.response.data)
-        }
-      }
+      console.log(`[updateLastUpdate] 更新功能已禁用 - dataID=${dataID}, time=${lastUpdateTime}`)
+      // 功能已禁用，不再调用后端更新接口
     }
 
     const handleSubmit = async () => {
@@ -2026,8 +1976,9 @@ export default {
 
         let response
         if (editingSourceId.value) {
-          const url = apiUrls.dataSourceById(editingSourceId.value)
-          response = await axios.put(url, requestData)
+          // 更新功能已禁用
+          ElMessage.error('数据源更新功能已禁用，请删除后重新添加')
+          return
         } else {
           const url = apiUrls.dataSource()
           response = await axios.post(url, requestData)
@@ -3714,20 +3665,10 @@ export default {
           })
         }
 
-        const response = await axios.put(
-          apiUrls.dataSourceById(editingSourceId.value), 
-          requestData
-        )
-
-        const result = response.data
-        
-        if (result.success) {
-          ElMessage.success('数据源更新成功')
-          editDialogVisible.value = false
-          loadDataSources() // 重新加载数据源列表
-        } else {
-          ElMessage.error(result.message || '更新数据源失败')
-        }
+        // 更新功能已禁用
+        ElMessage.error('数据源更新功能已禁用，请删除后重新添加')
+        editDialogVisible.value = false
+        return
       } catch (error) {
         console.error('更新数据源失败:', error)
         let errorMessage = '更新失败'
